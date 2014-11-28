@@ -1,3 +1,0 @@
-%% encoding: UTF-8
-{packages,[]}.
-{modules,[adprep,adpreps_,dcs,decay,userar]}.
