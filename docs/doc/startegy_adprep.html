@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module adprep</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module adprep</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Provides operations required in a database.
+
+<p><b>Version:</b> 1.0.0</p>
+<p><b>Authors:</b> Amadeo Asco.</p>
+<p><b>References</b><ul><li>Project <a href="https://syncfree.lip6.fr/">SyncFree</a></li><li>More courses at <a href="http://www.trifork.com">Trifork Leeds</a></li></ul></p>
+
+<h2><a name="description">Description</a></h2>Provides operations required in a database.
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decay-6">decay/6*</a></td><td>Processes the decay message.</td></tr>
+<tr><td valign="top"><a href="#flush-1">flush/1*</a></td><td>Removes all pre-existing messages in the mailbox and replies to those that require a
+ 		response.</td></tr>
+<tr><td valign="top"><a href="#forward-6">forward/6*</a></td><td>Builds the forward message and send it to the specified process.</td></tr>
+<tr><td valign="top"><a href="#processStrength-5">processStrength/5*</a></td><td>Processes the forwarded message.</td></tr>
+<tr><td valign="top"><a href="#read-8">read/8*</a></td><td>Reads the specified data, irrespective of where it is located.</td></tr>
+<tr><td valign="top"><a href="#run-12">run/12*</a></td><td>Processes the messaged from the mailbox.</td></tr>
+<tr><td valign="top"><a href="#run-3">run/3</a></td><td>Processes the messaged from the mailbox base on the specified arguments and the given data
+ 		(its key).</td></tr>
+<tr><td valign="top"><a href="#stop-1">stop/1*</a></td><td>Stops the process associated to the data.</td></tr>
+<tr><td valign="top"><a href="#update-7">update/7*</a></td><td>Updates only this replica and may request to stop process.</td></tr>
+<tr><td valign="top"><a href="#write-9">write/9*</a></td><td>Writes the new value of the specified data and take appropiate action to update replicated sites (DCs).</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="decay-6">decay/6 *</a></h3>
+<div class="spec">
+<p><tt>decay(Key, Replicated::boolean(), Strength::float(), MinNumReplicas::float(), RmvThreshold::float(), Decay::float()) -&gt; {Replicated1::boolean(), Strength1::float()}</tt><br></p>
+</div><p>Processes the decay message.</p>
+
+<h3 class="function"><a name="flush-1">flush/1 *</a></h3>
+<div class="spec">
+<p><tt>flush(Key) -&gt; {ok}</tt><br></p>
+</div><p>Removes all pre-existing messages in the mailbox and replies to those that require a
+ 		response.</p>
+
+<h3 class="function"><a name="forward-6">forward/6 *</a></h3>
+<div class="spec">
+<p><tt>forward(Key, Type::atom(), Pid::pid(), Id::integer(), Msg, Replicated::<a href="#type-bolean">bolean()</a>) -&gt; {ok}</tt><br></p>
+</div><p>Builds the forward message and send it to the specified process.</p>
+
+<h3 class="function"><a name="processStrength-5">processStrength/5 *</a></h3>
+<div class="spec">
+<p><tt>processStrength(Key, Replicated::boolean(), Strength::float(), MinNumReplicas::float(), RmvThreshold::float()) -&gt; {Replicated1::boolean(), Strength::float()}</tt><br></p>
+</div><p>Processes the forwarded message.</p>
+
+<h3 class="function"><a name="read-8">read/8 *</a></h3>
+<div class="spec">
+<p><tt>read(Key, Pid::pid(), Id::integer(), Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), RStrength::float(), MaxStrength::float()) -&gt; {Replicated1::boolean(), Strength1::float()}</tt><br></p>
+</div><p>Reads the specified data, irrespective of where it is located.</p>
+
+<h3 class="function"><a name="run-12">run/12 *</a></h3>
+<div class="spec">
+<p><tt>run(Key, Replicated::boolean(), Strength::float(), DecayTime::integer(), MinNumReplicas::integer(), ReplicationThreshold::float(), RmvThreshold::float(), MaxStrength::float(), Decay::float(), WDecay::float(), RStrength::float(), WStrength::float()) -&gt; Result::tuple()</tt><br></p>
+</div><p>Processes the messaged from the mailbox. ReplicationThreshold &gt; RmvThreshold &gt;= 0.</p>
+
+<h3 class="function"><a name="run-3">run/3</a></h3>
+<div class="spec">
+<p><tt>run(Key, DC::list(), Args::tuple()) -&gt; Result::tuple()</tt><br></p>
+</div><p>Processes the messaged from the mailbox base on the specified arguments and the given data
+ 		(its key).</p>
+
+<h3 class="function"><a name="stop-1">stop/1 *</a></h3>
+<div class="spec">
+<p><tt>stop(Key) -&gt; {ok}</tt><br></p>
+</div><p>Stops the process associated to the data. No replay is sent to sender.</p>
+
+<h3 class="function"><a name="update-7">update/7 *</a></h3>
+<div class="spec">
+<p><tt>update(Key, Value, Replicated::boolean(), Strength::float(), MinNumReplicas::float(), RmvThreshold::float(), WDecay::float()) -&gt; {Replicated1::boolean(), Strength1::float()}</tt><br></p>
+</div><p>Updates only this replica and may request to stop process.</p>
+
+<h3 class="function"><a name="write-9">write/9 *</a></h3>
+<div class="spec">
+<p><tt>write(Key, Pid::pid(), Id::integer(), Value, Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), WStrength::float(), MaxStrength::float()) -&gt; {Replicated1::boolean(), Strength1::float()}</tt><br></p>
+</div><p>Writes the new value of the specified data and take appropiate action to update replicated sites (DCs).</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Nov 24 2014, 11:20:17.</i></p>
+</body>
+</html>
