@@ -141,13 +141,14 @@ sendIt(Key, Type, Id, Msg, WaitReply) ->
 %% 
 %% @doc Sends the specified message for the specified data. The result may be already_exist, ok or 
 %%		created.
-startProcess(Key, Strategy, Dcs, Args) ->
+startProcess(Key, StrategyName, Dcs, Args) ->
 	% Check if the process already exists, i.e. the data is known to exist
 	Result = nodes(Key),
 	case Result of
 		[nonode@nohost] ->
 			% The process does not exists yet
 		    % Start the strategy process
+			Strategy = "strategy_" + StrategyName,
 		    Pid = spawn(Strategy, run, {Key, Dcs, Args}),
 		    R = register(Key, Pid),
 			if

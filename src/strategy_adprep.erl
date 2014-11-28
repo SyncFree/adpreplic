@@ -13,7 +13,7 @@
 
 %%
 %% @doc Provides operations required in a database.
--module(adprep).
+-module(strategy_adprep).
 -author('aas@trifork.co.uk').
 
 -ifdef(EUNIT).
