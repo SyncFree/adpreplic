@@ -1,0 +1,1619 @@
+% This file was created with JabRef 2.10.
+% Encoding: Cp1252
+
+
+@InProceedings{Hell2009a,
+  Title                    = {Building on Quicksand},
+  Author                   = {Pat Helland and
+ David Campbell},
+  Booktitle                = {CIDR},
+  Year                     = {2009},
+
+  Abstract                 = {Reliable systems have always been built out of unreliable components [1]. Early on, the reliable components were small such as mirrored disks or ECC (Error Correcting Codes) in core memory. These systems were designed such that failures of these small components were transparent to the application. Later, the size of the unreliable components grew larger and semantic challenges crept into the application when failures occurred.
+Fault tolerant algorithms comprise a set of idempotent sub- algorithms. Between these idempotent sub-algorithms, state is sent across the failure boundaries of the unreliable components. The failure of an unreliable component can then be tolerated as a takeover by a backup, which uses the last known state and drives forward with a retry of the idempotent sub-algorithm. Classically, this has been done in a linear fashion (i.e. one step at a time).
+As the granularity of the unreliable component grows (from a mirrored disk to a system to a data center), the latency to communicate with a backup becomes unpalatable. This leads to a more relaxed model for fault tolerance. The primary system will acknowledge the work request and its actions without waiting to ensure that the backup is notified of the work. This improves the responsiveness of the system because the user is not delayed behind a slow interaction with the backup.
+There are two implications of asynchronous state capture:
+1) Everything promised by the primary is probabilistic. There is always a chance that an untimely failure shortly after the promise results in a backup proceeding without knowledge of
+the commitment. Hence, nothing is guaranteed!
+2) Applications must ensure eventual consistency [20]. Since work may be stuck in the primary after a failure and reappear
+later, the processing order for work cannot be guaranteed.
+Platform designers are struggling to make this easier for their applications. Emerging patterns of eventual consistency and probabilistic execution may soon yield a way for applications to express requirements for a “looser” form of consistency while providing availability in the face of ever larger failures. As we will also point out in this paper, the patterns of probabilistic execution and eventual consistency are applicable to intermittently connected application patterns.
+This paper recounts portions of the evolution of these trends, attempts to show the patterns that span these changes, and talks about future directions as we continue to “build on quicksand”.},
+  Bibsource                = {DBLP, http://dblp.uni-trier.de},
+  Crossref                 = {DBLP:conf/cidr/2009},
+  Ee                       = {http://www-db.cs.wisc.edu/cidr/cidr2009/Paper_133.pdf},
+  Review                   = {Discusses basic principles for building fault-tolerant, stateful systems. As systems scale, designers must confront a fundamental tradeoff between availability and consistency. The paper offers insights for designing in the face of this inconvenient reality.
+
+The paper argues that app developers cannot be shielded from the complexity in which the application has logic for reconciling inconsistent.}
+}
+
+@InProceedings{Abad2011a,
+  Title                    = {DARE: Adaptive Data Replication for Efficient Cluster Scheduling},
+  Author                   = {Abad, Cristina L. and Lu, Yi and Campbell, Roy H.},
+  Booktitle                = {Proceedings of the 2011 IEEE International Conference on Cluster Computing},
+  Year                     = {2011},
+
+  Address                  = {Washington, DC, USA},
+  Pages                    = {159--168},
+  Publisher                = {IEEE Computer Society},
+  Series                   = {CLUSTER '11},
+
+  Abstract                 = {Placing data as close as possible to computation is a common practice of data intensive systems, commonly referred to as the data locality problem. By analyzing existing production systems, we confirm the benefit of data locality and find that data have different popularity and varying correlation of accesses. We propose DARE, a distributed adaptive data replication algorithm that aids the scheduler to achieve better data locality. DARE solves two problems, how many replicas to allocate for each file and where to place them, using probabilistic sampling and a competitive aging algorithm independently at each node. It takes advantage of existing remote data accesses in the system and incurs no extra network usage. Using two mixed workload traces from Face book, we show that DARE improves data locality by more than 7 times with the FIFO scheduler in Hadoop and achieves more than 85% data locality for the FAIR scheduler with delay scheduling. Turnaround time and job slowdown are reduced by 19% and 25\%, respectively.},
+  Acmid                    = {2065769},
+  Comment                  = {http://dx.doi.org/10.1109/CLUSTER.2011.26
+Printed},
+  Doi                      = {10.1109/CLUSTER.2011.26},
+  ISBN                     = {978-0-7695-4516-5},
+  Keywords                 = {MapReduce, replication, scheduling, locality, adaptive data replication},
+  Numpages                 = {10},
+  Review                   = {"uses the ElephantTrap structure to replicate popular files in a distributed manner."
+"Data with correlated acesses are distributed over different nodes as new replicas are created and old replicas expire."
+Thrasing is minimised by using sampling and an aging algorithm.
+
+Uses the Hadoop framework (Appache's open source implementation of MapReduce).
+
+uses: budget, threshold and p (probability).
+
+Thrashing: it is a high rate of replica creation and eviction.},
+  Url                      = {https://wiki.engr.illinois.edu/download/attachments/194990492/cluster11.pdf}
+}
+
+@Article{Abadi2012consistency,
+  Title                    = {Consistency Tradeoffs in Modern Distributed Database System Design: CAP is Only Part of the Story},
+  Author                   = {Abadi, D.},
+  Journal                  = {Computer},
+  Year                     = {2012},
+
+  Month                    = {Feb},
+  Number                   = {2},
+  Pages                    = {37-42},
+  Volume                   = {45},
+
+  Abstract                 = {The CAP theorem's impact on modern distributed database system design is more limited than is often perceived. Another tradeoff-between consistency and latency -has had a more direct influence on several well-known DDBSs. A proposed new formulation, PACELC, unifies this tradeoff with CAP.},
+  Doi                      = {10.1109/MC.2012.33},
+  ISSN                     = {0018-9162},
+  Keywords                 = {distributed databases;theorem proving;CAP throrem;PACELC formulation;consistency tradeoff;consistency-availability-partition tolerance theorem;distributed database system design;partition-availability-consistency-else-latency-consistency formulation;Computer architecture;Database systems;Distributed databases;Protocols;Wide area networks;CAP theorem;computer systems organization;database architectures;distributed database systems;networking and information technology},
+  Url                      = {http://cs-www.cs.yale.edu/homes/dna/papers/abadi-pacelc.pdf}
+}
+
+@InProceedings{Abdul-Wahid2007a,
+  Title                    = {Adaptive Distributed Database Replication Through Colonies of Pogo Ants},
+  Author                   = {Abdul-Wahid, S. and Andonie, R. and Lemley, J. and Schwing, J. and Widger, J.},
+  Booktitle                = {Parallel and Distributed Processing Symposium, 2007. IPDPS 2007. IEEE International},
+  Year                     = {2007},
+  Month                    = {March},
+  Pages                    = {1-8},
+
+  Abstract                 = {We address the problem of optimizing the distribution of partially replicated databases over a computer network. Replication is used to increase data availability in the presence of site or communication failures and to decrease retrieval costs by local access if possible. We present a new bio-inspired replication management approach which is adaptive, completely decentralized, and based on swarm intelligence. Each node has the autonomy to start at any time, depending on the internal state of its stored data objects, a redistribution process. "Redistribution" means replicate, create, delete, update, or move data objects to other nodes of the network. The redistribution process is a dynamic load-balancing scheme which runs with lower priority in the background. The system is event-driven, but the learning process is not synchronized with the events.},
+  Doi                      = {10.1109/IPDPS.2007.370575},
+  Keywords                 = {mobile agents;replicated databases;resource allocation;Pogo ant colony;adaptive distributed database;bioinspired replication management;computer network;data availability;dynamic load-balancing scheme;mobile agent;optimization;redistribution process;replicated database;swarm intelligence;Ant colony optimization;Computer network management;Computer science;Delay;Distributed databases;Information retrieval;Intelligent agent;Load management;Particle swarm optimization;Transaction databases},
+  Url                      = {http://www.cwu.edu/~andonie/MyPapers/IPDPS%20Long%20Beach%202007%20final.pdf}
+}
+
+@Article{Abubakar2014a,
+  Title                    = {Performance Evaluation of NoSQL Systems using YCSB in a Resource Austere Environment},
+  Author                   = {Yusuf Abubakar and Thankgod Sani Adeyi and Ibrahim Gambo Auta},
+  Journal                  = {International Journal of Applied Information Systems},
+  Year                     = {2014},
+
+  Month                    = {September},
+  Note                     = {Published by Foundation of Computer Science, New York, USA},
+  Number                   = {8},
+  Pages                    = {23-27},
+  Volume                   = {7},
+
+  Keywords                 = {benchmark},
+  Url                      = {http://research.ijais.org/volume7/number8/ijais14-451229.pdf}
+}
+
+@InProceedings{Alveirinho2010a,
+  Title                    = {Flexible and Efficient Resource Location in Large-Scale Systems},
+  Author                   = {Alveirinho, Jo{\~a}o and Paiva, Jo{\~a}o and Leit{\~a}o, Jo{\~a}o and Rodrigues, Lu{\'i}s},
+  Booktitle                = {Proceedings of the 4th ACM SIGOPS International Workshop on Large-Sacle Distributed Systems and Middleware},
+  Year                     = {2010},
+
+  Address                  = {Zurich, Switzerland},
+  Month                    = jul,
+  Publisher                = {ACM},
+  Series                   = {LADIS'10}
+}
+
+@Article{Apers1988a,
+  Title                    = {Data allocation in distributed database systems},
+  Author                   = {Peter M. G. Apers},
+  Journal                  = {ACM Transactions on Database Systems},
+  Year                     = {1988},
+  Pages                    = {263--304},
+  Volume                   = {13},
+
+  Abstract                 = {The problem of allocating the data of a database to the sites of a communication network is investigated. This problem deviates from the well-known file allocation problem in several aspects. First, the objects to be allocated are not known a priori; second, these objects are accessed by schedules that contain transmissions between objects to produce the result. A model that makes it possible to compare the cost of allocations is presented, the cost can be computed for different cost functions and for processing schedules produced by arbitrary query processing algorithms. For minimizing the total transmission cost, a method is proposed to determine the fragments to be allocated from the relations in the conceptual schema and the queries and updates executed by the users. For the same cost function, the complexity of the data allocation problem is investigated. Methods for obtaining optimal and heuristic solutions under various ways of computing the cost of an allocation are presented and compared. Two different approaches to the allocation management problem are presented and their merits are discussed.}
+}
+
+@InProceedings{Ardekani2014a,
+  Title                    = {A Self-Configurable Geo-Replicated Cloud Storage System},
+  Author                   = {Masoud Saeida Ardekani and Douglas B. Terry},
+  Booktitle                = {11th USENIX Symposium on Operating Systems Design and Implementation (OSDI 14)},
+  Year                     = {2014},
+
+  Address                  = {Broomfield, CO},
+  Month                    = Oct,
+  Pages                    = {367--381},
+  Publisher                = {USENIX Association},
+
+  Comment                  = {Printed},
+  ISBN                     = { 978-1-931971-16-4},
+  Url                      = {http://blogs.usenix.org/conference/osdi14/technical-sessions/presentation/ardekani}
+}
+
+@TechReport{Asco2014b,
+  Title                    = {Adaptable Location of Replicas Based on Ant Colony Algorithm},
+  Author                   = {Amadeo Asc\'{o}},
+  Institution              = {SyncFree},
+  Year                     = {2014},
+  Month                    = {September},
+
+  Abstract                 = {The amount of data being processed in Data Centres (DCs) keeps growing at enormous rate [20, 5, 4]. Some of the areas where the amount of stored data already reach terabytes (TBs) and even petabytess (PBs) are data mining, particle physics, climate modelling, high energy physics and astrophysics, to site few, data which needs to be shared and analysed [12, 15, 16]. DCs are able to ensure that stored data is highly accessible and scalable. But the location of a DC in respect of the client accessing the data has an impact on availability, access times (latency - accessibility) and costs derived from providing the data. Replicating some of the data at multiple sites is a possible solution to reduce some of these undesirable effects, [3, 1, 21]. An increase in the number of replications may result in a large bandwidth savings and lead to a reduction in user response time on reads. But keeping too many replicas of the data incurs in extra costs, such as extra replication traffic to keep all versions of the data coherent (writes), extra required storage and extra computational power [8]...},
+  Keywords                 = {Adaptive Replication, algorithm, ant colony},
+  Owner                    = {aas},
+  Timestamp                = {2014.11.06},
+  Url                      = {https://github.com/SyncFree/WP1/blob/master/AdaptiveReplication/docs/adaptiveAntReplication.pdf}
+}
+
+@TechReport{Asco2014a,
+  Title                    = {Formal Mathematical Requirements},
+  Author                   = {Amadeo Asc\'{o} and Tom Benedictus},
+  Institution              = {SyncFree},
+  Year                     = {2014},
+  Month                    = {July},
+
+  Abstract                 = {Building reliable distributed systems, given the CAP theorem where partitioning must always be considered, relays in the trade-offs between consistency and availability. Conflict-free Replicated Data Types (CRDTs) define replicated data types with mathematical properties that ensure absence of conflict and confer them Strong Eventual Consistency (SEC), a form of Eventual Consistency (EC) which it is a technique of compromise. Consistency is a property of the data, not the datastore, given that the rules to decide how to synchronise are business decisions. CRDTs have been created to ensure that we have a computer model for handling data which accommodates data’s nature in a world of vast communication and no definite central place of storage. Using an Relational Database Management System (RDBMS) for these type of systems can result in systems where a large amount of the processing is required to circumnavigate the shortcomings of a model that is not fit for purpose. A significant project for mediating this dilemma is SyncFree.
+This article provides a brief presentation of the natural language requirements, which shows the special nature of the paradigm shift forcing large-scale distributed applications away from RDBMS.},
+  Keywords                 = {use cases, TLA+, requirements},
+  Owner                    = {aas},
+  Timestamp                = {2014.11.06},
+  Url                      = {https://github.com/SyncFree/WP1/blob/master/D1.2/docs/D1_2.pdf}
+}
+
+@InProceedings{Baquero2014CRDTs,
+  Title                    = {Making Operation-based CRDTs Operation-based},
+  Author                   = {Baquero, Carlos and Almeida, Paulo S{\'e}rgio and Shoker, Ali},
+  Booktitle                = {Proceedings of the First Workshop on Principles and Practice of Eventual Consistency},
+  Year                     = {2014},
+
+  Address                  = {New York, NY, USA},
+  Pages                    = {7:1--7:2},
+  Publisher                = {ACM},
+  Series                   = {PaPEC '14},
+
+  Abstract                 = {Conflict-free Replicated Datatypes can simplify the design of predictable eventual consistency. They can be classified into state-based or operation-based. Operation-based approaches have the potential for allowing compact designs in both the sent message and the object state size, but current approaches are still far from this objective. Here we explore the design space for operation-based solutions, and we leverage the interaction with the middleware by offering a technique that delivers very compact solutions, while only broadcasting operation names and arguments.},
+  Acmid                    = {2596632},
+  Articleno                = {7},
+  Doi                      = {10.1145/2596631.2596632},
+  ISBN                     = {978-1-4503-2716-9},
+  Keywords                 = {eventual consistency, operation-based CRDTs},
+  Location                 = {Amsterdam, The Netherlands},
+  Numpages                 = {2},
+  Url                      = {http://doi.acm.org/10.1145/2596631.2596632}
+}
+
+@TechReport{Baquero1997a,
+  Title                    = {Specification of Convergent Abstract Data Types for
+Autonomous Mobile Computing},
+  Author                   = {Carlos Baquero and Francisco Moura},
+  Institution              = {Departamento de Inform{\'a}tica, Universidade do Minho},
+  Year                     = {1997},
+  Month                    = October,
+
+  Abstract                 = {Abstract Traditional replica control mechanisms such as quorum consensus, primary replicas and other strong consistency approaches are unable to provide a useful level of availability on unconstrained mobile environments. We define an environment thats exploits pair-wise communication and allows autonomous creation and joining of replicas while ensuring eventual convergence. A set of composable components (ADTs) are formally specified using the SETS Calculus. These components can be used to build simple distributed applications that take advantage of peer-to-peer communication between mobile hosts.},
+  Key                      = {scadt4},
+  Keywords                 = {mobile computing, ADTs, Replication, SETS Calculus},
+  Url                      = {http://gsd.di.uminho.pt/publications/gsd-1997-06}
+}
+
+@InProceedings{syn:rep:1580,
+  Title                    = {Exploiting our computational surroundings for better mobile collaboration},
+  Author                   = {Jo{{\~a}}o Barreto and Paulo Ferreira and Marc Shapiro},
+  Booktitle                = intconfon # {Mobile Data Management (MDM)},
+  Year                     = {2007},
+
+  Address                  = {Mannheim, Germany},
+  Month                    = {May},
+  Pages                    = {110--117},
+
+  Comment                  = {INT LIP6 REGAL},
+  Keywords                 = {syn,rep},
+  Local-url                = {./papers/DecoupledConsistency-MDM-2007.pdf},
+  Url                      = {http://www.computer.org/portal/web/csdl/doi/10.1109/MDM.2007.24}
+}
+
+@TechReport{Benedictus2014a,
+  Title                    = {D1.1 Natural language requirements},
+  Author                   = {Tom Benedictus},
+  Institution              = {SyncFree},
+  Year                     = {2014},
+  Month                    = {May},
+
+  Keywords                 = {use cases, arge-scale computation},
+  Owner                    = {aas},
+  Timestamp                = {2014.11.06},
+  Url                      = {https://syncfree.lip6.fr/dokuwiki/lib/exe/fetch.php?media=syncfree:workpackages:wp1_d1.1_use_cases_in_natural_language.pdf}
+}
+
+@TechReport{Benedictus2014b,
+  Title                    = {Optimistic Control for a Critical System},
+  Author                   = {Tom Benedictus and Jordi Martori and Rune Skou Larsen and Pascal Urso},
+  Institution              = {SyncFree},
+  Year                     = {2014},
+  Month                    = {September},
+
+  Abstract                 = {For the last couple of decades building a new IT system has often started with deciding on which Relational Database Management System (RDBMS) to use. A number of factors have proven that this approach comes with drawbacks. It has only been the brave who dared to say that Atomicity, Consistency, Isolation, Durability (ACID) was not always desirable and with Brewer’s CAP theorem the debate has flamed around whether you could have consistency, availability, and partition tolerance at the same time. Data now exists in mobile devices, in cloud databases, and in transition on communication lines. This makes par- tition tolerance a feature of any contemporary solution and availability is a requirement that may overshadow the aim for consistency...},
+  Keywords                 = {FMK},
+  Owner                    = {aas},
+  Timestamp                = {2014.11.06},
+  Url                      = {https://github.com/SyncFree/WP1/blob/master/OCCSDoc/CriticalOptimisticEventualConsistency_0.1.pdf}
+}
+
+@TechReport{rep:optim:sh126,
+  Title                    = {Telex: Principled System Support for Write-Sharing in Collaborative Applications},
+  Author                   = {Benmouffok, Lamia and Busca, Jean-Michel and Manuel Marqu{\`e}s, Joan and Shapiro, Marc and Sutra, Pierre and Tsoukalas, Georgios},
+  Institution              = {INRIA},
+  Year                     = {2008},
+
+  Address                  = rocq,
+  Month                    = {May},
+  Note                     = {Use \cite{rep:sh133} instead!},
+  Number                   = {6546},
+  Type                     = rr,
+
+  Keywords                 = {rep,optim},
+  Local-url                = {./papers/Telex-principled-RR-6546-2008-06.pdf},
+  Url                      = {http://hal.inria.fr/inria-00281329/en/}
+}
+
+@InProceedings{Benmouffok2009a,
+  Title                    = {Telex: A Semantic Platform for Cooperative Application Development},
+  Author                   = {Lamia Benmouffok and Jean-Michel Busca and Joan Manuel Marqu{\`e}s and Marc Shapiro and Pierre Sutra and Georgios Tsoukalas},
+  Booktitle                = cfse,
+  Year                     = {2009},
+
+  Address                  = {Toulouse, France},
+  Month                    = {September},
+
+  Comment                  = {NAT LIP6 REGAL},
+  Local-url                = {./papers/Telex-CFSE-2009.pdf},
+  Url                      = {http://lip6.fr/Marc.Shapiro/papers/Telex-CFSE-2009.pdf},
+  X-editorial-board        = {yes},
+  X-international-audience = {yes},
+  X-pays                   = {GR, ES},
+  X-proceedings            = {yes}
+}
+
+@InProceedings{Benmouffok2007a,
+  Title                    = {Semantic Middleware for Designing Collaborative Applications in Mobile Environment},
+  Author                   = {Lamia Benmouffok and Jean-Michel Busca and Marc Shapiro},
+  Booktitle                = {Middleware for Network Eccentric and Mobile Apps.\ W.\ ({MiNEMA})},
+  Year                     = {2007},
+
+  Address                  = {Magdeburg, Germany},
+  Month                    = {September},
+  Pages                    = {58--61},
+
+  Comment                  = {INT LIP6 REGAL},
+  Keywords                 = {app,rep},
+  Local-url                = {./papers/benmouffok-busca-minema-2007.pdf},
+  Url                      = {http://minema.cs.uni-magdeburg.de/downloads/folien/minema07-proceedings.pdf}
+}
+
+@InProceedings{Bonvin2010a,
+  Title                    = {A Self-organized, Fault-tolerant and Scalable Replication Scheme for Cloud Storage},
+  Author                   = {Bonvin, Nicolas and Papaioannou, Thanasis G. and Aberer, Karl},
+  Booktitle                = {Proceedings of the 1st ACM Symposium on Cloud Computing},
+  Year                     = {2010},
+
+  Address                  = {New York, NY, USA},
+  Pages                    = {205--216},
+  Publisher                = {ACM},
+  Series                   = {SoCC '10},
+
+  Abstract                 = {Failures of any type are common in current datacenters, partly due to the higher scales of the data stored. As data scales up, its availability becomes more complex, while different availability levels per application or per data item may be required. In this paper, we propose a self-managed key-value store that dynamically allocates the resources of a data cloud to several applications in a cost-efficient and fair way. Our approach offers and dynamically maintains multiple differentiated availability guarantees to each different application despite failures. We employ a virtual economy, where each data partition (i.e. a key range in a consistent-hashing space) acts as an individual optimizer and chooses whether to migrate, replicate or remove itself based on net benefit maximization regarding the utility offered by the partition and its storage and maintenance cost. As proved by a game-theoretical model, no migrations or replications occur in the system at equilibrium, which is soon reached when the query load and the used storage are stable. Moreover, by means of extensive simulation experiments, we have proved that our approach dynamically finds the optimal resource allocation that balances the query processing overhead and satisfies the availability objectives in a cost-efficient way for different query rates and storage requirements. Finally, we have implemented a fully working prototype of our approach that clearly demonstrates its applicability in real settings.},
+  Acmid                    = {1807162},
+  Doi                      = {10.1145/1807128.1807162},
+  ISBN                     = {978-1-4503-0036-0},
+  Keywords                 = {decentralized optimization, equilibrium, net benefit maximization, rational strategies},
+  Location                 = {Indianapolis, Indiana, USA},
+  Numpages                 = {12},
+  Url                      = {http://infoscience.epfl.ch/record/146774/files/socc048-bonvin.pdf}
+}
+
+@Article{Bouajjani2014a,
+  Title                    = {Verifying Eventual Consistency of Optimistic Replication Systems},
+  Author                   = {Bouajjani, Ahmed and Enea, Constantin and Hamza, Jad},
+  Journal                  = {SIGPLAN Not.},
+  Year                     = {2014},
+
+  Month                    = jan,
+  Number                   = {1},
+  Pages                    = {285--296},
+  Volume                   = {49},
+
+  Abstract                 = {We address the verification problem of eventual consistency of optimistic replication systems. Such systems are typically used to implement distributed data structures over large scale networks. We introduce a formal definition of eventual consistency that applies to a wide class of existing implementations, including the ones using speculative executions. Then, we reduce the problem of checking eventual consistency to reachability and model checking problems. This reduction enables the use of existing verification tools for message-passing programs in the context of verifying optimistic replication systems. Furthermore, we derive from these reductions decision procedures for checking eventual consistency of systems implemented as finite-state programs communicating through unbounded unordered channels.},
+  Acmid                    = {2535877},
+  Address                  = {New York, NY, USA},
+  Doi                      = {10.1145/2578855.2535877},
+  ISSN                     = {0362-1340},
+  Issue_date               = {January 2014},
+  Keywords                 = {message passing concurrency, model checking, static program analysis},
+  Numpages                 = {12},
+  Publisher                = {ACM},
+  Url                      = {http://doi.acm.org/10.1145/2578855.2535877}
+}
+
+@InProceedings{Brewer2000cap,
+  Title                    = {Towards Robust Distributed Systems (Abstract)},
+  Author                   = {Brewer, Eric A.},
+  Booktitle                = {Proceedings of the Nineteenth Annual ACM Symposium on Principles of Distributed Computing},
+  Year                     = {2000},
+
+  Address                  = {New York, NY, USA},
+  Pages                    = {7--},
+  Publisher                = {ACM},
+  Series                   = {PODC '00},
+
+  Acmid                    = {343502},
+  Doi                      = {10.1145/343477.343502},
+  ISBN                     = {1-58113-183-6},
+  Location                 = {Portland, Oregon, USA},
+  Url                      = {http://doi.acm.org/10.1145/343477.343502}
+}
+
+@MastersThesis{Briquemont2014a,
+  Title                    = {Optimising Client-side Geo-replication with Partially Replicated Data Structures},
+  Author                   = {Iwan Briquemont},
+  School                   = {Louvain-la-Neuve},
+  Year                     = {2014},
+  Month                    = {September},
+
+  Abstract                 = {Current mobile and web applications replicate data increasingly at the client-side to reduce latency and to tolerate network issues. Mobile devices have however limited storage and network capabilities. Thus large data structures at the server-side need to be split before being sent to the client and reintegrated when modified, in order to keep a low memory and network usage. Ad-hoc solutions tend to be poorly integrated with server-side storage, and do not have well-defined consistency guarantees.
+We propose a replication mechanism built upon conflict-free replicated data types (CRDT) to seamlessly replicate parts of large data structures. We define partial replication and give an approach to keep the strong eventual consistency properties of CRDTs with par- tial replicas. We integrate our mechanism into SwiftCloud, a transactional system that brings geo-replication to the client. We evaluate the solution with a content-sharing ap- plication. Our results show improvements in bandwidth, memory, and latency usage over both classical geo-replication and the existing SwiftCloud solution.},
+  Keywords                 = {partial replication, CRDT, CPRDT},
+  Owner                    = {aas},
+  Timestamp                = {2014.09.23},
+  Url                      = {http://www.info.ucl.ac.be/~pvr/MemoireIwanBriquemont.pdf}
+}
+
+@Proceedings{Briquemont2015a,
+  Title                    = {Conflict-free Partially Replicated Data Types},
+  Year                     = {2015},
+  Organization             = {PPoPP},
+
+  Abstract                 = {Designers of large user-oriented distributed applications, such as social networks and mobile applications, have adopted measures to improve the responsiveness of their applications. Latency is a major concern as people are very sensitive to it. Geo-replication is a commonly used mechanism to bring the data closer to the clients. Nevertheless, reaching the closest datacenter can still be consid- erably slow. Thus, in order to further reduce the access latency, mobile and web applications may be forced to replicate data at the client-side. Nevertheless, fully replicating large data structures may still be a waste of resources, specially for thin-clients.
+We propose a replication mechanism built upon conflict-free replicated data types (CRDT) to seamlessly replicate parts of large data structures. We define partial replication and give an approach to keep the strong eventual consistency properties of CRDTs with partial replicas. We integrate our mechanism into SwiftCloud, a transactional system that brings geo-replication to the client. We evaluate the solution with a content-sharing application. Our results show improvements in bandwidth, memory, and latency usage over both classical geo-replication and the existing SwiftCloud solution.},
+  Author                   = {Iwan Briquemont and Manuel Bravo and Zhongmiao Li and Peter Van Roy},
+  Comment                  = {Printed},
+  File                     = {:/Users/aas/Documents/Projects/Documents/Papers/ppopp15-briquemont.pdf:PDF},
+  Keywords                 = {Partial Replication, CRDT, CPRDT, Distributed Data Structures},
+  Owner                    = {aas},
+  Review                   = {The general idea is to distribute the data and only replicate the data parts in each part of the system. This reduces the bandwidth, latency and memory.
+
+But CPRDTs (Conflict-free Partially Replicated Data Types) have a negative impact on the cache hit rate, which has to be weighted against the upper bound on the latency it provides.},
+  Timestamp                = {2014.09.23}
+}
+
+@InProceedings{Buchholz2004a,
+  Title                    = {Replica Placement in Adaptive Content Distribution Networks},
+  Author                   = {Buchholz, Sven and Buchholz, Thomas},
+  Booktitle                = {Proceedings of the 2004 ACM Symposium on Applied Computing},
+  Year                     = {2004},
+
+  Address                  = {New York, NY, USA},
+  Pages                    = {1705--1710},
+  Publisher                = {ACM},
+  Series                   = {SAC '04},
+
+  Abstract                 = {Adaptive content networking is a promising new approach aimed at scalable delivery of content to a pervasive client population. By adaptive content delivery networks (A-CDN) content is adapted, replicated and delivered to the clients in a cost-quality-optimized fashion. The integration of content adaptation into CDNs minimizes the interference of adaptation with replication effectiveness.The paper presents ongoing research on replica placement in A-CDNs. Based on a static model for cost-quality-optimized adaptive content networking, algorithms to optimize the placement of replicas in the surrogates of an A-CDN are discussed. The dynamics of a real Web scenario are not explicitly taken into account by the algorithms. Whereas long-term dynamics are dealt with by periodic adjustments of the underlying model and recalculation of an optimal placement, short term dynamics are considered to result in inaccuracies in the system and load model. Therefore, algorithms being tolerant to an imperfect underlying model are chosen.As adaptation path composition turns out to be a subproblem of replica placement in A-CDNs, we also introduce an algorithm for optimal adaptation path composition.},
+  Acmid                    = {968238},
+  Comment                  = {Printed},
+  Doi                      = {10.1145/967900.968238},
+  ISBN                     = {1-58113-812-1},
+  Keywords                 = {CDN, adaptation path composition, content adaptation, replica placement},
+  Location                 = {Nicosia, Cyprus},
+  Numpages                 = {6},
+  Url                      = {http://doi.acm.org/10.1145/967900.968238}
+}
+
+@TechReport{Chanthadavong2014a,
+  Title                    = {Internet of Things to drive explosion of useful data: EMC},
+  Author                   = {Aimee Chanthadavong},
+  Institution              = {ZDNet},
+  Year                     = {2014},
+  Month                    = {April},
+
+  Abstract                 = {More than one-third of useful data that businesses will use is set be collected from the Internet of Things (IoT), according to a recent study by EMC.},
+  Owner                    = {aas},
+  Timestamp                = {2014.09.24},
+  Url                      = {http://www.zdnet.com/internet-of-things-to-drive-explosion-of-useful-data-emc-7000028376}
+}
+
+@TechReport{Cisco2014a,
+  Title                    = {The Zettabyte Era-Trends and Analysis},
+  Author                   = {Cisco},
+  Institution              = {Cisco},
+  Year                     = {2014},
+  Month                    = {June},
+
+  Abstract                 = {This document is part of the Cisco® Visual Networking Index (VNI), an ongoing initiative to track and forecast the impact of visual networking applications. The document presents some of the main findings of Cisco’s global IP traffic forecast and explores the implications of IP traffic growth for service providers. For a more detailed look at the forecast and the methodology behind it},
+  Keywords                 = {IP traffic},
+  Owner                    = {aas},
+  Timestamp                = {2014.09.24},
+  Url                      = {http://www.cisco.com/c/en/us/solutions/collateral/service-provider/visual-networking-index-vni/VNI_Hyperconnectivity_WP.pdf}
+}
+
+@Misc{FMK,
+  Title                    = {{FMK}},
+
+  Author                   = {{Danish Helath and Medicines Authority}},
+  HowPublished             = {\url{http://sundhedsstyrelsen.dk/en/medicines/medicine-profile}},
+  Year                     = {2013},
+
+  Bdsk-url-1               = {http://sundhedsstyrelsen.dk/en/medicines/medicine-profile%20http://sundhedsstyrelsen.dk/en/medicines/medicine-profile},
+  Date-added               = {2014-07-09 11:30:25 +0000},
+  Date-modified            = {2014-07-09 11:41:50 +0000}
+}
+
+@Article{Dao1999a,
+  Title                    = {Semantic Multicast: Intelligently Sharing Collaborative Sessions},
+  Author                   = {Son K. Dao and Brad Perry and Eddie C. Shek and Asha Vellaikal and Richard R. Muntz and Lixia Zhang and Miodrag Potkonjak and Ouri Wolfson},
+  Journal                  = {ACM Computing Surveys},
+  Year                     = {1999},
+  Volume                   = {3},
+
+  Abstract                 = {We present novel methods for efficiently sharing the content produced during collaborative interactions among internetworked users. We introduce the concept of semantic multicast to implement a large-scale shared interaction infrastructure providing mechanisms for collecting, indexing, and disseminating the information produced in collaborative sessions. This infrastructure captures the interactions between users (as video, text, audio, and data streams) and promotes a philosophy of filtering, archiving, and correlating collaborative sessions in user and context sensitive subgroupings. The semantic multicast service efficiently disseminate every piece of potentially relevant information to every user engaged in the collaborative session, making the aggregated streams of the collaborative session available to the correct users at the right amount of detail. Given a collaborative session of many overlapping streams, semantic multicast helps decide which streams should be propagated to an...},
+  Url                      = {http://www.cs.uic.edu/~wolfson/mobile_ps/acmsurvey99.pdf}
+}
+
+@Article{Dayyani2013a,
+  Title                    = {A Comparative Study of Replication Techniques in Grid Computing Systems},
+  Author                   = {Sheida Dayyani and
+ Mohammad{-}Reza Khayyambashi},
+  Journal                  = {CoRR},
+  Year                     = {2013},
+  Volume                   = {abs/1309.6723},
+
+  Bibsource                = {dblp computer science bibliography, http://dblp.org},
+  Biburl                   = {http://dblp.uni-trier.de/rec/bib/journals/corr/DayyaniK13},
+  Comment                  = {Printed},
+  Keywords                 = {survey, replication},
+  Timestamp                = {Tue, 30 Sep 2014 15:45:46 +0200},
+  Url                      = {http://arxiv.org/abs/1309.6723}
+}
+
+@Article{DeCandia2007a,
+  Title                    = {Dynamo: Amazon's Highly Available Key-value Store},
+  Author                   = {DeCandia, Giuseppe and Hastorun, Deniz and Jampani, Madan and Kakulapati, Gunavardhan and Lakshman, Avinash and Pilchin, Alex and Sivasubramanian, Swaminathan and Vosshall, Peter and Vogels, Werner},
+  Journal                  = {SIGOPS Oper. Syst. Rev.},
+  Year                     = {2007},
+
+  Month                    = oct,
+  Number                   = {6},
+  Pages                    = {205--220},
+  Volume                   = {41},
+
+  Acmid                    = {1294281},
+  Address                  = {New York, NY, USA},
+  Doi                      = {10.1145/1323293.1294281},
+  ISSN                     = {0163-5980},
+  Issue_date               = {December 2007},
+  Keywords                 = {performance, reliability, scalability},
+  Numpages                 = {16},
+  Publisher                = {ACM},
+  Url                      = {http://doi.acm.org/10.1145/1323293.1294281}
+}
+
+@InProceedings{Deftu2013a,
+  Title                    = {A Scalable Conflict-Free Replicated Set Data Type},
+  Author                   = {Deftu, Andrei and Griebsch, Jan},
+  Booktitle                = {Proceedings of the 2013 IEEE 33rd International Conference on Distributed Computing Systems},
+  Year                     = {2013},
+
+  Address                  = {Washington, DC, USA},
+  Pages                    = {186--195},
+  Publisher                = {IEEE Computer Society},
+  Series                   = {ICDCS '13},
+
+  Abstract                 = {Replication of state is the fundamental approach to achieve scalability and availability. In order to maintain or restore replica consistency under updates, some form of synchronization is needed. Conflict-free Replicated Data Types (CRDTs) ensure eventual consistency, such that replicas converge to a common state, equivalent to a correct sequential execution without foreground synchronization. A particular CRDT is the set data type, which is a pervasive abstraction for storing collections of unique elements and constitutes an important building block for other, more complex data structures. Since the original specification is not scalable, we improve it by introducing an efficient algorithm for sending deltas of updates between replicas and by partitioning a set replica into disjunctive subsets. We further add support for limited-lifetime elements, which, in turn, enable simple garbage collection strategies to address the problem of unbounded database growth. Lastly, implementation details and evaluation results of a client library for this data structure are presented.},
+  Acmid                    = {2549731},
+  Doi                      = {10.1109/ICDCS.2013.10},
+  ISBN                     = {978-0-7695-5000-8},
+  Keywords                 = {eventual consistency, data replication, distributed systems},
+  Numpages                 = {10},
+  Url                      = {http://dx.doi.org/10.1109/ICDCS.2013.10}
+}
+
+@InProceedings{Dong2008a,
+  Title                    = {On Dynamic Replication Strategies in Data Service Grids},
+  Author                   = {Xiaohua Dong and Ji Li and Zhongfu Wu and Dacheng Zhang and Jie Xu},
+  Booktitle                = {Object Oriented Real-Time Distributed Computing (ISORC), 2008 11th IEEE International Symposium on},
+  Year                     = {2008},
+  Month                    = {May},
+  Pages                    = {155-161},
+
+  Abstract                 = {Service oriented architecture (SOA) allows multiple and heterogeneous data resources to be integrated within a single service while hiding the implementation details and formats of data resources from users of the service. However, data sources for a service are often distributed geographically and connected with long-latency networks; time and bandwidth consumption of data transportation may have an impact on the system performance. Dynamic data replication is a practical solution to this problem. By replicating data copies to appropriate sites, this approach aims to reduce time and bandwidth consumptions over networks. Existing strategies for dynamic replication are typically based on so-called single-location algorithms for identifying a single site for data replication. In this paper we discuss the issues with single-location strategies in large-scale data integration applications, and examine potential multiple-location schemes. Dynamic multiple-location replication is NP-complete in nature. We therefore transform the multiple-location problem into several classical mathematical problems with different parameter settings, for which efficient approximation algorithms exist. Experimental results indicate that unlike single-location strategies our multiple-location schemes are efficient with respect to access latency and bandwidth consumption, especially when the requesters of a data set are distributed over a large scale of locations.},
+  Doi                      = {10.1109/ISORC.2008.66},
+  Keywords                 = {computational complexity;grid computing;software architecture;NP-complete;data resources;data service grids;data transportation;dynamic replication strategies;long-latency networks;multiple-location problem;service oriented architecture;single-location algorithms;Approximation algorithms;Bandwidth;Delay;Distributed computing;Heuristic algorithms;Large scale integration;Large-scale systems;Service oriented architecture;System performance;Transportation;Approximation algorithms;SOA;dynamic data replication;multiple-location replication}
+}
+
+@PhdThesis{dorigo1992a,
+  Title                    = {Optimization, Learning and Natural Algorithms},
+  Author                   = {Dorigo, M.},
+  School                   = {Politecnico di Milano, Italy},
+  Year                     = {1992},
+
+  Citeulike-article-id     = {6415913},
+  Keywords                 = {ant, learning, swarm},
+  Posted-at                = {2009-12-21 09:47:17}
+}
+
+@Misc{syncfree,
+  Title                    = {SyncFree "Large-scale computation without synchronisation''},
+
+  Author                   = {{European research project, grant agreement 609551}},
+  HowPublished             = {\url{http://syncfree.lip6.fr}},
+  Month                    = {October},
+  Year                     = {2013},
+
+  Bdsk-url-1               = {http://syncfree.lip6.fr},
+  Date-added               = {2014-07-09 11:33:56 +0000},
+  Date-modified            = {2014-07-09 12:19:09 +0000}
+}
+
+@Article{Ghosh2014a,
+  Title                    = {Automatically Extracting Requirements Specifications from
+ Natural Language},
+  Author                   = {Shalini Ghosh and
+ Daniel Elenius and
+ Wenchao Li and
+ Patrick Lincoln and
+ Natarajan Shankar and
+ Wilfried Steiner},
+  Journal                  = {CoRR},
+  Year                     = {2014},
+  Volume                   = {abs/1403.3142},
+
+  Bibsource                = {DBLP, http://dblp.uni-trier.de},
+  Ee                       = {http://arxiv.org/abs/1403.3142},
+  Url                      = {http://arxiv.org/pdf/1403.3142.pdf}
+}
+
+@Article{Gilbert2002a,
+  Title                    = {Brewer's Conjecture and the Feasibility of Consistent, Available, Partition-tolerant Web Services},
+  Author                   = {Gilbert, Seth and Lynch, Nancy},
+  Journal                  = {SIGACT News},
+  Year                     = {2002},
+
+  Month                    = jun,
+  Number                   = {2},
+  Pages                    = {51--59},
+  Volume                   = {33},
+
+  Acmid                    = {564601},
+  Address                  = {New York, NY, USA},
+  Doi                      = {10.1145/564585.564601},
+  ISSN                     = {0163-5700},
+  Issue_date               = {June 2002},
+  Numpages                 = {9},
+  Publisher                = {ACM},
+  Url                      = {http://doi.acm.org/10.1145/564585.564601}
+}
+
+@InProceedings{Goel2006a,
+  Title                    = {Data Replication Strategies in Wide Area Distributed Systems},
+  Author                   = {Sushant Goel and Rajkumar Buyya},
+  Booktitle                = {Enterprise Service Computing: From Concept to Deployment},
+  Year                     = {2006},
+  Editor                   = {Robin G. Qiu},
+  Pages                    = {211--241},
+  Publisher                = {Idea Group Inc},
+
+  Abstract                 = {Effective data management in today’s competitive enterprise environment is an important issue. Data is information; and information is knowledge. Hence, fast and effective access to data is very important. Replication is one such widely accepted phenomenon in distributed environment, where data is stored at more than one site for performance and reliability reasons. Applications and architecture of distributed computing has changed drastically during last decade and so has replication protocols. Different replication protocols may be suitable for different applications. In this manuscript we present a survey of replication algorithms for different distributed storage and content management systems ranging from distributed Database Management Systems, Service-oriented Data Grids, Peer-to-Peer (P2P) Systems, and Storage Area Networks. We discuss the replication algorithms of more recent architectures, Data Grids and P2P systems, in details. We briefly discuss replication in storage area network and Internet.},
+  Comment                  = {ISBN 1-599044181-2},
+  Url                      = {http://www.cloudbus.org/papers/DataReplicationInDSChapter2006.pdf}
+}
+
+@InCollection{Guerraoui1996a,
+  Title                    = {Fault-tolerance by replication in distributed systems},
+  Author                   = {Guerraoui, Rachid and Schiper, André},
+  Booktitle                = {Reliable Software Technologies -- Ada Europe 96},
+  Publisher                = {Springer Berlin Heidelberg},
+  Year                     = {1996},
+  Editor                   = {Strohmeier, Alfred},
+  Pages                    = {38--57},
+  Series                   = {Lecture Notes in Computer Science},
+  Volume                   = {1088},
+
+  Doi                      = {10.1007/BFb0013477},
+  ISBN                     = {978-3-540-61317-6},
+  Language                 = {English},
+  Url                      = {http://dx.doi.org/10.1007/BFb0013477}
+}
+
+@Article{app:syn:optim:1487,
+  Title                    = {Pushing log-based reconciliation},
+  Author                   = {Youssef Hamadi and Marc Shapiro},
+  Journal                  = {Int.\ J.\ on Artif.\ Intelligence Tools (IJAIT)},
+  Year                     = {2005},
+
+  Month                    = jun,
+  Number                   = {3--4},
+  Pages                    = {445--458},
+  Volume                   = {14},
+
+  Comment                  = {INT LIP6 REGAL},
+  Keywords                 = {app,syn,optim},
+  Local-url                = {./papers/ijait05Log.pdf},
+  Url                      = {http://dx.doi.org/10.1142/S0218213005002193}
+}
+
+@InProceedings{Hansen2011a,
+  Title                    = {Towards a Software Ecosystem of Health- care Services},
+  Author                   = {Klaus Marius Hansen and Mads Ingstrup and Morten Kyng and Jesper Wolff Olsen},
+  Booktitle                = {Infrastructures for Healthcare: Global Healthcare: Proceedings of the 3rd International Workshop 2011},
+  Year                     = {2011},
+  Pages                    = {27--36},
+
+  Keywords                 = {healhealth, FMK},
+  Url                      = {http://www.itu.dk/people/lrc/ProcInfraHealth2011.PDF}
+}
+
+@InProceedings{helland2007life,
+  Title                    = {Life beyond Distributed Transactions: an Apostate's Opinion.},
+  Author                   = {Helland, Pat},
+  Booktitle                = {CIDR},
+  Year                     = {2007},
+  Pages                    = {132--141},
+
+  Abstract                 = {This paper describes the design of ElephantTrap, a device which aims to cache the largest flows (the “elephants”) on a network link. ElephantTrap differs from previous work on identifying large flows in one crucial sense: it does not attempt to accurately estimate the size of the flows it is trapping. This leads to an extremely lightweight design and a surprisingly good performance. ElephantTrap can be employed in the line cards of switches and routers and be used for diagnostics, anomaly detection and traffic engineering.},
+  Date-added               = {2014-07-09 12:41:01 +0000},
+  Date-modified            = {2014-07-09 12:41:01 +0000}
+}
+
+@InProceedings{Herrmann2007,
+  Title                    = {Self-organizing Replica Placement - A Case Study on Emergence},
+  Author                   = {Herrmann, K.},
+  Booktitle                = {Self-Adaptive and Self-Organizing Systems, 2007. SASO '07. First International Conference on},
+  Year                     = {2007},
+  Month                    = {July},
+  Pages                    = {13-22},
+
+  Abstract                 = {The concept of self-organization is rapidly gaining importance in the area of distributed computing system However, we still lack the necessary means for engineering such system in a standardized way since their common properties are rather abstract, and the mechanisms from which self-organization emerges are too diverse. Therefore,it has become common practice to engineer computing systems by taking inspirations from well-known case studies of biological systems. However, the concepts found in such systems are in many cases only partially transferable to the domain of distributed computing systems since biological systems are subject to vastly different constraints compared to those in a computing system. Our contributions in this paper are the following: (i) We present a case study of a self-organizing software system that originates from the domain of distributed computing systems. Therefore, its concepts can be exploited in other distributed computing systems much more directly, (ii) We give a detailed analysis of the emergent properties of the system and the mechanisms by which they arise, (iii) We generalize the mechanisms by which self-organization emerges in this system and present a catalog of design questions that may help engineers in creating arbitrary self-organizing systems.},
+  Doi                      = {10.1109/SASO.2007.54},
+  Keywords                 = {artificial intelligence;grid computing;self-adjusting systems;ad hoc service grid;ambient intelligence;distributed computing system;self-organizing replica placement;self-organizing software system;systems engineer;Biological systems;Biology computing;Computer science;Design engineering;Distributed computing;Engineering management;Mechanical factors;Scalability;Software systems;Systems engineering and theory}
+}
+
+@Article{Jeon2014a,
+  Title                    = {A Priority based Adaptive Data Replication Strategy for Hierarchical Cluster Grids},
+  Author                   = {Junsang Kim; Won Joo Lee; Changho Jeon},
+  Journal                  = {International Journal of Multimedia \& Ubiquitous Engineering},
+  Year                     = {2014},
+  Number                   = {6},
+  Pages                    = {127--140},
+  Volume                   = {9},
+
+  Abstract                 = {In this paper, we propose the priority based adaptive data replication strategy for the reduction of the processing time in hierarchical cluster grids. Because the proposed replication strategy reflects data access patterns of users in real-time, job execution time increment due to changes in the access pattern can be reduced. We assign a Priority Value (PV) to all replicas for implementation of the replication strategy and use it for criteria of replica generation/deletion.
+The PV reflects the access pattern because it is calculated from an access count and capacity of the replica. And the PV is re-calculated in real-time whenever data is requested by users. Therefore the proposed replication strategy can be reduced job execution time in data grids to recover low data availability due to changes in the access pattern.
+We compare the performances of priority based adaptive data replication strategy and Popular File Replicate First (PFRF) algorithm. For this simulation, we generate 200 files sized 1GB on average and 6000 jobs, and assign these to users in each cluster. The results from simulation show that average job execution time of the proposed strategy was reduced from the no-replication by approximately 37\% and the PFRF algorithm by approximately 21\%.},
+  Keywords                 = {Data grids, Replication strategy, PADRE strategy, Hierarchical cluster grids},
+  Owner                    = {aas},
+  Review                   = {They only compare their algorithm to the case where no-replication but not with other already available approaches, i.e. DARE.},
+  Timestamp                = {2014.09.15},
+  Url                      = {http://www.sersc.org/journals/IJMUE/vol9_no6_2014/13.pdf}
+}
+
+@Article{Jimenez-Peris2003a,
+  Title                    = {Are Quorums an Alternative for Data Replication?},
+  Author                   = {Jim{\'e}nez-Peris, Ricardo and Pati\~{n}o-Mart\'{\i}nez, M. and Alonso, Gustavo and Kemme, Bettina},
+  Journal                  = {ACM Trans. Database Syst.},
+  Year                     = {2003},
+
+  Month                    = sep,
+  Number                   = {3},
+  Pages                    = {257--294},
+  Volume                   = {28},
+
+  Abstract                 = {Data replication is playing an increasingly important role in the design of parallel information systems. In particular, the widespread use of cluster architectures often requires to replicate data for performance and availability reasons. However, maintaining the consistency of the different replicas is known to cause severe scalability problems. To address this limitation, quorums are often suggested as a way to reduce the overall overhead of replication. In this article, we analyze several quorum types in order to better understand their behavior in practice. The results obtained challenge many of the assumptions behind quorum based replication. Our evaluation indicates that the conventional read-one/write-all-available approach is the best choice for a large range of applications requiring data replication. We believe this is an important result for anybody developing code for computing clusters as the read-one/write-all-available strategy is much simpler to implement and more flexible than quorum-based approaches. In this article, we show that, in addition, it is also the best choice using a number of other selection criteria.},
+  Acmid                    = {937601},
+  Address                  = {New York, NY, USA},
+  Doi                      = {10.1145/937598.937601},
+  ISSN                     = {0362-5915},
+  Issue_date               = {September 2003},
+  Keywords                 = {Data replication, availability, distributed transactions., quorums, scalability},
+  Numpages                 = {38},
+  Publisher                = {ACM},
+  Url                      = {http://lsd.ls.fi.upm.es/lsd/papers/2003/tods03.pdf}
+}
+
+@InProceedings{Jimenez-Peris2001a,
+  Title                    = {How to select a replication protocol according to scalability, availability and communication overhead},
+  Author                   = {Jimenez-Peris, R. and Patino-Martinez, M. and Alonso, G. and Kernme, B.},
+  Booktitle                = {Reliable Distributed Systems, 2001. Proceedings. 20th IEEE Symposium on},
+  Year                     = {2001},
+  Pages                    = {24-33},
+
+  Abstract                 = {Data replication is playing an increasingly important role in the design of parallel information systems. In particular, the widespread use of cluster architectures in high-performance computing has created many opportunities for applying data replication techniques in new areas. For instance, as part of work related to cluster computing in bioinformatics, we have been confronted with the problem of having to choose an optimal replication strategy in terms of scalability, availability and communication overhead. Thus, we have evaluated several representative replication protocols in order to better understand their behavior in practice. The results obtained are surprising in that they challenge many of the assumptions behind existing protocols. Our evaluation indicates that the conventional read-one/write-all approach is the best choice for a large range of applications requiring data replication. We believe this is an important result for anybody developing code for computing clusters as the read-one/write-all strategy is much simpler to implement and more flexible than quorum-based approaches. In this paper we show that, in addition, it is also the best choice using a number of other selection criteria},
+  Doi                      = {10.1109/RELDIS.2001.969732},
+  ISSN                     = {1060-9857},
+  Keywords                 = {memory protocols;parallel databases;replicated databases;transaction processing;workstation clusters;availability;bioinformatics;cluster architectures;cluster computing;communication overhead;data replication protocol selection;high-performance computing;optimal replication strategy;parallel information systems;quorum-based approaches;read-one/write-all approach;scalability;transactions;Availability;Bioinformatics;Computer architecture;Computer science;Concurrent computing;Databases;Distributed information systems;Information systems;Protocols;Scalability},
+  Url                      = {http://www.cs.mcgill.ca/~kemme/papers/srds01.pdf}
+}
+
+@Article{Kemme2010a,
+  Title                    = {Database Replication: A Tale of Research Across Communities},
+  Author                   = {Kemme, Bettina and Alonso, Gustavo},
+  Journal                  = {Proc. VLDB Endow.},
+  Year                     = {2010},
+
+  Month                    = sep,
+  Number                   = {1-2},
+  Pages                    = {5--12},
+  Volume                   = {3},
+
+  Acmid                    = {1920847},
+  Doi                      = {10.14778/1920841.1920847},
+  ISSN                     = {2150-8097},
+  Issue_date               = {September 2010},
+  Numpages                 = {8},
+  Publisher                = {VLDB Endowment},
+  Url                      = {http://dx.doi.org/10.14778/1920841.1920847}
+}
+
+@Article{KingsyGrace2013a,
+  Title                    = {Dynamic Replica Placement and Selection Strategies in Data Grids- A Comprehensive Survey},
+  Author                   = {Kingsy Grace, R. and Manimegalai, R.},
+  Journal                  = {J. Parallel Distrib. Comput.},
+  Year                     = {2013},
+
+  Month                    = feb,
+  Number                   = {2},
+  Pages                    = {2099--2108},
+  Volume                   = {74},
+
+  Abstract                 = {Data replication techniques are used in data grid to reduce makespan, storage consumption, access latency and network bandwidth. Data replication enhances data availability and thereby increases the system reliability. There are two steps involved in data replication, namely, replica placement and replica selection. Replica placement involves identifying the best possible node to duplicate data based on network latency and user request. Replica selection involves selecting the best replica location to access the data for job execution in the data grid. Various replica placement and selection algorithms are available in the literature. These algorithms measure and analyze different parameters such as bandwidth consumption, access cost, scalability, execution time, storage consumption and makespan. In this paper, various replica placement and selection strategies along with their merits and demerits are discussed. This paper also analyses the performance of various strategies with respect to the parameters mentioned above. In particular, this paper focuses on the dynamic replica placement and selection strategies in the data grid environment.},
+  Acmid                    = {2565837},
+  Address                  = {Orlando, FL, USA},
+  Doi                      = {10.1016/j.jpdc.2013.10.009},
+  File                     = {:/Users/aas/Documents/Projects/Documents/Papers/DynamicReplicaPlacement AndSelectionStrategiesInDataGrid-AComprehensiveSurvey.pdf:PDF},
+  ISSN                     = {0743-7315},
+  Issue_date               = {February, 2014},
+  Keywords                 = {Data grid, Computational grid, Dynamic replication, Replica placement, Replica selection},
+  Numpages                 = {10},
+  Publisher                = {Academic Press, Inc.},
+  Url                      = {http://dx.doi.org/10.1016/j.jpdc.2013.10.009}
+}
+
+@InProceedings{rep:1507,
+  Title                    = {Brief announcement: Exploring the Consistency Problem Space},
+  Author                   = {Nishith Krishna and Marc Shapiro and Karthikeyan Bhargavan},
+  Booktitle                = podc,
+  Year                     = {2005},
+
+  Address                  = {Las Vegas, Nevada, USA},
+  Month                    = {July},
+  Organization             = {ACM SIGACT-SIGOPS},
+  Pages                    = {168--168},
+
+  Authorizer               = {http://dl.acm.org/authorize?877295},
+  Comment                  = {INT LIP6 REGAL},
+  Keywords                 = {rep},
+  Url                      = {http://doi.acm.org/10.1145/1073814.1073845}
+}
+
+@Article{Ladin1992a,
+  Title                    = {Providing High Availability Using Lazy Replication},
+  Author                   = {Ladin, Rivka and Liskov, Barbara and Shrira, Liuba and Ghemawat, Sanjay},
+  Journal                  = {ACM Trans. Comput. Syst.},
+  Year                     = {1992},
+
+  Month                    = nov,
+  Number                   = {4},
+  Pages                    = {360--391},
+  Volume                   = {10},
+
+  Acmid                    = {138877},
+  Address                  = {New York, NY, USA},
+  Doi                      = {10.1145/138873.138877},
+  ISSN                     = {0734-2071},
+  Issue_date               = {Nov. 1992},
+  Keywords                 = {client/server architecture, fault tolerance, group communication, high availability, operation ordering, replication, scalability, semantics of application},
+  Numpages                 = {32},
+  Publisher                = {ACM},
+  Url                      = {http://doi.acm.org/10.1145/138873.138877}
+}
+
+@Article{lloyd2014dont,
+  Title                    = {Don'T Settle for Eventual Consistency},
+  Author                   = {Lloyd, Wyatt and Freedman, Michael J. and Kaminsky, Michael and Andersen, David G.},
+  Journal                  = {Commun. ACM},
+  Year                     = {2014},
+
+  Month                    = may,
+  Number                   = {5},
+  Pages                    = {61--68},
+  Volume                   = {57},
+
+  Acmid                    = {2596624},
+  Address                  = {New York, NY, USA},
+  Bdsk-url-1               = {http://doi.acm.org/10.1145/2596624},
+  Bdsk-url-2               = {http://dx.doi.org/10.1145/2596624},
+  Date-added               = {2014-07-01 13:39:32 +0000},
+  Date-modified            = {2014-07-01 13:39:47 +0000},
+  Doi                      = {10.1145/2596624},
+  ISSN                     = {0001-0782},
+  Issue_date               = {May 2014},
+  Numpages                 = {8},
+  Publisher                = {ACM},
+  Url                      = {http://doi.acm.org/10.1145/2596624}
+}
+
+@Article{Loukopoulos2004a,
+  Title                    = {Static and Adaptive Distributed Data Replication Using Genetic Algorithms},
+  Author                   = {Loukopoulos, Thanasis and Ahmad, Ishfaq},
+  Journal                  = {J. Parallel Distrib. Comput.},
+  Year                     = {2004},
+
+  Month                    = nov,
+  Number                   = {11},
+  Pages                    = {1270--1285},
+  Volume                   = {64},
+
+  Abstract                 = {Fast dissemination and access of information in large distributed systems, such as the Internet, has become a norm of our daily life. However, undesired long delays experienced by end-users, especially during the peak hours, continue to be a common problem. Replicating some of the objects at multiple sites is one possible solution in decreasing network traffic. The decision of what to replicate where, requires solving a constraint optimization problem which is NP-complete in general. Such problems are known to stretch the capacity of a Genetic Algorithm (GA) to its limits. Nevertheless, we propose a GA to solve the problem when the read/write demands remain static and experimentally prove the superior solution quality obtained compared to an intuitive greedy method. Unfortunately, the static GA approach involves high running time and may not be useful when read/write demands continuously change, as is the case with breaking news. To tackle such case we propose a hybrid GA that takes as input the current replica distribution and computes a new one using knowledge about the network attributes and the changes occurred. Keeping in view more pragmatic scenarios in today's distributed information environments, we evaluate these algorithms with respect to the storage capacity constraint of each site as well as variations in the popularity of objects, and also examine the trade-off between running time and solution quality.},
+  Acmid                    = {1052118},
+  Address                  = {Orlando, FL, USA},
+  Comment                  = {Printed},
+  Doi                      = {10.1016/j.jpdc.2004.04.005},
+  ISSN                     = {0743-7315},
+  Issue_date               = {November 2004},
+  Keywords                 = {Data replication, Genetic algorithm, Greedy method, Internet, Static and dynamic allocation, Worldwide web},
+  Numpages                 = {16},
+  Publisher                = {Academic Press, Inc.},
+  Review                   = {The cost function is too expensive to be used in Big Data this together with the operational cost of the algorithm as it needs to calculate multiple solutions to choose the best make it not appropiate for this type of problems.
+
+Also the rapid changes in the load of system do not help either.},
+  Url                      = {http://pdf.aminer.org/000/297/337/static_and_adaptive_data_replication_algorithms_for_fast_information_access.pdf}
+}
+
+@InProceedings{Loukopoulos2000a,
+  Title                    = {Static and adaptive data replication algorithms for fast information access in large distributed systems},
+  Author                   = {Loukopoulos, T. and Ahmad, I},
+  Booktitle                = {Distributed Computing Systems, 2000. Proceedings. 20th International Conference on},
+  Year                     = {2000},
+  Pages                    = {385-392},
+
+  Abstract                 = {Creating replicas of frequently accessed objects across a read-intensive network can result in large bandwidth savings which, in turn, can lead to reduction in user response time. On the contrary, data replication in the presence of writes incurs extra cost due to multiple updates. The set of sites at which an object is replicated constitutes its replication scheme. Finding an optimal replication scheme that minimizes the amount of network traffic given read and write frequencies for various objects, is NP-complete in general. We propose two heuristics to deal with this problem for static read and write patterns. The first is a simple and fast greedy heuristic that yields good solutions when the system is predominantly read-oriented. The second is a genetic algorithm that through an efficient exploration of the solution space provides better solutions for cases where the greedy heuristic does not perform well. We also propose an extended genetic algorithm that rapidly adapts to the dynamically changing characteristics such as the frequency of reads and writes for particular objects},
+  Comment                  = {Printed},
+  Doi                      = {10.1109/ICDCS.2000.840950},
+  ISSN                     = {1063-6927},
+  Keywords                 = {database theory;distributed algorithms;genetic algorithms;heuristic programming;replicated databases;NP-complete;adaptive data replication algorithms;bandwidth;data replication;fast information access;frequently accessed object replicas;genetic algorithm;greedy heuristic;heuristics;large distributed systems;network traffic;read patterns;read-intensive network;static data replication algorithms;user response time;write patterns;Broadcasting;Communication system control;Computer science;Constraint optimization;Costs;Equations;Marine vehicles;Writing},
+  Url                      = {http://ranger.uta.edu/~iahmad/conf-papers/%5BC65%5D%20Static%20and%20Adaptive%20Data%20Replication%20Algorithms%20for%20Fast%20Information%20Access%20in%20Large%20Distributed%20Systems%20.pdf}
+}
+
+@InProceedings{Lu2007a,
+  Title                    = {ElephantTrap: A low cost device for identifying large flows},
+  Author                   = {Yi Lu and Mei Wang and Prabhakar, B. and Bonomi, F.},
+  Booktitle                = {High-Performance Interconnects, 2007. HOTI 2007. 15th Annual IEEE Symposium on},
+  Year                     = {2007},
+  Month                    = {Aug},
+  Pages                    = {99-108},
+
+  Doi                      = {10.1109/HOTI.2007.13},
+  ISSN                     = {1550-4794},
+  Keywords                 = {telecommunication links;telecommunication network management;ElephantTrap;anomaly detection;large flows;low cost device;traffic engineering;Bandwidth;Costs;Counting circuits;Forensics;Load management;Mice;Monitoring;State estimation;Switches;Telecommunication traffic},
+  Url                      = {http://web.stanford.edu/~balaji/papers/07elephanttrap.pdf}
+}
+
+@InProceedings{Lu1999a,
+  Title                    = {Partial Replica Selection Based on Relevance for Information Retrieval},
+  Author                   = {Lu, Zhihong and McKinley, Kathryn S.},
+  Booktitle                = {Proceedings of the 22Nd Annual International ACM SIGIR Conference on Research and Development in Information Retrieval},
+  Year                     = {1999},
+
+  Address                  = {New York, NY, USA},
+  Pages                    = {97--104},
+  Publisher                = {ACM},
+  Series                   = {SIGIR '99},
+
+  Acmid                    = {312662},
+  Doi                      = {10.1145/312624.312662},
+  ISBN                     = {1-58113-096-1},
+  Location                 = {Berkeley, California, USA},
+  Numpages                 = {8},
+  Url                      = {http://maroo.cs.umass.edu/pub/web/getpdf.php?id=157}
+}
+
+@InProceedings{Lumer1994a,
+  Title                    = {Diversity and Adaptation in Populations of Clustering Ants},
+  Author                   = {Lumer, Erik D. and Faieta, Baldo},
+  Booktitle                = {Proceedings of the Third International Conference on Simulation of Adaptive Behavior : From Animals to Animats 3: From Animals to Animats 3},
+  Year                     = {1994},
+
+  Address                  = {Cambridge, MA, USA},
+  Pages                    = {501--508},
+  Publisher                = {MIT Press},
+  Series                   = {SAB94},
+
+  Acmid                    = {190043},
+  File                     = {:/Users/aas/Documents/Projects/Documents/Papers/Diversity and adaptation in populations of clustering ants1994.pdf:PDF},
+  ISBN                     = {0-262-53122-4},
+  Location                 = {Brighton, United Kingdom},
+  Numpages                 = {8},
+  Url                      = {http://dl.acm.org/citation.cfm?id=189829.190043}
+}
+
+@InProceedings{app:sh137,
+  Title                    = {A Semantically Rich Approach for Collaborative Model Edition},
+  Author                   = {Jonathan Michaux and Xavier Blanc and Pierre Sutra and Marc Shapiro},
+  Booktitle                = {Symp.\ on Applied Computing (SAC)},
+  Year                     = {2011},
+
+  Address                  = {TaiChung, Taiwan},
+  Month                    = {March},
+  Organization             = {ACM SIGAPP},
+  Pages                    = {1470--1475},
+  Publisher                = {ACM},
+  Volume                   = {26},
+
+  Authorizer               = {http://dl.acm.org/authorize?17863},
+  Doi                      = {http://doi.acm.org/10.1145/1982185.1982500},
+  Local-url                = {./papers/SAC2011-Cpraxis_wholePaper.pdf},
+  Url                      = {http://lip6.fr/Marc.Shapiro/papers/SAC2011-Cpraxis_wholePaper.pdf}
+}
+
+@InCollection{MohdZin2012a,
+  Title                    = {Replication Techniques in Data Grid Environments},
+  Author                   = {Mohd. Zin, Noriyani and Noraziah, A. and Che Fauzi, AinulAzila and Herawan, Tutut},
+  Booktitle                = {Intelligent Information and Database Systems},
+  Publisher                = {Springer Berlin Heidelberg},
+  Year                     = {2012},
+  Editor                   = {Pan, Jeng-Shyang and Chen, Shyi-Ming and Nguyen, NgocThanh},
+  Pages                    = {549-559},
+  Series                   = {Lecture Notes in Computer Science},
+  Volume                   = {7197},
+
+  Doi                      = {10.1007/978-3-642-28490-8_57},
+  ISBN                     = {978-3-642-28489-2},
+  Keywords                 = {Replica placement strategies; Data grid},
+  Language                 = {English},
+  Url                      = {http://dx.doi.org/10.1007/978-3-642-28490-8_57}
+}
+
+@Article{Naseera2009a,
+  Title                    = {Agent Based Replica Placement in a Data Grid Environement},
+  Author                   = {Shaik Naseera and K.V. Madhu Murthy},
+  Journal                  = {Computational Intelligence, Communication Systems and Networks, International Conference on},
+  Year                     = {2009},
+  Pages                    = {426-430},
+  Volume                   = {0},
+
+  Abstract                 = {In a data grid, large quantities of data files are produced and data replication is applied to reduce data access time. Determining when and where to replicate data in order to meet performance goals in grid systems with many users and files, dynamic network and resource characteristics and changing user behavior is difficult. Therefore efficiency and fast access to replicated data are influenced by the location of the resource holding the replica. In this paper, we present an agent based replica placement algorithm to determine the candidate site for the placement of replica. An agent is deployed at each site holding the master copies of the shared data files. To create a replica, each agent prioritizes the resources in the grid based on the resource configuration, bandwidth in the network and the demand for the replica at their sites and then creates a replica at suitable resource locations. We have carried out the simulation using GridSim Toolkit-4.0 [1] for EU Data Grid Testbed1 [14]. The simulation results show that the aggregated data transfer time and the execution time for jobs at various resources is less for agent based replica placement.},
+  Address                  = {Los Alamitos, CA, USA},
+  Doi                      = {http://doi.ieeecomputersociety.org/10.1109/CICSYN.2009.77},
+  ISBN                     = {978-0-7695-3743-6},
+  Publisher                = {IEEE Computer Society}
+}
+
+@InBook{Neumann1956a,
+  Title                    = {Automata Studies},
+  Author                   = {von Neumann, J.},
+  Chapter                  = {Probabilistic Logics and Synthesis of Reliable Organisms from Unreliable Components},
+  Editor                   = {C. Shannon and J. McCarthy},
+  Pages                    = {43--98},
+  Publisher                = {Princeton University Press},
+  Year                     = {1956},
+
+  Owner                    = {aas},
+  Timestamp                = {2014.10.23},
+  Url                      = {https://ece.uwaterloo.ca/~ssundara/courses/prob_logics.pdf}
+}
+
+@InProceedings{Paiva2013,
+  Title                    = {Policies for Efficient Data Replication in P2P Systems},
+  Author                   = {Paiva, Jo{\~a}o and Rodrigues, Lu{\'i}s},
+  Booktitle                = {Proceedings of the 19th IEEE International Conference on Parallel and Distributed Systems},
+  Year                     = {2013},
+
+  Address                  = {Seoul, Korea},
+  Month                    = Dec,
+  Publisher                = {IEEE},
+  Series                   = {ICPADS'13}
+}
+
+@InProceedings{Paiva2013a,
+  Title                    = {AutoPlacer: scalable self-tuning data placement in distributed key-value stores},
+  Author                   = {Paiva, Jo{\~a}o and Ruivo, Pedro and Romano, Paolo and Rodrigues, Lu{\'i}s},
+  Booktitle                = {Proceedings of the 10th International Conference on Autonomic Computing},
+  Year                     = {2013},
+
+  Address                  = {San Jose, CA, USA},
+  Month                    = jun,
+  Publisher                = {USENIX},
+  Series                   = {ICAC'13},
+
+  Url                      = {https://www.usenix.org/conference/icac13/technical-sessions/presentation/paiva}
+}
+
+@PhdThesis{Peluso2014a,
+  Title                    = {Ecient Protocols for Replicated Transactional Systems},
+  Author                   = {Sebastiano Peluso},
+  School                   = {Dipartimento di Ingegneria Informatica, Sapienza Universit\'{a} di Roma},
+  Year                     = {2014},
+
+  Address                  = {Dipartimento di Ingegneria Informatica, Automatica e Gestionale
+Sapienza Universita di Roma
+Via Ariosto 25, I-00185 Roma, Italy
+e-mail: peluso@dis.uniroma1.it},
+
+  Abstract                 = {Over the last years several relevant technological trends have signicantly increased the relative impact that the inter-replica synchronization costs have on the performance of transactional systems. Indeed, the emergence of technologies like Transactional Memory, Solid-State Drives and Cloud computing has exacerbated the ratio between the latencies of replication coordination and transaction processing. The requirements of these environments harshly challenge state of the art techniques for replication of transactional systems, raising the need for rethinking existing approaches to this problem. This dissertation advances the state of the art on replicated transactional systems by presenting a set of innovative replication protocols designed to achieve high eciency even in such challenging scenarios.
+More in detail, four transactional replication protocols are proposed, which tackle the aforementioned issues from various angles. The rst two cope with full replication scenarios, and exploit orthogonal techniques, such as speculation and transaction migration, which allow for amortizing, in dierent ways, the impact of distributed coordination on system performance. The other two proposals explicitly cope with the issue of scalability, by introducing the rst genuine partial replication techniques that support abort-free read-only transactions while ensuring, respectively, One-Copy Serializability and Extended Update Serializability. The core of these protocols is a distributed multi-version concurrency control algorithm, which relies on a novel logical clock synchronization mechanism to track, in a totally decentralized (and consequently scalable) way, both data and causal dependency relations among transactions. The trade-os arising across the dierent presented solutions are also discussed and experimentally evaluated by integrating them into state of the art academic and industrial transactional platforms.},
+  Keywords                 = {Protocol},
+  Owner                    = {aas},
+  Timestamp                = {2014.11.26},
+  Url                      = {http://www.ssrg.ece.vt.edu/theses/Phd_Peluso.pdf}
+}
+
+@InCollection{Peluso2012a,
+  Title                    = {SCORe: A Scalable One-Copy Serializable Partial Replication Protocol},
+  Author                   = {Peluso, Sebastiano and Romano, Paolo and Quaglia, Francesco},
+  Booktitle                = {Middleware 2012},
+  Publisher                = {Springer Berlin Heidelberg},
+  Year                     = {2012},
+  Editor                   = {Narasimhan, Priya and Triantafillou, Peter},
+  Pages                    = {456-475},
+  Series                   = {Lecture Notes in Computer Science},
+  Volume                   = {7662},
+
+  Abstract                 = {In this article we present SCORe, a scalable one-copy serializable partial replication protocol. Differently from any other literature proposal, SCORe jointly guarantees the following properties: (i) it is genuine, thus ensuring that only the replicas that maintain data accessed by a transaction are involved in its processing, and (ii) it guarantees that read operations always access consistent snapshots, thanks to a one-copy serializable multiversion scheme, which never aborts read-only transactions and spares them from any (distributed) validation phase. This makes SCORe particularly efficient in presence of read-intensive workloads, as typical of a wide range of real-world applications. We have integrated SCORe into a popular open source distributed data grid and performed a large scale experimental study with well-known benchmarks using both private and public cloud infrastructures. The experimental results demonstrate that SCORe provides stronger consistency guarantees (namely One-Copy Serializability) than existing multiversion partial replication protocols at no additional overhead.},
+  Doi                      = {10.1007/978-3-642-35170-9_23},
+  File                     = {:/Users/aas/Documents/Projects/Documents/Papers/SCOREe2012.pdf:PDF},
+  ISBN                     = {978-3-642-35169-3},
+  Keywords                 = {Distributed Transactional Systems; Partial Replication; Scalability; Multiversioning},
+  Language                 = {English},
+  Url                      = {http://dx.doi.org/10.1007/978-3-642-35170-9_23}
+}
+
+@InProceedings{Peluso2012a,
+  Title                    = {When Scalability Meets Consistency: Genuine Multiversion Update-Serializable Partial Data Replication},
+  Author                   = {Sebastiano Peluso and Pedro Ruivo and Paolo Romano and Francesco Quaglia and Luís Rodrigues},
+  Booktitle                = {In Proc. of International Conference on Distributed Systems},
+  Year                     = {2012},
+
+  File                     = {:/Users/aas/Documents/Projects/Documents/Papers/icdcs12.pdf:PDF},
+  Keywords                 = {Partial Data Replication, Multiversioning, TrTransaction System, Fault Tolerance, Protocol}
+}
+
+@InProceedings{Preguica2009a,
+  Title                    = {A Commutative Replicated Data Type for Cooperative Editing},
+  Author                   = {Preguica, Nuno and Marques, Joan Manuel and Shapiro, Marc and Letia, Mihai},
+  Booktitle                = {Proceedings of the 2009 29th IEEE International Conference on Distributed Computing Systems},
+  Year                     = {2009},
+
+  Address                  = {Washington, DC, USA},
+  Pages                    = {395--403},
+  Publisher                = {IEEE Computer Society},
+  Series                   = {ICDCS '09},
+
+  Abstract                 = {A Commutative Replicated Data Type (CRDT) is one where all concurrent operations commute. The replicas of a CRDT converge automatically, without complex concurrency control. This paper describes Treedoc, a novel CRDT design for cooperative text editing. An essential property is that the identifiers of Treedoc atoms are selected from a dense space. We discuss practical alternatives for implementing the identifier space based on an extended binary tree. We also discuss storage alternatives for data and meta-data, and mechanisms for compacting the tree. In the best case, Treedoc incurs no overhead with respect to a linear text buffer. We validate the results with traces from existing edit histories.},
+  Acmid                    = {1584604},
+  Doi                      = {10.1109/ICDCS.2009.20},
+  ISBN                     = {978-0-7695-3659-0},
+  Keywords                 = {commutative replicated data type, distributed algorithms, replicated data, co-operative editing, dense identifier space},
+  Numpages                 = {9},
+  Url                      = {http://dx.doi.org/10.1109/ICDCS.2009.20}
+}
+
+@Article{pritchett2008base,
+  Title                    = {{BASE}: An {ACID} Alternative},
+  Author                   = {Pritchett, Dan},
+  Journal                  = {Queue},
+  Year                     = {2008},
+
+  Month                    = may,
+  Number                   = {3},
+  Pages                    = {48--55},
+  Volume                   = {6},
+
+  Acmid                    = {1394128},
+  Address                  = {New York, NY, USA},
+  Bdsk-url-1               = {http://doi.acm.org/10.1145/1394127.1394128},
+  Bdsk-url-2               = {http://dx.doi.org/10.1145/1394127.1394128},
+  Date-added               = {2014-07-01 13:38:00 +0000},
+  Date-modified            = {2014-07-09 11:40:05 +0000},
+  Doi                      = {10.1145/1394127.1394128},
+  ISSN                     = {1542-7730},
+  Issue_date               = {May/June 2008},
+  Keywords                 = {eventual consistency, soft state, availability},
+  Numpages                 = {8},
+  Publisher                = {ACM},
+  Url                      = {http://doi.acm.org/10.1145/1394127.1394128}
+}
+
+@Article{Rinard2003a,
+  Title                    = {Eliminating Synchronization Bottlenecks Using Adaptive Replication},
+  Author                   = {Rinard, Martin C. and Diniz, Pedro C.},
+  Journal                  = {ACM Trans. Program. Lang. Syst.},
+  Year                     = {2003},
+
+  Month                    = {May},
+  Number                   = {3},
+  Pages                    = {316--359},
+  Volume                   = {25},
+
+  Abstract                 = {This article presents a new technique, adaptive replication, for automatically eliminating synchronization bottlenecks in multithreaded programs that perform atomic operations on objects. Synchronization bottlenecks occur when multiple threads attempt to concurrently update the same object. It is often possible to eliminate synchronization bottlenecks by replicating objects. Each thread can then update its own local replica without synchronization and without interacting with other threads. When the computation needs to access the original object, it combines the replicas to produce the correct values in the original object. One potential problem is that eagerly replicating all objects may lead to performance degradation and excessive memory consumption.Adaptive replication eliminates unnecessary replication by dynamically detecting contention at each object to find and replicate only those objects that would otherwise cause synchronization bottlenecks. We have implemented adaptive replication in the context of a parallelizing compiler for a subset of C++. Given an unannotated sequential program written in C++, the compiler automatically extracts the concurrency, determines when it is legal to apply adaptive replication, and generates parallel code that uses adaptive replication to efficiently eliminate synchronization bottlenecks.In addition to automatic parallelization and adaptive replication, our compiler also implements a lock coarsening transformation that increases the granularity at which the computation locks objects. The advantage is a reduction in the frequency with which the computation acquires and releases locks; the potential disadvantage is the introduction of new synchronization bottlenecks caused by increases in the sizes of the critical sections. Because the adaptive replication transformation takes place at lock acquisition sites, there is a synergistic interaction between lock coarsening and adaptive replication. Lock coarsening drives down the overhead of using adaptive replication, and adaptive replication eliminates synchronization bottlenecks associated with the overaggressive use of lock coarsening.Our experimental results show that, for our set of benchmark programs, the combination of lock coarsening and adaptive replication can eliminate synchronization bottlenecks and significantly reduce the synchronization and replication overhead as compared to versions that use none or only one of the transformations.},
+  Acmid                    = {641911},
+  Address                  = {New York, NY, USA},
+  Doi                      = {10.1145/641909.641911},
+  ISSN                     = {0164-0925},
+  Issue_date               = {May 2003},
+  Keywords                 = {Atomic operations, commutativity analysis, parallel computing, parallelizing compilers, replication, synchronization},
+  Numpages                 = {44},
+  Publisher                = {ACM},
+  Url                      = {http://people.csail.mit.edu/rinard/paper/toplas03AdaptiveReplication.pdf}
+}
+
+@Article{Saito2005a,
+  Title                    = {Optimistic Replication},
+  Author                   = {Yasushi Saito and Marc Shapiro},
+  Journal                  = acmcs,
+  Year                     = {2005},
+
+  Month                    = {March},
+  Number                   = {1},
+  Pages                    = {42--81},
+  Volume                   = {37},
+
+  Authorizer               = {http://dl.acm.org/authorize?865762},
+  Comment                  = {INT LIP6 REGAL},
+  Doi                      = {http://doi.acm.org/10.1145/1057977.1057980},
+  Group                    = {replication+consistency},
+  Keywords                 = {optim,rep,syn},
+  Local-url                = {./papers/Optimistic_Replication_Computing_Surveys_2005-03_cameraready.pdf},
+  Url                      = {http://lip6.fr/Marc.Shapiro/papers/Optimistic_Replication_Computing_Surveys_2005-03_cameraready.pdf}
+}
+
+@InProceedings{Serrano2007a,
+  Title                    = {Boosting Database Replication Scalability through Partial Replication and 1-Copy-Snapshot-Isolation},
+  Author                   = {Serrano, D. and Patino-Martinez, M. and Jimenez-Peris, R. and Kemme, B.},
+  Booktitle                = {Dependable Computing, 2007. PRDC 2007. 13th Pacific Rim International Symposium on},
+  Year                     = {2007},
+  Month                    = {Dec},
+  Pages                    = {290-297},
+
+  Abstract                 = {Databases have become a crucial component in modern information systems. At the same time, they have become the main bottleneck in most systems. Database replication protocols have been proposed to solve the scalability problem by scaling out in a cluster of sites. Current techniques have attained some degree of scalability, however there are two main limitations to existing approaches. Firstly, most solutions adopt a full replication model where all sites store a full copy of the database. The coordination overhead imposed by keeping all replicas consistent allows such approaches to achieve only medium scalability. Secondly, most replication protocols rely on the traditional consistency criterion, 1-copy-serializability, which limits concurrency, and thus scalability of the system. In this paper, we first analyze analytically the performance gains that can be achieved by various partial replication configurations, i.e., configurations where not all sites store all data. From there, we derive a partial replication protocol that provides 1-copy-snapshot isolation as correctness criterion. We have evaluated the protocol with TPC-W and the results show better scalability than full replication.},
+  Doi                      = {10.1109/PRDC.2007.39},
+  Keywords                 = {protocols;replicated databases;1-copy-snapshot-isolation;database replication scalability;information systems;partial replication protocol;Analytical models;Boosting;CADCAM;Computer aided manufacturing;Concurrent computing;Information systems;Performance analysis;Protocols;Scalability;Transaction databases},
+  Url                      = {http://www.researchgate.net/publication/200023090_Boosting_Database_Replication_Scalability_through_Partial_Replication_and_1-Copy-Snapshot-Isolation/links/0deec520a3cdf6504e000000}
+}
+
+@InCollection{Shapiro2009a,
+  Title                    = {Optimistic Replication and Resolution},
+  Author                   = {Marc Shapiro},
+  Booktitle                = {Encyclopedia of Database Systems (online and print)},
+  Publisher                = {Springer},
+  Year                     = {2009},
+  Editor                   = {{\"O}zsu, M. Tamer and Liu, Ling},
+  Month                    = {October},
+  Note                     = {http://www.springer.com/computer/database+management+%26+information+retrieval/book/978-0-387-49616-0},
+
+  Comment                  = {INT LIP6 REGAL},
+  Group                    = {papers},
+  Keywords                 = {opt,db},
+  Local-url                = {./papers/optimistic-replication-Encyclopedia-DB-systems-2009.pdf},
+  Url                      = {http://pagesperso-systeme.lip6.fr/Marc.Shapiro/papers/optimistic-replication-Encyclopedia-DB-systems-2009.pdf},
+  X-editorial-board        = {yes},
+  X-international-audience = {yes},
+  X-proceedings            = {yes}
+}
+
+@TechReport{Shapiro2004a,
+  Title                    = {The {A}ctions-{C}onstraints approach to replication: Definitions and proofs},
+  Author                   = {Marc Shapiro and Karthikeyan Bhargavan},
+  Institution              = {Microsoft Research},
+  Year                     = {2004},
+  Month                    = {March},
+  Number                   = {MSR-TR-2004-14},
+
+  Keywords                 = {rep,syn,optim},
+  Url                      = {ftp://ftp.research.microsoft.com/pub/tr/TR-2004-14.pdf}
+}
+
+@TechReport{rep:syn:optim:1491,
+  Title                    = {A formalism for consistency and partial replication},
+  Author                   = {Marc Shapiro and Karthikeyan Bhargavan and Yek Chong and Youssef Hamadi},
+  Institution              = {Microsoft Research},
+  Year                     = {2004},
+
+  Address                  = {Cambridge, UK},
+  Month                    = {June},
+  Number                   = {MSR-TR-2004-58},
+
+  Keywords                 = {rep,syn,optim},
+  Url                      = {ftp://ftp.research.microsoft.com/pub/tr/TR-2004-58.pdf}
+}
+
+@InProceedings{optim:rep:syn:1498,
+  Title                    = {A Constraint-based Formalism for Consistency in Replicated Systems},
+  Author                   = {Marc Shapiro and Karthikeyan Bhargavan and Nishith Krishna},
+  Booktitle                = opodis,
+  Year                     = {2004},
+
+  Address                  = {Grenoble, France},
+  Month                    = {December},
+  Number                   = {3544},
+  Pages                    = {331--345},
+  Series                   = {lncs},
+
+  Comment                  = {INT LIP6 REGAL},
+  Keywords                 = {optim,rep,syn},
+  Local-url                = {./papers/opodis2004-final-2004-10-30.pdf},
+  Url                      = {http://dx.doi.org/10.1007/11516798_24}
+}
+
+@InCollection{Shapiro2009,
+  Title                    = {Eventual Consistency},
+  Author                   = {Marc Shapiro and Bettina Kemme},
+  Booktitle                = {Encyclopedia of Database Systems (online and print)},
+  Publisher                = Springer,
+  Year                     = {2009},
+  Editor                   = {{\"O}zsu, M. Tamer and Liu, Ling},
+  Month                    = {Octuber},
+  Note                     = {Printed},
+
+  Comment                  = {INT LIP6 REGAL},
+  Group                    = {papers},
+  Keywords                 = {opt,proto},
+  Local-url                = {./papers/eventual-consistency-Encyclopedia-DB-systems-2009.pdf},
+  Url                      = {http://www.springer.com/computer/database+management+%26+information+retrieval/book/978-0-387-49616-0},
+  X-editorial-board        = {yes},
+  X-international-audience = {yes},
+  X-pays                   = {CA},
+  X-proceedings            = {yes}
+}
+
+@InProceedings{formel:rep:1529,
+  Title                    = {The three dimensions of data consistency},
+  Author                   = {Marc Shapiro and Nishith Krishna},
+  Booktitle                = {Journ{\'e}es Francophones sur la Coh{\'e}rence des Donn{\'e}es en Univers R{\'e}parti (CDUR)},
+  Year                     = {2005},
+
+  Address                  = {CNAM, Paris, France},
+  Month                    = {November},
+  Pages                    = {54--58},
+
+  Comment                  = {NAT LIP6 REGAL},
+  Keywords                 = {formel,rep},
+  Local-url                = {./papers/cdur2005.pdf},
+  Url                      = {http://lip6.fr/Marc.Shapiro/papers/cdur2005.pdf}
+}
+
+@InProceedings{shapiro11conflictfree,
+  Title                    = {Conflict-free Replicated Data Types},
+  Author                   = {Marc Shapiro and Nuno Pregui{\c c}a and Carlos Baquero and Marek Zawirski},
+  Booktitle                = {Stabilization, Safety, and Security of Distributed Systems (SSS)},
+  Year                     = {2011},
+
+  Address                  = {Grenoble, France},
+  Editor                   = {Xavier D{\'e}fago and Franck Petit and V. Villain},
+  Month                    = oct,
+  Pages                    = {386--400},
+  Publisher                = Springer,
+  Series                   = lncs,
+  Volume                   = {6976},
+
+  Bdsk-url-1               = {http://lip6.fr/Marc.Shapiro/papers/CRDTs_SSS-2011.pdf},
+  Date-added               = {2011-11-17 11:54:14 +0100},
+  Date-modified            = {2012-05-24 11:23:23 +0200},
+  Keywords                 = {CRDT}
+}
+
+@TechReport{shapiro11comprehensive,
+  Title                    = {A comprehensive study of Convergent and Commutative Replicated Data Types},
+  Author                   = {Shapiro, Marc and Pregui{\c c}a, Nuno and Baquero, Carlos and Zawirski, Marek},
+  Institution              = {INRIA},
+  Year                     = {2011},
+  Month                    = Jan,
+  Note                     = {Printed},
+  Number                   = {RR-7506},
+  Type                     = {Rapport de recherche},
+
+  Abstract                 = {{Eventual consistency aims to ensure that replicas of some mutable shared object converge without foreground synchronisation. Previous approaches to eventual consistency are ad-hoc and error-prone. We study a principled approach: to base the design of shared data types on some simple formal conditions that are sufficient to guarantee eventual consistency. We call these types Convergent or Commutative Replicated Data Types (CRDTs). This paper formalises asynchronous object replication, either state based or operation based, and provides a sufficient condition appropriate for each case. It describes several useful CRDTs, including container data types supporting both \add and \remove operations with clean semantics, and more complex types such as graphs, montonic DAGs, and sequences. It discusses some properties needed to implement non-trivial CRDTs.}},
+  Affiliation              = {REGAL - INRIA Rocquencourt , Laboratoire d'Informatique de Paris 6 - LIP6 , Centro de Investiga{\c c}{\\~a}o em Inform{\'a}tica e Tecnologias da Informa{\c c}{\\~a}o - CITI , Universidade do Minho Departamento de Inform{\'a}tica Distributed Systems Group - Universidade do Minho Departamento de Inform{\'a}tica},
+  Collaboration            = {INRIA, UNL, U Minho, LIP6 },
+  File                     = {techreport.pdf:http\://hal.inria.fr/inria-00555588/PDF/techreport.pdf:PDF},
+  Hal_id                   = {inria-00555588},
+  Keywords                 = {eventual consistency; optimistic replication; replicated data types; distributed algorithms; distributed systems; Data replication; commutative operations},
+  Language                 = {Anglais},
+  Pages                    = {50},
+  Url                      = {http://hal.inria.fr/inria-00555588}
+}
+
+@TechReport{Silvestre2012a,
+  Title                    = {Caju: a content distribution system for edge networks},
+  Author                   = {Silvestre, Guthemberg and Monnet, S{\'e}bastien and Krishnaswamy, Ruby and Sens, Pierre},
+  Institution              = {INRIA},
+  Year                     = {2012},
+  Month                    = {June},
+  Note                     = {Printed},
+  Number                   = {RR-8006},
+  Type                     = {Research Report},
+
+  Abstract                 = {More and more, users store their data in the cloud. While the content is then retrieved, the retrieval has to respect quality of service (QoS) constraints. In order to reduce transfer latency, data is replicated. The idea is make data close to users and to take advantage of providers home storage. However to minimize the cost of their platform, cloud providers need to limit the amount of storage usage. This is still more crucial for big contents. This problem is hard, the distribution of the popularity among the stored pieces of data is highly non-uniform: several pieces of data will never be accessed while others may be retrieved thousands of times. Thus, the trade-off between storage usage and QoS of data retrieval has to take into account the data popularity. This report presents our architecture gathering several storage domains composed of small-sized datacenters and edge devices; and it shows the importance of adapting the replication degree to data popularity. Our simulations, using realistic workloads, show that a simple cache mechanism provides a eight-fold ecrease in the number of SLA violations, requires up to 10 times less of storage capacity for replicas, and reduces aggregate bandwidth and number of flows by half.},
+  Affiliation              = {Laboratoire d'Informatique de Paris 6 - LIP6 , Orange Labs [Issy les Moulineaux] , REGAL - INRIA Paris-Rocquencourt},
+  File                     = {RR-8006.pdf:http\://hal.inria.fr/hal-00712990/PDF/RR-8006.pdf:PDF},
+  Hal_id                   = {hal-00712990},
+  Language                 = {English},
+  Url                      = {http://hal.inria.fr/hal-00712990}
+}
+
+@Article{Stankovic1999a,
+  Title                    = {Misconceptions about real-time databases},
+  Author                   = {Stankovic, J.A and Sang Hyuk Son and Hansson, J.},
+  Journal                  = {Computer},
+  Year                     = {1999},
+
+  Month                    = {Jun},
+  Number                   = {6},
+  Pages                    = {29-36},
+  Volume                   = {32},
+
+  Doi                      = {10.1109/2.769440},
+  ISSN                     = {0018-9162},
+  Keywords                 = {database management systems;real-time systems;timing;transaction processing;computer systems;conventional database technology;general purpose systems;mainstream database users;real time applications;real time aspects;real time databases;real time support;research areas;Application software;Audio databases;Control systems;Database systems;Hardware;Real time systems;Sensor systems;Stock markets;Timing;Transaction databases},
+  Url                      = {http://www.cs.virginia.edu/~stankovic/psfiles/R6stan.lo.pdf}
+}
+
+@InProceedings{Terry1995a,
+  Title                    = {Managing Update Conflicts in Bayou, a Weakly Connected Replicated Storage System},
+  Author                   = {Terry, D. B. and Theimer, M. M. and Petersen, Karin and Demers, A. J. and Spreitzer, M. J. and Hauser, C. H.},
+  Booktitle                = {Proceedings of the Fifteenth ACM Symposium on Operating Systems Principles},
+  Year                     = {1995},
+
+  Address                  = {New York, NY, USA},
+  Pages                    = {172--182},
+  Publisher                = {ACM},
+  Series                   = {SOSP '95},
+
+  Acmid                    = {224070},
+  Doi                      = {10.1145/224056.224070},
+  ISBN                     = {0-89791-715-4},
+  Location                 = {Copper Mountain, Colorado, USA},
+  Numpages                 = {11},
+  Url                      = {http://doi.acm.org/10.1145/224056.224070}
+}
+
+@Article{Tolle2011a,
+  Title                    = {The Fourth Paradigm: Data-Intensive Scientific Discovery [Point of View]},
+  Author                   = {Tolle, K.M. and Tansley, D. and Hey, A.J.G.},
+  Journal                  = {Proceedings of the IEEE},
+  Year                     = {2011},
+
+  Month                    = {Aug},
+  Number                   = {8},
+  Pages                    = {1334--1337},
+  Volume                   = {99},
+
+  __markedentry            = {[aas:2]},
+  Abstract                 = {We are now seeing governments and funding agencies looking at ways to increase the value and pace of scientific research through increased or open access to both data and publications. In this point of view article, we wish to look at another aspect of these twin revolutions, namely, how to enable developers, designers and researchers to build intuitive,multimodal, user-centric, scientific applications that can aid and enable scientific research.},
+  Doi                      = {10.1109/JPROC.2011.2155130},
+  ISSN                     = {0018-9219},
+  Keywords                 = {Data mining;Database systems;Information analysis;Information retrieval;Knowledge acquisition;Research and development;Scientific publishing;Search methods},
+  Url                      = {http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=5958175}
+}
+
+@InProceedings{Urazimbetov2012a,
+  Title                    = {A Case Study - On Patient Empowerment and Integration of Telemedicine to National Healthcare Services},
+  Author                   = {Surayya Urazimbetova},
+  Booktitle                = {International Conference on Health Informatics},
+  Year                     = {2012},
+
+  Address                  = {Vilamoura, Algarve, Portugal},
+  Month                    = {Februery},
+  Note                     = {DOI link: The full text of this paper is only available to INSTICC members},
+
+  Abstract                 = {Patient empowerment in the digitalized healthcare can be supported by means of telemedicine. As opposed to Electronic Patient Records developed by a few large business suppliers for healthcare professionals, telemedical applications include innovative solutions of small-medium size suppliers and are targeted at specific groups of patients (e.g., hip operated or dermatology patients) and their care network. Based on an integration experiment we argue that in order to support the national visions for patient empowerment and connectedness of healthcare at the same time, it is necessary to achieve the integration of telemedicine to the national healthcare services on a business logic (functional) integration level. In this paper, (1) we identify the lack of business logic (functional) level integration opportunities for patient oriented telemedical applications with national healthcare services; (2) we summarize on processes, products and organizations which are part of the integration procedure and provide places for shortening the time-to-market of SMBs. (3) we identify the need of supporting telemedicine uptake by extending access rights policies of the confidential patient data to decentralized citizens level access control.},
+  Doi                      = {10.5220/0003870902630269},
+  Keywords                 = {Telemedicine, Integration, Presentation Level Integration; Decentralized Access Control, Shared Medicine Card, Security Policy, National Healthcare Services, Time-to-Market, Small-Medium Size Businesses},
+  Type                     = {ConferencePaper <importModel: ConferenceImportModel>},
+  Url                      = {http://pure.au.dk//portal/files/53744533/A_case_study_on_patient_empowernment_and_....pdf}
+}
+
+@Article{Venugopal2006a,
+  Title                    = {A Taxonomy of Data Grids for Distributed Data Sharing, Management, and Processing},
+  Author                   = {Venugopal, Srikumar and Buyya, Rajkumar and Ramamohanarao, Kotagiri},
+  Journal                  = {ACM Comput. Surv.},
+  Year                     = {2006},
+
+  Month                    = jun,
+  Number                   = {1},
+  Volume                   = {38},
+
+  Acmid                    = {1132955},
+  Address                  = {New York, NY, USA},
+  Articleno                = {3},
+  Comment                  = {http://doi.acm.org/10.1145/1132952.1132955},
+  Doi                      = {10.1145/1132952.1132955},
+  ISSN                     = {0360-0300},
+  Issue_date               = {2006},
+  Keywords                 = {Grid computing, data-intensive applications, replica management, virtual organizations},
+  Publisher                = {ACM},
+  Url                      = {http://www.cloudbus.org/reports/DataGridTaxonomy.pdf}
+}
+
+@Article{Vogels2009a,
+  Title                    = {Eventually Consistent},
+  Author                   = {Vogels, Werner},
+  Journal                  = {Commun. ACM},
+  Year                     = {2009},
+
+  Month                    = jan,
+  Number                   = {1},
+  Pages                    = {40--44},
+  Volume                   = {52},
+
+  Acmid                    = {1435432},
+  Address                  = {New York, NY, USA},
+  Doi                      = {10.1145/1435417.1435432},
+  ISSN                     = {0001-0782},
+  Issue_date               = {January 2009},
+  Numpages                 = {5},
+  Publisher                = {ACM},
+  Url                      = {http://doi.acm.org/10.1145/1435417.1435432}
+}
+
+@InProceedings{Wang2008a,
+  Title                    = {Ant colony optimization algorithm based P2P system replica optimal location strategy},
+  Author                   = {Yu Wang and Yuelong Zhao and Fang Hou},
+  Booktitle                = {Service Operations and Logistics, and Informatics, 2008. IEEE/SOLI 2008. IEEE International Conference on},
+  Year                     = {2008},
+  Month                    = {Oct},
+  Pages                    = {494-497},
+  Volume                   = {1},
+
+  Abstract                 = {This paper presents a new replica optimal location strategy based on ant colony optimization algorithm. Through the improvement of ant algorithm, it can effectively choose the optimal replica node from a great number of nodes in peer-to-peer (P2P) system, which will help to realize the global optimization. The strategy fully considers that P2P nodes are heterogeneous, so the replica of a high degree of popularity will be placed in the high-performance nodes. It increases the high availability of the popular files. At the same time, owing to the increase of the high popular replica, it reduces the number of inquiring nodes when searching a file and decreasing the network traffic. This strategy also takes full consideration of the deferent factors that affect replica location, like path load, delay and so on. The simulation by using P2P tool PeerSim show that this strategy can effectively reduce request response time. Therefore, it improves performance of overall system.},
+  Doi                      = {10.1109/SOLI.2008.4686445},
+  Keywords                 = {optimisation;peer-to-peer computing;PeerSim;ant colony optimization algorithm;global optimization;network traffic;peer-to-peer system;replica optimal location strategy;Ant colony optimization;Computer science;Costs;Counting circuits;Delay;Feedback;Heuristic algorithms;Large-scale systems;Paper technology;Peer to peer computing;ant colony algorithm;peer-to-peer;placed strategy;replica}
+}
+
+@Article{Wang2012a,
+  Title                    = {A Novel Dynamic Network Data Replication Scheme Based on Historical Access Record and Proactive Deletion},
+  Author                   = {Wang, Zhe and Li, Tao and Xiong, Naixue and Pan, Yi},
+  Journal                  = {J. Supercomput.},
+  Year                     = {2012},
+
+  Month                    = oct,
+  Number                   = {1},
+  Pages                    = {227--250},
+  Volume                   = {62},
+
+  Abstract                 = {Data replication is becoming a popular technology in many fields such as cloud storage, Data grids and P2P systems. By replicating files to other servers/nodes, we can reduce network traffic and file access time and increase data availability to react natural and man-made disasters. However, it does not mean that more replicas can always have a better system performance. Replicas indeed decrease read access time and provide better fault-tolerance, but if we consider write access, maintaining a large number of replications will result in a huge update overhead. Hence, a trade-off between read access time and write updating cost is needed. File popularity is an important factor in making decisions about data replication. To avoid data access fluctuations, historical file popularity can be used for selecting really popular files. In this research, a dynamic data replication strategy is proposed based on two ideas. The first one employs historical access records which are useful for picking up a file to replicate. The second one is a proactive deletion method, which is applied to control the replica number to reach an optimal balance between the read access time and the write update overhead. A unified cost model is used as a means to measure and compare the performance of our data replication algorithm and other existing algorithms. The results indicate that our new algorithm performs much better than those algorithms.},
+  Acmid                    = {2385315},
+  Address                  = {Hingham, MA, USA},
+  Doi                      = {10.1007/s11227-011-0708-z},
+  ISSN                     = {0920-8542},
+  Issue_date               = {October 2012},
+  Keywords                 = {Data replication, Historical access record, Proactive deletion, Read overhead, Update overhead},
+  Numpages                 = {24},
+  Publisher                = {Kluwer Academic Publishers},
+  Url                      = {http://dx.doi.org/10.1007/s11227-011-0708-z}
+}
+
+@Article{weiss10logootundo,
+  Title                    = {Logoot-Undo: Distributed Collaborative Editing System on P2P Networks},
+  Author                   = {Stephane Weiss and Pascal Urso and Pascal Molli},
+  Journal                  = {IEEE Transactions on Parallel and Distributed Systems},
+  Year                     = {2010},
+  Pages                    = {1162-1174},
+  Volume                   = {21},
+
+  Address                  = {Los Alamitos, CA, USA},
+  Bdsk-url-1               = {http://doi.ieeecomputersociety.org/10.1109/TPDS.2009.173},
+  Date-added               = {2011-02-15 16:31:38 +0100},
+  Date-modified            = {2012-05-24 11:23:23 +0200},
+  ISSN                     = {1045-9219},
+  Keywords                 = {CRDT},
+  Publisher                = {IEEE Computer Society}
+}
+
+@TechReport{Weiss2008a,
+  Title                    = {Logoot: a P2P collaborative editing system},
+  Author                   = {Weiss, St{\'e}phane and Urso, Pascal and Molli, Pascal},
+  Institution              = {INRIA},
+  Year                     = {2008},
+  Number                   = {RR-6713},
+  Type                     = {Rapport de recherche},
+
+  Abstract                 = {Massive collaborative editing becomes a reality through leading projects such as the Wikipedia. Such massive collaboration is currently supported with costly central service. To avoid such costs, we aim to provide a peer-to-peer collaborative editing system. Existing approaches that propose distributed collaborative distributed either do not scale in term of users number or in term of editions number. We present the Logoot approach that scales in these both dimensions while ensuring causality, consistency and intention criteria. We evaluate the Logoot approach and compare it to others with a corpus of all the editions applied on a set of the most edited and biggest page of the Wikipedia.},
+  Affiliation              = {ECOO - INRIA Lorraine - LORIA},
+  File                     = {main.pdf:http\://hal.inria.fr/inria-00336191/PDF/main.pdf:PDF},
+  Hal_id                   = {inria-00336191},
+  Keywords                 = {P2P;collaborative editing;optimistic replication;scalability},
+  Language                 = {Anglais},
+  Pages                    = {13},
+  Review                   = {Used for colaborative editing},
+  Url                      = {http://hal.inria.fr/docs/00/34/59/11/PDF/main.pdf}
+}
+
+@TechReport{Wolfson1990a,
+  Title                    = {A Distributed Algorithm for Adaptive Replication of Data},
+  Author                   = {Ouri Wolfson},
+  Institution              = {Department of Computer Science, Columbia University},
+  Year                     = {1990},
+
+  Abstract                 = {We present a distributed algorithm for replication of a data-item in a set of processors interconnected by a tree network. The algorithm is adaptive in the sense that the replication scheme of the item (i.e. the set of processors. each of which stores a replica of the data-item). changes as the read-write pattern of the processors in the network changes. The algorithm is optimal in the sense that when the replication scheme stabilizes, the total number of messages required for the reads and writes is minimal.},
+  Comment                  = {Read},
+  Owner                    = {aas},
+  Review                   = {Good for its simplicity.
+With issues when the connected DC are in a ring (circule), without leafs.
+Maybe it could be extended},
+  Timestamp                = {2014.09.12},
+  Url                      = {http://hdl.handle.net/10022/AC:P:21285}
+}
+
+@Article{Wolfson1997a,
+  Title                    = {An Adaptive Data Replication Algorithm},
+  Author                   = {Wolfson, Ouri and Jajodia, Sushil and Huang, Yixiu},
+  Journal                  = {ACM Trans. Database Syst.},
+  Year                     = {1997},
+
+  Month                    = jun,
+  Number                   = {2},
+  Pages                    = {255--314},
+  Volume                   = {22},
+
+  Abstract                 = {This article addresses the performance of distributed database systems. Specifically, we present an algorithm for dynamic replication of an object in distributed systems. The algorithm is adaptive in the sence that it changes the replication scheme of the object i.e., the set of processors at which the object inreplicated) as changes occur in the read-write patern of the object (i.e., the number of reads and writes issued by each processor). The algorithm continuously moves the replication scheme towards an optimal one. We show that the algorithm can be combined with the concurrency control and recovery mechanisms of ta distributed database management system. The performance of the algorithm is analyzed theoretically and experimentally. On the way we provide a lower bound on the performance of any dynamic replication algorith.},
+  Acmid                    = {249982},
+  Address                  = {New York, NY, USA},
+  Doi                      = {10.1145/249978.249982},
+  ISSN                     = {0362-5915},
+  Issue_date               = {June 1997},
+  Keywords                 = {computer networks, dynamic data allocation, file allocation, replicated data},
+  Numpages                 = {60},
+  Publisher                = {ACM},
+  Url                      = {http://www.cs.uic.edu/~wolfson/mobile_ps/tods-adaptive-replication.pdf}
+}
+
+@Article{Wolfson1991a,
+  Title                    = {The Multicast Policy and Its Relationship to Replicated Data Placement},
+  Author                   = {Wolfson, Ouri and Milo, Amir},
+  Journal                  = {ACM Trans. Database Syst.},
+  Year                     = {1991},
+
+  Month                    = mar,
+  Number                   = {1},
+  Pages                    = {181--205},
+  Volume                   = {16},
+
+  Abstract                 = {In this paper we consider the communication complexity of maintaining the replicas of a logical data-item, in a database distributed over a computer network. We propose a new method, called the minimum spanning tree write, by which a processor in the network should multicast a write of a logical data-item, to all the processors that store replicas of the items. Then we show that the minimum spanning tree write is optimal from the communication cost point of view. We also demonstate that the method by which a write is multicast to all the replicas of a data-item affects the optimal replication scheme of the item, i.e., at which processors in the network the replicas should be located. Therefore, next we consider the problem of determining an optimal replicaiton scheme for a data item, assuming that each processor employs the minimum spanning tree write at run-time. The problem for general networks is shown NP-Complete, but we provide efficient algorithms to obtain an optimal allocation scheme for three common types of network topologies. They are completely-connected, tree, and ring networks. For these topologies, efficient algorithms are also provided for the case in which reliability considerations dictate a minimum number of replicas.},
+  Acmid                    = {103146},
+  Address                  = {New York, NY, USA},
+  Doi                      = {10.1145/103140.103146},
+  ISSN                     = {0362-5915},
+  Issue_date               = {March 1991},
+  Keywords                 = {NP-Complete, complexity, computer network, file allocation, message passing},
+  Numpages                 = {25},
+  Publisher                = {ACM},
+  Url                      = {http://academiccommons.columbia.edu/catalog/ac%3A142996}
+}
+
+@comment{jabref-meta: groupsversion:3;}
+
+@comment{jabref-meta: groupstree:
+0 AllEntriesGroup:;
+1 ExplicitGroup:Eventual Consistency\;0\;Baquero1997a\;Preguica2009a\;
+Saito2005a\;Shapiro2004a\;Shapiro2009\;Shapiro2009a\;app:sh137\;app:sy
+n:optim:1487\;formel:rep:1529\;optim:rep:syn:1498\;rep:1507\;rep:optim
+:sh126\;rep:syn:optim:1491\;shapiro11conflictfree\;syn:rep:1580\;;
+1 KeywordGroup:Genetic algorithm\;0\;keywords\;Genetic algorithm\;0\;0
+\;;
+1 KeywordGroup:Replication\;0\;keywords\;replication\;0\;0\;;
+1 ExplicitGroup:SyncFree\;0\;Asco2014a\;Asco2014b\;Benedictus2014a\;;
+1 KeywordGroup:Benchmark\;0\;keywords\;benchmark\;0\;0\;;
+1 KeywordGroup:Protocol\;0\;keywords\;Protocol\;0\;0\;;
+}
+

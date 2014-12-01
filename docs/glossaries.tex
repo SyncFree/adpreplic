@@ -1,0 +1,74 @@
+% % % % % % % % % % % % % % % % % % % % % % % % % %
+% Aconyms for SyncFree project.
+%
+% Author: Amadeo Asco 
+% Last updated: 24 July 2014
+% % % % % % % % % % % % % % % % % % % % % % % % % %
+% The acronym package helps you manage acronyms and acronym lists in your documents, http://www.mackichan.com/index.html?techtalk/456.htm~mainFrame
+% for the glossary to show up in Table of Contents you need to additionally add toc option
+\usepackage[toc,nonumberlist]{glossaries}
+%\showthe\hsize% interrupts latex and shows value of \hsize
+\setlength{\glsdescwidth}{0.82\hsize}%
+% to remove extra line between groups
+\renewcommand{\glsgroupskip}{}
+% To get rid of the full stop after the description in the glossary
+\renewcommand{\glspostdescription}{}
+\makeglossaries
+
+% Start definitions ---------------------------
+% Add all of the definitions for the abbreviations
+\newacronym{2pc}{2PC}{two-phase commit}
+\newacronym{2i}{2i}{Secondary Indexing}
+\newacronym{2pset}{2P-Set}{Two-Phase Set}
+\newacronym{acid}{ACID}{Atomicity, Consistency, Isolation, Durability}
+\newacronym{api}{API}{Application Programming Interface}
+\newacronym{b2b}{B2B}{Business to Business}
+\newacronym{base}{BASE}{basically available, soft state, eventual consistency}
+\newacronym{cci}{CCI}{Causality, Convergence and Intention}
+\newacronym{cmrdt}{CmRDT}{Op-based Convergent Replicated Data Type}
+\newacronym{cprdt}{CPRDT}{Conflict-free Partially Replicated Data Type}
+\newacronym{crdt}{CRDT}{Conflict-free Replicated Data Type}
+\newacronym{cqrs}{CQRS}{Command Query Responsibility Segregation}
+\newacronym{cvrdt}{CvRDT}{State-based Convergent Replicated Data Type}
+\newacronym{db}{DB}{Data Base}
+\newacronym{dc}{DC}{Data Centre}
+\newacronym{ec}{EC}{Eventual Consistency}
+\newacronym{fmk}{FMK}{Shared Medical Record}
+\newacronym{ga}{GA}{Genetic Algorithm}
+\newacronym{gmu}{GMU}{Genuine Multi-version Update}
+\newacronym{gp}{GP}{General Practitioner}
+\newacronym{gpr}{GPR}{Genuine Partial Replication}
+\newacronym{gset}{G-set}{State-based increment-only Counter}
+\newacronym{ha}{HA}{High Availability}
+\newacronym{id}{ID}{identifier}
+\newacronym{iot}{IoT}{Internet of Things}
+\newacronym{lww}{LWW}{Last-Writer-Wins}
+\newacronym{lwwr}{LWW-Register}{Last-Writer-Wins Register}
+\newacronym{mdc}{MDC}{Multi Data Centre}
+\newacronym{mv}{MV}{Multi-Valued}
+\newacronym{mvr}{MV-Register}{Multi-Valued Register}
+\newacronym{orset}{OR-set}{Observed-Removed Set}
+\newacronym{pb}{PB}{petabytes}
+\newacronym{rdbms}{RDBMS}{Relational Database Management System}
+\newacronym{rga}{RGA}{Replicated Growing Array}
+\newacronym{rest}{REST}{Representational State Transfer}
+\newacronym{rpc}{RPC}{Remote Procedure Call}
+\newacronym{cap}{CAP}{Consistency, Availability and Partition tolerance}
+\newacronym{sec}{SEC}{Strong Eventual Consistency}
+\newacronym{tb}{TB}{terabyte}
+\newacronym{ttl}{TTL}{Time To Live}
+\newacronym{uset}{U-Set}{Two-Phase Set with unique elements}
+\newacronym{wp1}{WP 1}{Work Package 1}
+\newacronym{wp2}{WP 2}{Work Package 2}
+\newacronym{wp3}{WP 3}{Work Package 3}
+\newacronym{wp4}{WP 4}{Work Package 4}
+\newacronym{wp5}{WP 5}{Work Package 5}
+\newacronym{uml}{UML}{Unified Modelling Language}
+% end abbreviations ---------------------------
+
+%\ifnum\showDefinitions=1
+% Add all of the definitions
+%\newglossaryentry{bwd}{name={box-and-whisker diagram}, text={box-and-whisker diagram}, first={box-and-whisker diagram},
+%    description={\parbox{10.6cm}{\medskip The bottom and top of the box are the 25th and 75th percentile (the lower and upper quartiles, respectively), and the band near the middle of the box is the median, whereas the dot represent the mean. The ends of the whiskers represent the minimum and maximum of all of the data.\medskip}}}
+% end definitions -----------------------------
+%\fi
