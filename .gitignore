@@ -6,3 +6,6 @@ ebin/
 dialyzer_unhandled_warnings
 .local_dialyzer_plt
 dialyzer_warnings
+
+.deps_plt
+deps/
