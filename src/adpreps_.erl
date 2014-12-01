@@ -27,41 +27,41 @@
 %% =============================================================================
 %% Adaptive Replication support
 %% =============================================================================
-%% @spec create(Key, Id::integer(), Value, Strategy::float(), Args::tuple()) -> Result::tuple()
+%% @spec create(Key::atom(), Id::integer(), Value, Strategy::float(), Args::tuple()) -> Result::tuple()
 %% 
 %% @doc Creates the first instance of the specified data in this DC. The results is of the format 
 %%		{ok} or {error, ErrorCode}.
 create(Key, Id, Value, Strategy, Args) ->
 	send(Key, {create, self(), Id, {Value, Strategy, Args}}).
 
-%% @spec read(Key, Id::integer) -> Result::tuple()
+%% @spec read(Key::atom(), Id::integer) -> Result::tuple()
 %% 
 %% @doc Reads the value of the specified data. The results is of the format {ok, Value} or 
 %%		{error, ErrorCode}.
 read(Key, Id) ->
 	send(Key, {read, self(), Id}).
 
-%% @spec write(Key, Id::integer(), Value) -> Result::tuple()
+%% @spec write(Key::atom(), Id::integer(), Value) -> Result::tuple()
 %% 
 %% @doc Writes the new value of the specified data. The results is of the format {ok} or 
 %%		{error, ErrorCode}.
 write(Key, Id, Value) ->
 	send(Key, {read, self(), Id, Value}).
 
-%% @spec stop(Key) -> Result::tuple()
+%% @spec stop(Key::atom()) -> Result::tuple()
 %% 
 %% @doc Requests to stop the process for the specified data. The results is of the format {ok} or 
 %%		{error, ErrorCode}.
 stop(Key) ->
 	send(Key, {stop, self(), 0}).
 
-%% @spec send(Key, Msg) -> Response::tuple()
+%% @spec send(Key::atom(), Msg) -> Response::tuple()
 %% 
 %% @doc Sends the specified message for the specified data and wait for the replay, synchronous. The 
 %%		results is of the format {ok, Value} or {error, ErrorCode}.
 send(Key, Msg) ->
 	send(Key, Msg, true).
-%% @spec send(Key, Msg, WaitReply::boolean()) -> Response::tuple()
+%% @spec send(Key::atom(), Msg, WaitReply::boolean()) -> Response::tuple()
 %% 
 %% @doc Sends the specified message for the specified data and wait for the replay if WaitReply is 
 %%		true. The results is of the format {ok, Value}, {ok, without_replay}, 
@@ -73,9 +73,8 @@ send(Key, Msg, WaitReply) ->
 			if
 				Result == created ->
 				    {create, Id2, {create, Pid2, Id2, Value}};
-
 				true ->
-					{error, none, already_exist}
+					{error, none, Result}
 			end;
 
 		{Type1, _Pid, Id2, _Value} ->
@@ -113,7 +112,7 @@ send(Key, Msg, WaitReply) ->
 			end
 	end.
 
-%% @spec sendIt(Key, Type, Id, Msg1, WaitReply::boolean()) -> Response::tuple()
+%% @spec sendIt(Key::atom(), Type, Id, Msg1, WaitReply::boolean()) -> Response::tuple()
 %% 
 %% @doc Sends the specified message of the specified type (Type) and identifier (Id) and waits for 
 %%		reply if WaitReply is true. The results is of the format {ok, Value}, {ok, without_replay} 
@@ -137,7 +136,7 @@ sendIt(Key, Type, Id, Msg, WaitReply) ->
 			{ok, without_replay}
     end.
 
-%% @spec startProcess(Key, Strategy::atom(), Dcs::list(), Args::tuple()) -> Result::atom()
+%% @spec startProcess(Key::atom(), Strategy::atom(), Dcs::list(), Args::tuple()) -> Result::atom()
 %% 
 %% @doc Sends the specified message for the specified data. The result may be already_exist, ok or 
 %%		created.
@@ -148,15 +147,14 @@ startProcess(Key, StrategyName, Dcs, Args) ->
 		[nonode@nohost] ->
 			% The process does not exists yet
 		    % Start the strategy process
-			Strategy = "strategy_" + StrategyName,
-		    Pid = spawn(Strategy, run, {Key, Dcs, Args}),
-		    R = register(Key, Pid),
+			Strategy = list_to_atom(string:str("strategy_", StrategyName)),
+		    R = register(Key, spawn(Strategy, run, {Key, Dcs, Args})),
 			if
 				R == undefined ->
 					% The process alreday exist, so the data already exists locally or somewhere 
 					% else.
 					% Stop the started process
-					Pid ! {stop, self(), 0},
+					Key ! {stop, self(), 0},
 					receive
 						{reply, stop, Key, 0, _Response} ->
 							already_exist

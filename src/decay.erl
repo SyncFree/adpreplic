@@ -20,7 +20,7 @@
 %% =============================================================================
 %% Decay process
 %% =============================================================================
-%% @spec runDecay(Time::integer(), Key) -> {ok}
+%% @spec runDecay(Time::integer(), Key::atom()) -> {ok}
 %% 
 %% @doc Applies the decay as time passes.
 runDecay(Time, Key) ->
@@ -33,23 +33,22 @@ runDecay(Time, Key) ->
 		runDecay(Time, Key)
 	end.
 
-%% @spec startDecay(DecayTime::integer(), Key, StopPrevious::boolean()) -> true
+%% @spec startDecay(DecayTime::integer(), Key::atom(), StopPrevious::boolean()) -> true
 %% 
 %% @doc Starts the decay process for the specified key and time period.
 startDecay(DecayTime, Key, StopPrevious) ->
-	DecayKey = Key + "decay",
+	DecayKey = list_to_atom(string:concat(Key, "decay")),
 	if
 		StopPrevious ->
 			DecayKey ! {stop}
 	end,
-	Pid = spawn(decay, runDecay, [DecayTime | Key]),
-	register(DecayKey, Pid).
+	register(DecayKey, spawn(decay, runDecay, [DecayTime | Key])).
 
-%% @spec stopDecay(Key) -> {ok}
+%% @spec stopDecay(Key::atom()) -> {ok}
 %%
 %% @doc Stops the dacay process. No reply is sent back to sender.
 stopDecay(Key) ->
 	% Stops the decay process
-	DecayKey = Key + "decay",
+	DecayKey = list_to_atom(string:concat(Key, "decay")),
 	DecayKey ! {stop},
 	{ok}.
