@@ -29,8 +29,8 @@ runDecay(Time, Key) ->
 			{ok}
 	after 
         Time ->
-		Key ! {decay},
-		runDecay(Time, Key)
+			Key ! {decay},
+			runDecay(Time, Key)
 	end.
 
 %% @spec startDecay(DecayTime::integer(), Key::atom(), StopPrevious::boolean()) -> true

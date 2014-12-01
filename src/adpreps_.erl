@@ -148,24 +148,24 @@ startProcess(Key, StrategyName, Dcs, Args) ->
 			% The process does not exists yet
 		    % Start the strategy process
 			Strategy = list_to_atom(string:concat("strategy_", StrategyName)),
-		    R = register(Key, spawn(Strategy, run, [{Key, Dcs, Args}])),
-			if
-				R == undefined ->
+			Pid = spawn(Strategy, run, [{Key, Dcs, Args}]),
+			try register(Key, Pid) of
+				true ->
+				    % Succeed
+				    created
+			catch
+				error:badarg -> 
 					% The process alreday exist, so the data already exists locally or somewhere 
 					% else.
 					% Stop the started process
-					Key ! {stop, self(), 0},
+					Key ! {stop, Pid, 0},
 					receive
 						{reply, stop, Key, 0, _Response} ->
 							already_exist
 					after
 						1000 -> 
 							already_exist
-					end;
-
-				true ->
-				    % Succeed
-				    created
+					end
 			end;
 
 		_ ->

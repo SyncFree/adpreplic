@@ -27,7 +27,7 @@
 %% =============================================================================
 %% Propossed Adaptive Replication Strategy process
 %% =============================================================================
-%% @spec run(Key, DC::list(), Args::tuple()) -> Result::tuple()
+%% @spec run(Key::atom(), DC::list(), Args::tuple()) -> Result::tuple()
 %%
 %% @doc Processes the messaged from the mailbox base on the specified arguments and the given data 
 %%		(its key).
@@ -51,9 +51,11 @@ run(Key, DCs, Args) ->
 			% No replica
 			{false, 0}
 	end,
-	decay:startDecay(DecayTime, Key, false),
+	StopPrevious = false,
+	decay:startDecay(DecayTime, Key, StopPrevious),
 	run(Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength).
-%% @spec run(Key, Replicated::boolean(), Strength::float(), DecayTime::integer(), MinNumReplicas::integer(), ReplicationThreshold::float(), RmvThreshold::float(), MaxStrength::float(), Decay::float(), WDecay::float(), RStrength::float(), WStrength::float()) -> Result::tuple()
+
+%% @spec run(Key::atom(), Replicated::boolean(), Strength::float(), DecayTime::integer(), MinNumReplicas::integer(), ReplicationThreshold::float(), RmvThreshold::float(), MaxStrength::float(), Decay::float(), WDecay::float(), RStrength::float(), WStrength::float()) -> Result::tuple()
 %%
 %% @doc Processes the messaged from the mailbox. ReplicationThreshold > RmvThreshold >= 0.
 run(Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength) ->
@@ -120,7 +122,7 @@ run(Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, 
 %% =============================================================================
 %% Support functions
 %% =============================================================================
-%% @spec decay(Key, Replicated::boolean(), Strength::float(), MinNumReplicas::float(), RmvThreshold::float(), Decay::float()) -> {Replicated1::boolean(), Strength1::float()}
+%% @spec decay(Key::atom(), Replicated::boolean(), Strength::float(), MinNumReplicas::float(), RmvThreshold::float(), Decay::float()) -> {Replicated1::boolean(), Strength1::float()}
 %% 
 %% @doc Processes the decay message.
 decay(Key, Replicated, Strength, MinNumReplicas, RmvThreshold, Decay) ->
@@ -128,7 +130,7 @@ decay(Key, Replicated, Strength, MinNumReplicas, RmvThreshold, Decay) ->
 	Strength1 = Strength - Decay,
 	processStrength(Key, Replicated, Strength1, MinNumReplicas, RmvThreshold).
 
-%% @spec forward(Key, Type::atom(), Pid::pid(), Id::integer(), Msg, Replicated::bolean()) -> {ok}
+%% @spec forward(Key::atom(), Type::atom(), Pid::pid(), Id::integer(), Msg, Replicated::bolean()) -> {ok}
 %% 
 %% @doc Builds the forward message and send it to the specified process.
 forward(Key, Type, Pid, Id, Msg, Replicated) -> 
@@ -166,7 +168,7 @@ forward(Key, Type, Pid, Id, Msg, Replicated) ->
     end,
     Pid ! {replay, Type, self(), Id, Respose}.
 
-%% @spec processStrength(Key, Replicated::boolean(), Strength::float(), MinNumReplicas::float(), RmvThreshold::float()) -> {Replicated1::boolean(), Strength::float()}
+%% @spec processStrength(Key::atom(), Replicated::boolean(), Strength::float(), MinNumReplicas::float(), RmvThreshold::float()) -> {Replicated1::boolean(), Strength::float()}
 %% 
 %% @doc Processes the forwarded message.
 processStrength(Key, Replicated, Strength, MinNumReplicas, RmvThreshold) ->
@@ -221,7 +223,7 @@ processStrength(Key, Replicated, Strength, MinNumReplicas, RmvThreshold) ->
 	end,
 	{Replicated1, Strength1}.
 
-%% @spec read(Key, Pid::pid(), Id::integer(), Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), RStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float()}
+%% @spec read(Key::atom(), Pid::pid(), Id::integer(), Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), RStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float()}
 %% 
 %% @doc Reads the specified data, irrespective of where it is located.
 read(Key, Pid, Id, Replicated, Strength, ReplicationThreshold, RStrength, MaxStrength) ->
@@ -253,7 +255,7 @@ read(Key, Pid, Id, Replicated, Strength, ReplicationThreshold, RStrength, MaxStr
 	dcs:sendReply(Pid, read, Id, Result),
 	{Replicated1, Strength1}.
 
-%% @spec stop(Key) -> {ok}
+%% @spec stop(Key::atom()) -> {ok}
 %%
 %% @doc Stops the process associated to the data. No replay is sent to sender.
 stop(Key) -> 
@@ -263,7 +265,7 @@ stop(Key) ->
 	flush(Key),
 	{ok}.
 
-%% @spec flush(Key) -> {ok}
+%% @spec flush(Key::atom()) -> {ok}
 %%
 %% @doc Removes all pre-existing messages in the mailbox and replies to those that require a 
 %%		response.
@@ -298,15 +300,15 @@ flush(Key) ->
 			{ok}
 	end.
 
-%% @spec update(Key, Value, Replicated::boolean(), Strength::float(), MinNumReplicas::float(), RmvThreshold::float(), WDecay::float()) -> {Replicated1::boolean(), Strength1::float()}
+%% @spec update(Key::atom(), Value, Replicated::boolean(), Strength::float(), MinNumReplicas::float(), RmvThreshold::float(), WDecay::float()) -> {Replicated1::boolean(), Strength1::float()}
 %% 
 %% @doc Updates only this replica and may request to stop process.
 update(Key, Value, Replicated, Strength, MinNumReplicas, RmvThreshold, WDecay) -> 
-	dcs:update(Key, Value),
+	dcs:updates(Key, Value),
 	Strength1 = Strength - WDecay,
 	processStrength(Key, Replicated, Strength1, MinNumReplicas, RmvThreshold).
 
-%% @spec write(Key, Pid::pid(), Id::integer(), Value, Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), WStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float()}
+%% @spec write(Key::atom(), Pid::pid(), Id::integer(), Value, Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), WStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float()}
 %% 
 %% @doc Writes the new value of the specified data and take appropiate action to update replicated sites (DCs).
 write(Key, Pid, Id, Value, Replicated, Strength, ReplicationThreshold, WStrength, MaxStrength) ->
