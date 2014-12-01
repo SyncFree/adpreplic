@@ -39,8 +39,10 @@ runDecay(Time, Key) ->
 startDecay(DecayTime, Key, StopPrevious) ->
 	DecayKey = list_to_atom(string:concat(Key, "decay")),
 	if
-		StopPrevious ->
-			DecayKey ! {stop}
+		StopPrevious == true ->
+			DecayKey ! {stop};
+		StopPrevious == false ->
+			ok
 	end,
 	register(DecayKey, spawn(decay, runDecay, [DecayTime | Key])).
 

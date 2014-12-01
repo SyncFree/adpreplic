@@ -51,8 +51,7 @@ run(Key, DCs, Args) ->
 			% No replica
 			{false, 0}
 	end,
-	StopPrevious = false,
-	decay:startDecay(DecayTime, Key, StopPrevious),
+	decay:startDecay(DecayTime, Key, false),
 	run(Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength).
 
 %% @spec run(Key::atom(), Replicated::boolean(), Strength::float(), DecayTime::integer(), MinNumReplicas::integer(), ReplicationThreshold::float(), RmvThreshold::float(), MaxStrength::float(), Decay::float(), WDecay::float(), RStrength::float(), WStrength::float()) -> Result::tuple()
@@ -112,7 +111,7 @@ run(Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, 
 
 		{forward, Type, Pid, Id, Msg} -> 
 			% Should only come from another DC. Maybe it should be cheked before it is processed
-			forward(key, Type, Pid, Id, Msg, Replicated),
+			forward(Key, Type, Pid, Id, Msg, Replicated),
 			run(Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength);
 
 		{stop, _Pid, _Id} ->
