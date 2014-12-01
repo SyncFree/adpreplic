@@ -147,8 +147,8 @@ startProcess(Key, StrategyName, Dcs, Args) ->
 		[nonode@nohost] ->
 			% The process does not exists yet
 		    % Start the strategy process
-			Strategy = list_to_atom(string:str("strategy_", StrategyName)),
-		    R = register(Key, spawn(Strategy, run, {Key, Dcs, Args})),
+			Strategy = list_to_atom(string:concat("strategy_", StrategyName)),
+		    R = register(Key, spawn(Strategy, run, [{Key, Dcs, Args}])),
 			if
 				R == undefined ->
 					% The process alreday exist, so the data already exists locally or somewhere 
