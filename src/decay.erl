@@ -13,44 +13,72 @@
 -module(decay).
 -author('aas@trifork.co.uk').
 
+
+-ifdef(EUNIT).
 -compile(export_all).
+-else.
+-compile(report).
 -export([startDecay/3,stopDecay/1]).
+-export([init/1]).
+-endif.
 
 
 %% =============================================================================
 %% Decay process
 %% =============================================================================
-%% @spec runDecay(Time::integer(), Key::atom()) -> {ok}
+
+%% @spec init({Time::integer(), Key::atom()}) -> {ok}
 %% 
 %% @doc Applies the decay as time passes.
-runDecay(Time, Key) ->
+init({Time, Key}) ->
+	loop(Time, Key).
+
+%% @spec loop(Time::integer(), Key::atom()) -> {ok}
+%% 
+%% @doc Processes the messages hold by the mailbox.
+loop(Time, Key) ->
 	receive
-		{stop} ->
+		{stop, _Pid, _Id} ->
 			{ok}
 	after 
         Time ->
-			Key ! {decay},
-			runDecay(Time, Key)
+			Key ! {decay, self(), 0},
+			loop(Time, Key)
 	end.
+
+%% =============================================================================
+%% Decay process interface
+%% =============================================================================
 
 %% @spec startDecay(DecayTime::integer(), Key::atom(), StopPrevious::boolean()) -> true
 %% 
 %% @doc Starts the decay process for the specified key and time period.
-startDecay(DecayTime, Key, StopPrevious) ->
-	DecayKey = list_to_atom(string:concat(Key, "decay")),
-	if
-		StopPrevious == true ->
-			DecayKey ! {stop};
-		StopPrevious == false ->
-			ok
-	end,
-	register(DecayKey, spawn(decay, runDecay, [DecayTime | Key])).
+startDecay(DecayTime, Key, true) ->
+	stopDecay(Key),
+	startDecay(DecayTime, Key, false);
+startDecay(DecayTime, Key, false) ->
+	DecayKey = buildPid(Key),
+	register(DecayKey, spawn_link(decay, init, [{DecayTime, Key}])).
 
-%% @spec stopDecay(Key::atom()) -> {ok}
+%% @spec stopDecay(Key::atom()) -> Results::tuple()
 %%
-%% @doc Stops the dacay process. No reply is sent back to sender.
+%% @doc Stops the dacay process. Returns {ok} if no problem was found requesting the stop 
+%%		of the process or {error, may_not_exists} otherwise.
 stopDecay(Key) ->
 	% Stops the decay process
-	DecayKey = list_to_atom(string:concat(Key, "decay")),
-	DecayKey ! {stop},
-	{ok}.
+	DecayKey = buildPid(Key),
+	% No reply is sent back to sender
+	try DecayKey ! {stop, self(), 0} of
+		_ ->
+			% Succeed
+			{ok}
+	catch
+		error:badarg -> 
+			{error, may_not_exists}
+	end.
+
+%% @spec buildPid(Key::atom()) -> Pid::atom()
+%%
+%% @doc Builds the decay process ID for the specified key.
+buildPid(Key) ->
+	list_to_atom(string:concat(Key, "decay")).

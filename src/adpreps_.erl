@@ -55,6 +55,7 @@ write(Key, Id, Value) ->
 stop(Key) ->
 	send(Key, {stop, self(), 0}).
 
+%% =============================================================================
 %% @spec send(Key::atom(), Msg) -> Response::tuple()
 %% 
 %% @doc Sends the specified message for the specified data and wait for the replay, synchronous. The 
@@ -68,11 +69,11 @@ send(Key, Msg) ->
 %%		{error, invalid_msg_format} or {error, timeout}.
 send(Key, Msg, WaitReply) ->
     {Type, Id, Msg1} = case Msg of
-        {create, Pid2, Id2, {Value, Strategy, Args}} ->
-			Result = startProcess(Key, Strategy, [], Args),
+        {create, Id2, {Value, Strategy, Args}} ->
+			Result = startProcess(Key, Strategy, Args),
 			if
 				Result == created ->
-				    {create, Id2, {create, Pid2, Id2, Value}};
+				    {create, Id2, {create, Id2, Value}};
 				true ->
 					{error, none, Result}
 			end;
@@ -100,11 +101,11 @@ send(Key, Msg, WaitReply) ->
 	catch
         _ ->
 			% The process for that data does not exist yet
-	        Id1 = dsc:getNewID(),
+	        Id1 = dcs:getNewID(Key),
 			dcs:sendToAllDCs({has_replica, self(), Id1}),
 			receive
-				{reply, has_replica, _, Id1, {ok, {Strategy1, DCs, Args1}}} ->
-					startProcess(Key, Strategy1, DCs, Args1),
+				{reply, has_replica, _, Id1, {ok, {Strategy1, _DCs, Args1}}} ->
+					startProcess(Key, Strategy1, Args1),
 					sendIt(Key, Type, Id, Msg1, WaitReply)
 			after 
 				6000 ->
@@ -118,29 +119,28 @@ send(Key, Msg, WaitReply) ->
 %%		reply if WaitReply is true. The results is of the format {ok, Value}, {ok, without_replay} 
 %%		or {error, timeout}.
 sendIt(Key, Type, Id, Msg, WaitReply) ->
-    % Send message
-    Key ! Msg,
 	if
-		WaitReply ->
-		% Wait to get reply
-        receive 
-	        {reply, Type, Key, Id, Response} ->
-        		Response
-        after 
-        	1000 -> 
-        		{error, timeout}
-		end;
+		WaitReply == true ->
+			Reply = gen_server:call(Key, Msg, 5000),
+			case Reply of
+				{reply, Type, Key, Id, Response} ->
+	        		Response;
 
-		true ->
+				Response ->
+					Response
+			end;
+
+		WaitReply == false ->
 			% Don't wait for reply
+			gen_server:cast(Key, Msg),
 			{ok, without_replay}
     end.
 
-%% @spec startProcess(Key::atom(), Strategy::atom(), Dcs::list(), Args::tuple()) -> Result::atom()
+%% @spec startProcess(Key::atom(), Strategy::atom(), Args::tuple()) -> Result::atom()
 %% 
 %% @doc Sends the specified message for the specified data. The result may be already_exist, ok or 
 %%		created.
-startProcess(Key, StrategyName, Dcs, Args) ->
+startProcess(Key, StrategyName, Args) ->
 	% Check if the process already exists, i.e. the data is known to exist
 	Result = nodes(Key),
 	case Result of
@@ -148,24 +148,13 @@ startProcess(Key, StrategyName, Dcs, Args) ->
 			% The process does not exists yet
 		    % Start the strategy process
 			Strategy = list_to_atom(string:concat("strategy_", StrategyName)),
-			Pid = spawn(Strategy, run, [{Key, Dcs, Args}]),
-			try register(Key, Pid) of
-				true ->
+			try gen_server:start({global, Key}, Strategy, {Key, Args}, []) of
+				_ ->
 				    % Succeed
 				    created
 			catch
 				error:badarg -> 
-					% The process alreday exist, so the data already exists locally or somewhere 
-					% else.
-					% Stop the started process
-					Key ! {stop, Pid, 0},
-					receive
-						{reply, stop, Key, 0, _Response} ->
-							already_exist
-					after
-						1000 -> 
-							already_exist
-					end
+					already_exist
 			end;
 
 		_ ->

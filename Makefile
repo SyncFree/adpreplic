@@ -72,7 +72,7 @@ $(DEPS_PLT):
 	   --apps $(DEPS) -r deps
  
 dialyzer: $(DEPS_PLT)
-	dialyzer --fullpath --plt $(DEPS_PLT) -Wrace_conditions -r ./ebin
+	dialyzer --fullpath --src --plt $(DEPS_PLT) -Wrace_conditions -r ./ebin ./src
  
 typer:
 	typer --plt $(DEPS_PLT) -r ./src
