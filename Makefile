@@ -63,6 +63,9 @@ doc:
 eunit: compile clean-common-test-data
 	$(REBAR) skip_deps=true eunit
  
+$(TEST_DEPS):
+	@echo Running EUnit
+
 test: compile eunit
  
 $(DEPS_PLT):
@@ -72,7 +75,7 @@ $(DEPS_PLT):
 	   --apps $(DEPS) -r deps
  
 dialyzer: $(DEPS_PLT)
-	dialyzer --fullpath --src --plt $(DEPS_PLT) -Wrace_conditions -r ./ebin ./src -I ./include
+	dialyzer --fullpath --src --plt $(DEPS_PLT) -Wrace_conditions -r ./ebin ./src ./test -I ./include
  
 typer:
 	typer --plt $(DEPS_PLT) -r ./src

@@ -26,7 +26,6 @@
 -endif.
 -behaviour(gen_server).
 
--include_lib("eunit/include/eunit.hrl").
 -include("adprep.hrl").
 
 

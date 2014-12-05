@@ -28,4 +28,4 @@
 
 
 flush_test() ->
-	?assertEqual(flush(""), {ok}).
+	?assertEqual(adpreps:flush(""), {ok}).
