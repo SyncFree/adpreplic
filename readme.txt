@@ -15,4 +15,4 @@ To build run
 	make
 
 To build javadoc like documentation run
-	erl -noshell -run edoc_run packages '[""]' '[{source_path, ["./src" | ["./test" | ["./include"]]]}, {dir,”./docs/doc"}, {private,true}, {todo,true}]'
+	erl -noshell -run edoc_run packages '[""]' '[{source_path, ["./src" | ["./include"]]}, {dir,”./docs/doc"}, {private,true}, {todo,true}]'
