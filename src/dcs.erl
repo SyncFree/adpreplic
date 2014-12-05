@@ -26,10 +26,12 @@
 %% =============================================================================
 %% Data Centers support
 %% =============================================================================
-%% @spec create(Key::atom(), Value, Func) -> Result::typle()
+%% @spec create(Key::atom(), Value::tuple()) -> Result::typle()
 %% 
 %% @doc Creates the replica locally. The result may have the values {ok} or 
 %%		{error, ErrorCode}.
+%%
+%%		The passed Value is a tuple that contains {Value, NextDCFunc::function(), Args}.
 create(Key, {Value, NextDCFunc, Args}) ->
     send(create, Key, {Value, NextDCFunc, Args}).
 
@@ -267,9 +269,9 @@ getNumReplicas() ->
 	%% TODO: implement it
 	0.
 
-%% @spec getNewID(Key:atom()) -> Id::integer()
+%% @spec getNewID(Key::atom()) -> Id::integer()
 %% 
-%% @doc Provides a new ID.
+%% @doc Provides a new ID for the specified key.
 getNewID(Key) ->
 	Pid = getReplicationLayerPid(Key),
 	{reply, new_id, 0, Results} = gen_server:call(Pid, {new_id, 0, Key}, 1000),
