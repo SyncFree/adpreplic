@@ -26,7 +26,6 @@
 -endif.
 -behaviour(gen_server).
 
--include_lib("eunit/include/eunit.hrl").
 -include("adprep.hrl").
 
 
@@ -51,7 +50,7 @@ handle_info(_Msg, LoopData) ->
 terminate(_Reason, _LoopData) ->
 	ok.
 
-%% @spec code_change(PreviousVersion, State, Extra) -> {ok, State}
+%% @spec code_change(PreviousVersion, State, Extra) -> Result::tuple()
 %%
 %% @doc Does nothing. No change planned yet.
 code_change(_PreviousVersion, State, _Extra) ->
@@ -246,10 +245,12 @@ handle_cast({reply, update, _Id, Key, Result}, {OwnId, Map}) ->
 %% Support functions
 %% =============================================================================
 
-%% @spec create(Key::atom(), Value, Map:map(), OwnId::integer()) -> {{ok}, OwnId1::integer(), Record, Map1::map()}
+%% @spec create(Key::atom(), Value, Map::map(), OwnId::integer()) -> Result::tuple()
 %%
 %% @doc Ceates a record for the specified data, adds it to the passed map and return all 
 %%		new information.
+%%
+%%		Returns {{ok}, Id::integer(), Record, NewMap}.
 create(Key, Value, Map, OwnId) ->
 	% Create the record for the specified key and save it
 	List = sets:new(),
@@ -257,7 +258,7 @@ create(Key, Value, Map, OwnId) ->
 	Map1 = maps:put(Key, Record, Map),
 	{{ok}, OwnId, Record, Map1}.
 
-%% @spec createOtherReplicas(Record, OwnId::integer(), NextDCsFunc::function(), Args) -> {Record1, OwnId1::integer()}
+%% @spec createOtherReplicas(Record, OwnId::integer(), NextDCsFunc::function(), Args) -> Result::tuple()
 %%
 %% @doc Gets a list of DC where replicas should be created, updates the record with the 
 %% 		new list of DCs with replicas and request the creation of the new replicas in each 
@@ -283,7 +284,7 @@ createOtherReplicas_(RegName, Record, OwnId, AllReplicatedDCs, [Dc | DCs], Poten
 	PotentialDCs1 = case Result of
 		{error, _ErrorCode} ->
 			% Failed, try with other potential DCs
-			PotentialDCs2 = createReplicasPotentiaDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, PotentialDCs),
+			PotentialDCs2 = createReplicasPotentialDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, PotentialDCs),
 			% Allow it to be later re-use the DC if needed
 			[Dc | PotentialDCs2];
 		_ ->
@@ -293,27 +294,29 @@ createOtherReplicas_(RegName, Record, OwnId, AllReplicatedDCs, [Dc | DCs], Poten
 createOtherReplicas_(_RegName, Record, OwnId, _AllReplicatedDCs, [], _PotentialDCs) ->
 	{Record, OwnId+1}.
 
-%% @spec createReplicasPotentiaDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, [Dc | NextPotentialDCs]) -> 
+%% @spec createReplicasPotentialDcs(RegName::atom(), Record, OwnId::integer(), AllReplicatedDCs::List, PotentialDCs::List, NextPotentialDCs::List) -> NewPotentialDCs::List
 %%
 %% @doc Tries to create the replica to a DC from within the list of other potential DCs.
-createReplicasPotentiaDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, [Dc | NextPotentialDCs]) ->
+createReplicasPotentialDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, [Dc | NextPotentialDCs]) ->
 	#replica{key=Key,value=Value}=Record,
 	{reply, create_new, OwnId, Result} = gen_server:call({RegName, Dc}, {create_new, OwnId, Key, Value, AllReplicatedDCs}),
 	case Result of
 		{error, _ErrorCode} ->
 			% Failed
-			createReplicasPotentiaDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, NextPotentialDCs);
+			createReplicasPotentialDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, NextPotentialDCs);
 		_ ->
 			sets:del_element(Dc, PotentialDCs)
 	end;
-createReplicasPotentiaDcs(_RegName, _Record, _OwnId, _AllReplicatedDCs, PotentialDCs, []) ->
+createReplicasPotentialDcs(_RegName, _Record, _OwnId, _AllReplicatedDCs, PotentialDCs, []) ->
 	PotentialDCs.
 
-%% @spec read(Key::atom(), OwnId::integer(), Map::map()) -> {Response, OwnId1::integer()}
+%% @spec read(Key::atom(), OwnId::integer(), Map::map()) -> Result::tuple()
 %%
 %% @doc Reads the data locally if exist, i.e. replicated, or alternativelly get the data 
-%%		from any of the other DCs with replicas. The returned value is a tuple with the 
-%%		response of the form {{ok, Value}, NewOwnId} or {{error, ErrorCode}, NewOwnId}
+%%		from any of the other DCs with replicas.
+%%
+%%		The returned value is a tuple with the response of the form 
+%%		{{ok, Value}, NewOwnId} or {{error, ErrorCode}, NewOwnId}.
 read(Key, OwnId, Map) ->
 	try maps:get(Key, Map) of
 		Record ->
@@ -334,7 +337,7 @@ read(Key, OwnId, Map) ->
 			end
 	end.
 
-%% @spec createOtherReplicas(Record, OwnId::integer(), NextDCFunc, Args) -> {Record1, OwnId1::integer()}
+%% @spec write(Key::atom(), OwnId::integer(), Value, Map::map()) -> Result::tuple()
 %%
 %% @doc Saves locally the new value and sets to send updates to all DCs with replicas if 
 %%		the data exists locally, otherwise requested from DCs with replicas and if the 
@@ -363,10 +366,11 @@ write(Key, OwnId, Value, Map) ->
 			end
 	end.
 
-%% @spec getAllDCsWithReplicas(Key::atom(), OwnId::integer()) -> Result
+%% @spec getAllDCsWithReplicas(Key::atom(), OwnId::integer()) -> Result::tuple()
 %%
-%% @doc Gets all the DCs with a replica. Returs a tuple that can be {ok, DCS} on success 
-%%		or {error, timeout} otherwise.
+%% @doc Gets all the DCs with a replica.
+%%
+%%		Returs a tuple that can be {ok, DCS} on success or {error, timeout} otherwise.
 getAllDCsWithReplicas(Key, OwnId) ->
 	% Discover the DCs with replicas
 	AllDCs = dcs:getAllDCs(),
@@ -381,10 +385,11 @@ getAllDCsWithReplicas(Key, OwnId) ->
 			{error, timeout}
 	end.
 
-%% @spec sendOne(Type::atom, OwnId::integer(), Key::atom(), Msg, RegName::atom(), DCs::List) -> Result::tuple()
+%% @spec sendOne(Type::atom(), OwnId::integer(), Key::atom(), Msg, RegName::atom(), DCs::List) -> Result::tuple()
 %%
 %% @doc Sends synchronously the specified message to the first of the specified DC for its 
-%%		process registered with the key and on failure will try with the other DCs. 
+%%		process registered with the key and on failure will try with the other DCs.
+%%
 %%		Returned result is a tuple with the result and the new own internal ID.
 sendOne(Type, OwnId, Key, Msg, RegName, [Dc | DCs]) ->
 	{reply, Type, OwnId, {ResultType, Result}} = gen_server:call({RegName, Dc}, Msg, 1000),

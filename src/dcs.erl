@@ -19,17 +19,22 @@
 -compile(export_all).
 -else.
 -compile(report).
--export([buildReply/2,buildReply/3,create/2,createReplica/1,createReplica/2,forwardMsg/2,forwardMsg/3,getAllDCs/0,getDCsReplica/1,getNewID/1,getNewID/0,newReplica/2,read/1,replicated/1,rmvFromReplica/2,rmvReplica/2,setDCsReplica/2,sendReply/4,sendToAllDCs/1,write/2,updates/2]).
+-export([buildReply/2,buildReply/3,create/2,createReplica/1,createReplica/2,forwardMsg/2,forwardMsg/3,getAllDCs/0,getDCsReplica/1,getNewID/1,getNewID/0,newReplica/2,read/1,replicated/1,rmvFromReplica/2,rmvReplica/2,setDCsReplica/2,sendReply/4,sendToAllDCs/1,write/2,updates/2,startReplicationLayer/0]).
 -endif.
 
+
+startReplicationLayer() ->
+	gen_server:start({global, getReplicationLayerPid()}, adprep, [], []).
 
 %% =============================================================================
 %% Data Centers support
 %% =============================================================================
-%% @spec create(Key::atom(), Value, Func) -> Result::typle()
+%% @spec create(Key::atom(), Value::tuple()) -> Result::typle()
 %% 
 %% @doc Creates the replica locally. The result may have the values {ok} or 
 %%		{error, ErrorCode}.
+%%
+%%		The passed Value is a tuple that contains {Value, NextDCFunc::function(), Args}.
 create(Key, {Value, NextDCFunc, Args}) ->
     send(create, Key, {Value, NextDCFunc, Args}).
 
@@ -267,9 +272,9 @@ getNumReplicas() ->
 	%% TODO: implement it
 	0.
 
-%% @spec getNewID(Key:atom()) -> Id::integer()
+%% @spec getNewID(Key::atom()) -> Id::integer()
 %% 
-%% @doc Provides a new ID.
+%% @doc Provides a new ID for the specified key.
 getNewID(Key) ->
 	Pid = getReplicationLayerPid(Key),
 	{reply, new_id, 0, Results} = gen_server:call(Pid, {new_id, 0, Key}, 1000),
@@ -285,6 +290,8 @@ getNewID() ->
 %% 
 %% @doc Provides the local Replication Layer process ID for the specified data.
 getReplicationLayerPid(_Key) ->
+	getReplicationLayerPid().
+getReplicationLayerPid() ->
 %	list_to_atom(string:concat(Key, "_rl")).
 	'rl'.
 
