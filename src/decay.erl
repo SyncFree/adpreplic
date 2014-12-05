@@ -20,7 +20,6 @@
 -compile(report).
 -export([startDecay/3,stopDecay/1]).
 -export([init/1]).
--export([buildPid/1]). % just for unit-test
 -endif.
 
 

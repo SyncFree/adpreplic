@@ -19,9 +19,12 @@
 -compile(export_all).
 -else.
 -compile(report).
--export([buildReply/2,buildReply/3,create/2,createReplica/1,createReplica/2,forwardMsg/2,forwardMsg/3,getAllDCs/0,getDCsReplica/1,getNewID/1,getNewID/0,newReplica/2,read/1,replicated/1,rmvFromReplica/2,rmvReplica/2,setDCsReplica/2,sendReply/4,sendToAllDCs/1,write/2,updates/2]).
+-export([buildReply/2,buildReply/3,create/2,createReplica/1,createReplica/2,forwardMsg/2,forwardMsg/3,getAllDCs/0,getDCsReplica/1,getNewID/1,getNewID/0,newReplica/2,read/1,replicated/1,rmvFromReplica/2,rmvReplica/2,setDCsReplica/2,sendReply/4,sendToAllDCs/1,write/2,updates/2,startReplicationLayer/0]).
 -endif.
 
+
+startReplicationLayer() ->
+	gen_server:start({global, getReplicationLayerPid()}, adprep, [], []).
 
 %% =============================================================================
 %% Data Centers support
@@ -287,6 +290,8 @@ getNewID() ->
 %% 
 %% @doc Provides the local Replication Layer process ID for the specified data.
 getReplicationLayerPid(_Key) ->
+	getReplicationLayerPid().
+getReplicationLayerPid() ->
 %	list_to_atom(string:concat(Key, "_rl")).
 	'rl'.
 

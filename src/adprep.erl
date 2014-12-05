@@ -284,7 +284,7 @@ createOtherReplicas_(RegName, Record, OwnId, AllReplicatedDCs, [Dc | DCs], Poten
 	PotentialDCs1 = case Result of
 		{error, _ErrorCode} ->
 			% Failed, try with other potential DCs
-			PotentialDCs2 = createReplicasPotentiaDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, PotentialDCs),
+			PotentialDCs2 = createReplicasPotentialDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, PotentialDCs),
 			% Allow it to be later re-use the DC if needed
 			[Dc | PotentialDCs2];
 		_ ->
@@ -294,20 +294,20 @@ createOtherReplicas_(RegName, Record, OwnId, AllReplicatedDCs, [Dc | DCs], Poten
 createOtherReplicas_(_RegName, Record, OwnId, _AllReplicatedDCs, [], _PotentialDCs) ->
 	{Record, OwnId+1}.
 
-%% @spec createReplicasPotentiaDcs(RegName::atom(), Record, OwnId::integer(), AllReplicatedDCs::List, PotentialDCs::List, NextPotentialDCs::List) -> NewPotentialDCs::List
+%% @spec createReplicasPotentialDcs(RegName::atom(), Record, OwnId::integer(), AllReplicatedDCs::List, PotentialDCs::List, NextPotentialDCs::List) -> NewPotentialDCs::List
 %%
 %% @doc Tries to create the replica to a DC from within the list of other potential DCs.
-createReplicasPotentiaDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, [Dc | NextPotentialDCs]) ->
+createReplicasPotentialDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, [Dc | NextPotentialDCs]) ->
 	#replica{key=Key,value=Value}=Record,
 	{reply, create_new, OwnId, Result} = gen_server:call({RegName, Dc}, {create_new, OwnId, Key, Value, AllReplicatedDCs}),
 	case Result of
 		{error, _ErrorCode} ->
 			% Failed
-			createReplicasPotentiaDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, NextPotentialDCs);
+			createReplicasPotentialDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, NextPotentialDCs);
 		_ ->
 			sets:del_element(Dc, PotentialDCs)
 	end;
-createReplicasPotentiaDcs(_RegName, _Record, _OwnId, _AllReplicatedDCs, PotentialDCs, []) ->
+createReplicasPotentialDcs(_RegName, _Record, _OwnId, _AllReplicatedDCs, PotentialDCs, []) ->
 	PotentialDCs.
 
 %% @spec read(Key::atom(), OwnId::integer(), Map::map()) -> Result::tuple()

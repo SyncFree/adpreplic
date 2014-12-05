@@ -1,5 +1,5 @@
 %% =============================================================================
-%% EUnits for the daycay process - SyncFree
+%% EUnits for the deycay process - SyncFree
 %% 
 %% @author Amadeo Asco
 %% @version 1.0.0
