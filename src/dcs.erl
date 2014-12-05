@@ -19,79 +19,50 @@
 -compile(export_all).
 -else.
 -compile(report).
--export([create/2,createReplica/1,createReplica/2,forwardMsg/2,forwardMsg/3,getDCsReplica/1,newReplica/2,read/1,rmvFromReplica/2,rmvReplica/2,setDCsReplica/2,sendReply/4,sendToAllDCs/1,write/2,updates/2]).
+-export([buildReply/2,buildReply/3,create/2,createReplica/1,createReplica/2,forwardMsg/2,forwardMsg/3,getAllDCs/0,getDCsReplica/1,getNewID/1,getNewID/0,newReplica/2,read/1,replicated/1,rmvFromReplica/2,rmvReplica/2,setDCsReplica/2,sendReply/4,sendToAllDCs/1,write/2,updates/2]).
 -endif.
 
 
 %% =============================================================================
 %% Data Centers support
 %% =============================================================================
-%% @spec create(Key::atom(), Value) -> Result::typle()
+%% @spec create(Key::atom(), Value, Func) -> Result::typle()
 %% 
-%% @doc Creates the local replica. The result may have the values {ok} or {error, ErrorCode}
-create(Key, Value) ->
-    send(create, Key, Value).
+%% @doc Creates the replica locally. The result may have the values {ok} or 
+%%		{error, ErrorCode}.
+create(Key, {Value, NextDCFunc, Args}) ->
+    send(create, Key, {Value, NextDCFunc, Args}).
 
 %% @spec createReplica(Key::atom(), Value) -> Result::typle()
 %% 
-%% @doc Creates the replica locally. The result may have the values {ok} or {error, ErrorCode}
+%% @doc Creates the replica locally, sets the specified value and notifies all existing 
+%%		DC with replicas of the new replica. The result may have the values {ok} or 
+%%		{error, ErrorCode}
 createReplica(Key, Value) ->
     send(new_replica, Key, Value).
 
 %% @spec createReplica(Key::atom()) -> Result::tuple()
 %% 
-%% @doc Creates a replica locally and notify all existing DC with replicas of the new replica. The 
-%%		result may have the values {ok} or {error, ErrorCode}.
+%% @doc Creates a replica locally and notifies all existing DC with replicas of the new 
+%%		replica. The result may have the values {ok, Value} or {error, ErrorCode}.
 createReplica(Key) ->
-    DCs = getDCsReplica(Key),
-    Id = getNewID(),
-    if
-        length(DCs) > 0 ->
-            Dc = list:nth(0, DCs);
-        true ->
-            % Get the DCs
-            sendToAllDCs({has_replica, {node(), Key}, Id}),
-            % Wait for the first reply
-            receive
-                {reply, has_replica, Id, {ok, _Strategy, DCs, _Args}} ->
-                    Dc = list:nth(0, DCs)
-            after
-                60000 ->
-                    Dc = {error, timeout}
-            end
-    end,
-    case Dc of
-        {error, timeout} ->
-            {error, timeout};
-        _ ->
-            % Send read request
-            Dc ! {read, {node(), Key}, Id},
-            % Wait for the reply
-            receive
-                {reply, read, Dc, Id, Value} ->
-                    % Send to the replication layer
-                    createReplica(Key, Value)
-            after
-                60000 ->
-                    {error, timeout}
-            end
-    end.
+	send(new_replica, Key).
 
 %% @spec read(Key::atom()) -> Result::typle()
 %% 
-%% @doc Reads the data locally. The result may have the values {ok, Value} or {error, ErrorCode}.
+%% @doc Reads the data locally. The result may have the values {ok, Value} or 
+%%		{error, ErrorCode}.
 read(Key) ->
     send(read, Key).
 
 %% @spec write(Key::atom(), Value) -> Result::typle()
 %% 
-%% @doc Writes the specified value into the local data and forward update messages to the other DCs 
-%% with replicas. The result may have the values {ok} or {error, ErrorCode}.
+%% @doc Writes the specified value into the local data and forward update messages to the 
+%%		other DCs with replicas. The result may have the values {ok} or 
+%%		{error, ErrorCode}.
 write(Key, Value) ->
 	% Write new value
-    send(write, Key, Value),
-	% Send updates
-	sendToDCsReplica(Key, {update, write, self(), getNewID(), Value}).
+    send(write, Key, Value).
 
 %% @spec newReplica(Key::atom(), Dc) -> {ok}
 %% 
@@ -99,14 +70,14 @@ write(Key, Value) ->
 newReplica(Key, Dc) ->
     % Send to the replication layer
     Pid = getReplicationLayerPid(Key),
-    Id = getNewID(),
+    Id = getNewID(Key),
     Pid ! {new_replica, Dc, Id},
 	{ok}.
 
 %% @spec rmvFromReplica(Key::atom(), MinNumReplicas::integer()) -> Result::typle()
 %% 
-%% @doc Removes this replica if the data is sufficiently replicated and notify all other replicas. 
-%%		The result may have the values {ok} or {error, insuficient_replicas}.
+%% @doc Removes this replica if the data is sufficiently replicated and notify all other 
+%%		replicas. The result may have the values {ok} or {error, insuficient_replicas}.
 rmvFromReplica(Key, MinNumReplicas) ->
 	% Only process it if there are not sufficient no. of replicas when this 
 	% replica is removed
@@ -141,7 +112,7 @@ rmvFromReplica(Key, MinNumReplicas) ->
 rmvReplica(Key, Dc) ->
     % Send to the replication layer
     Pid = getReplicationLayerPid(Key),
-    Id = getNewID(),
+    Id = getNewID(Key),
     Pid ! {rmv_replica, Dc, Id},
     {ok}.
 
@@ -153,15 +124,23 @@ update(Key, Value) ->
 
 %% @spec updates(Key::atom(), Value) -> Result
 %% 
-%% @doc Updates the local replica and sends appropiate messages to the other DCs with replicas to 
-%%		update their replica too. Returns the message ID used to send update message to other DCs.
+%% @doc Updates the local replica and sends appropiate messages to the other DCs with 
+%%		replicas to update their replica too. Returns the message ID used to send update 
+%%		message to other DCs.
 updates(Key, Value) ->
     % Update new value locally
     Result = update(Key, Value),
     % Notify all other DCs with replica irrespective of result from previous
-    Id = getNewID(),
+    Id = getNewID(Key),
     sendToDCsReplica(Key, {update, Key, Id, Value}),
     Result.
+
+%% @spec replicated(Key::atom()) -> HasReply::boolean()
+%% 
+%% @doc Checks if the data is locally replicated.
+replicated(Key) ->
+	{reply, has_a_replica, 0, {ok, HasReply}} = gen_server:call(getReplicationLayerPid(key), {has_a_replica, 0, Key}, 1000),
+	HasReply.
 
 %% @spec sendToAllDCs(Msg) -> {ok}
 %% 
@@ -179,22 +158,23 @@ sendToDCsReplica(Key, Msg) ->
 %% 
 %% @doc Sends the specified message to one of DCs with replica.
 sendToOneDC(Key, Msg) ->
-    Pid = list:nth(getDCsReplica(Key), 0),
+    Pid = lists:nth(1, getDCsReplica(Key)),
     Pid ! Msg,
     {ok}.
 
 %% @spec forwardMsg(Key::atom(), Msg) -> Response::tuple()
 %% 
-%% @doc Forwards the specified message to one of the DCs with replica and waits for the response. 
-%%		This execution is synchronous. The result values are Response, {error::atom(), 
-%%		invalid_msg_format} or {error::atom(), timeout::atom()}.
+%% @doc Forwards the specified message to one of the DCs with replica and waits for the 
+%%		response. This execution is synchronous. The result values are Response, 
+%%		{error::atom(), invalid_msg_format} or {error::atom(), timeout::atom()}.
 forwardMsg(Key, Msg) ->
 	forwardMsg(Key, Msg, false).
 %% @spec forwardMsg(Key::atom(), Msg, WaitReply::boolean()) -> Response::tuple()
 %% 
-%% @doc Forwards the specified message to one of the DCs with replica and waits for the response id 
-%%		WaitReply is true. The possible result values are Response, {id::atom(), Id::integer()}, 
-%%		{error::atom(), invalid_msg_format} or {error::atom(), timeout::atom()}.
+%% @doc Forwards the specified message to one of the DCs with replica and waits for the 
+%%		response id WaitReply is true. The possible result values are Response, 
+%%		{id::atom(), Id::integer()}, {error::atom(), invalid_msg_format} or 
+%%		{error::atom(), timeout::atom()}.
 forwardMsg(Key, Msg, WaitReply) ->
     % Get the type and ID of the message to forward
     {Type, Id} = case Msg of
@@ -211,7 +191,7 @@ forwardMsg(Key, Msg, WaitReply) ->
             Type;
         true ->
             % Send to one of the DCs with replica
-            Id1 = getNewID(),
+            Id1 = getNewID(Key),
             Pid = sendToOneDC(Key, {forward, {node(), Key}, Id1, Msg}),
 			if
 				WaitReply ->
@@ -231,10 +211,20 @@ forwardMsg(Key, Msg, WaitReply) ->
 			end
     end.
 
+%% @spec buildReply(Type::atom(), Id::integer(), Result) -> Msg::atom()
+%%
+buildReply(Type, Id, Results) ->
+	{reply, Type, Id, Results}.
+%% @spec buildReply(Type::atom(), Id::integer()) -> Msg::atom()
+%%
+buildReply(Type, Id) ->
+	{reply, Type, Id}.
+
 %% @spec sendReply(Destination::pid(), Type::atom(), Id::integer(), Result) -> {ok}
 %%
-%% @doc Builds a reply message and sends it to the specified destination. Reduces the chances of 
-%%		making mistakes when building a reply message, keeping the format hidden.
+%% @doc Builds a reply message and sends it to the specified destination. Reduces the 
+%%		chances of making mistakes when building a reply message, keeping the format 
+%%		hidden.
 sendReply(Destination, Type, Id, Result) -> 
 	Destination ! {reply, Type, self(), Id, Result},
 	{ok}.
@@ -253,12 +243,12 @@ sendToDCs([Dc|DCs], Msg) ->
 
 %% @spec setDCsReplica(Key::atom(), DCs::list()) -> Result::atom()
 %%
-%% @doc Sets the list of DCs with replica. If the DC has an interal copy of the data then it is 
-%%		replicated, otherwise it is not. The result expected may any of {ok, Replicated} or 
-%%		{error, ErrorCode}.
+%% @doc Sets the list of DCs with replica. If the DC has an interal copy of the data then 
+%%		it is replicated, otherwise it is not. The result expected may be any of 
+%%		{ok, Replicated} or {error, ErrorCode}.
 setDCsReplica(Key, DCs) ->
     Pid = getReplicationLayerPid(Key),
-	Id = getNewID(),
+	Id = getNewID(Key),
     Pid ! {set_dcs, Key, Id, DCs},
 	Result = receive
 		{reply, set_dcs, Pid, Id, R} ->
@@ -277,35 +267,43 @@ getNumReplicas() ->
 	%% TODO: implement it
 	0.
 
+%% @spec getNewID(Key:atom()) -> Id::integer()
+%% 
+%% @doc Provides a new ID.
+getNewID(Key) ->
+	Pid = getReplicationLayerPid(Key),
+	{reply, new_id, 0, Results} = gen_server:call(Pid, {new_id, 0, Key}, 1000),
+	Results.
 %% @spec getNewID() -> Id::integer()
 %% 
 %% @doc Provides a new ID.
 getNewID() ->
-	0.
+	Key = process_info(self(), registered_name),
+	getNewID(Key).
 
 %% @spec getReplicationLayerPid(Key::atom()) -> Pid::pid()
 %% 
 %% @doc Provides the local Replication Layer process ID for the specified data.
-getReplicationLayerPid(Key) ->
-	list_to_atom(string:concat(Key, "_rl")).
+getReplicationLayerPid(_Key) ->
+%	list_to_atom(string:concat(Key, "_rl")).
+	'rl'.
 
 
 %% =============================================================================
 % Internal functions
 %% =============================================================================
-%% @spec getAllDCs() -> DCs::list()
+%% @spec getAllDCs() -> DCs::List
 %% 
 %% @doc The list of all the DCs.
 getAllDCs() ->
-    %% TODO: get the overall DCs
-    [].
+    nodes().
 
 %% @spec getDCsReplica(Key::atom()) -> DCs::list()
 %% 
 %% @doc Provides the current list of DCs with replica.
 getDCsReplica(Key) ->
     Pid = getReplicationLayerPid(Key),
-    Id = getNewID(),
+    Id = getNewID(Key),
     Pid ! {get_dcs, Key, Id},
     receive
         {reply, set_dcs, Pid, Id, {ok, DCs}} ->
@@ -337,11 +335,11 @@ getNumRemovedFromReplicas(Sender, NumReplicas, NumResponses) ->
 
 %% @spec send(Type::atom(), Key::atom()) -> Result::tuple()
 %% 
-%% @doc Sends message to the replication layer. The results may have one of these values {ok} or 
-%%		{error, ErrorCode}
+%% @doc Sends message to the replication layer. The results may have one of these values 
+%%		{ok} or {error, ErrorCode}.
 send(Type, Key) ->
     Pid = getReplicationLayerPid(Key),
-    Id = getNewID(),
+    Id = getNewID(Key),
     Pid ! {Type, Key, Id},
     % Wait for the reply
     receive
