@@ -47,7 +47,7 @@ getNumReplicas_test() ->
 	% Clean-up
 	gen_server:cast(dcs:getReplicationLayerPid(), stop).
 
-checkNewId(Pid, Id, ExpectedId, 0) ->
+checkNewId(_Pid, _Id, _ExpectedId, 0) ->
 	{ok};
 checkNewId(Pid, Id, ExpectedId, NumTimes) when NumTimes > 0 ->
 	{reply, 'new_id', Id, Response} = gen_server:call(Pid, {new_id, Id, any}),

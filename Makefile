@@ -76,7 +76,7 @@ $(DEPS_PLT):
  
 # -DEUNIT for the unit-tests
 dialyzer: $(DEPS_PLT)
-	dialyzer --fullpath --src --plt $(DEPS_PLT) -Wrace_conditions -r ./ebin ./src ./test -I ./include -DEUNIT
+	dialyzer --fullpath --src --plt $(DEPS_PLT) -Wrace_conditions -r ./src ./test -I ./include -DEUNIT
  
 typer:
 	typer --plt $(DEPS_PLT) -r ./src

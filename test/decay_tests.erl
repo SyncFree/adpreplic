@@ -58,11 +58,11 @@ buildPid_test() ->
 
 
 %%%%%%
-repeat(DelayTime, Key, 0) ->
+repeat(_DelayTime, _Key, 0) ->
 	{ok};
 repeat(DelayTime, Key, Num) when Num > 0 ->
 	Result = receive
-		{decay, Pid, 0} ->
+		{decay, _Pid, 0} ->
 			repeat(DelayTime, Key, Num-1);
 		_ ->
 			{error}
