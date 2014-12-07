@@ -67,27 +67,17 @@ $(TEST_DEPS):
 	@echo Running EUnit
 
 test: compile eunit
- 
-# $(DEPS_PLT):
-# 	@echo Building local plt at $(DEPS_PLT)
-# 	@echo
-# 	dialyzer --output_plt $(DEPS_PLT) --build_plt \
-# 	   --apps $(DEPS) -r deps
- 
-# # -DEUNIT for the unit-tests
-# dialyzer: $(DEPS_PLT)
-# 	dialyzer --fullpath --src --plt $(DEPS_PLT) -Wrace_conditions -r ./src ./test -I ./include -DEUNIT
- 
+  
 PLT ?= $(HOME)/.combo_dialyzer_plt
 LOCAL_PLT = .local_dialyzer_plt
 DIALYZER_FLAGS ?= -Wunmatched_returns -Werror_handling -Wrace_conditions -Wunderspecs
 
 ${PLT}: compile
 	@if [ -f $(PLT) ]; then \
-		dialyzer --check_plt --plt $(PLT) --apps $(DIALYZER_APPS) && \
-		dialyzer --add_to_plt --plt $(PLT) --output_plt $(PLT) --apps $(DIALYZER_APPS) ; test $$? -ne 1; \
+		dialyzer --check_plt --plt $(PLT) && \
+		dialyzer --add_to_plt --plt $(PLT) --output_plt $(PLT) ; test $$? -ne 1; \
 	else \
-		dialyzer --build_plt --output_plt $(PLT) --apps $(DIALYZER_APPS); test $$? -ne 1; \
+		dialyzer --build_plt --output_plt $(PLT) ; test $$? -ne 1; \
 	fi
 
 ${LOCAL_PLT}: compile
@@ -146,3 +136,10 @@ distclean: clean
 	- rm -rvf $(CURDIR)/deps
  
 rebuild: distclean deps compile escript dialyzer test
+
+rel: all
+	$(REBAR) generate
+
+relclean:
+	rm -rf rel/antidote
+
