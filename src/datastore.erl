@@ -18,7 +18,6 @@
 %%
 %% -------------------------------------------------------------------
 
-
 %%% Simple in-memory datastore dummy for test purposes.
 -module(datastore).
 -behaviour(gen_server).
@@ -53,7 +52,7 @@ read(Id) ->
     gen_server:call(?MODULE, {read, Id}).
 
 %% Updates an entry by merging the states
-update(Id,Obj) ->
+update(Id, Obj) ->
     gen_server:call(?MODULE, {update, Id, Obj}).
 
 %% Removes an entry

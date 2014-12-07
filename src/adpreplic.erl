@@ -17,20 +17,27 @@
 %% under the License.
 %%
 %% -------------------------------------------------------------------
+-module(adpreplic).
 
--module(adpreplic_app).
+%% Public API, can be called by clients using RPC.
 
--behaviour(application).
+-export([create/3,
+         read/2,
+         write/3]).
 
-%% Application callbacks
--export([start/2, stop/1]).
+%% Public API
 
-%% ===================================================================
-%% Application callbacks
-%% ===================================================================
+%% @doc The create/2 function creates a new entry under some key,
+%%      with an initial value.
+create(Key, _Type, Obj) ->
+    datastore:create(Key,Obj).
 
-start(_StartType, _StartArgs) ->
-    adpreplic_sup:start_link().
-    
-stop(_State) ->
-    ok.
+%% @doc The read/2 function returns the current value for the
+%%      object stored at some key.
+read(Key, _Type) ->
+    datastore:read(Key).
+
+%% @doc The write/3 function updates the current value for the
+%%      object stored at some key.
+write(Key, _Type, Obj) ->
+    datastore:update(Key,Obj).
