@@ -1,6 +1,6 @@
 {application, adpreplic,
  [
-  {description, ""},
+  {description, "Adaptive replication prototype"},
   {vsn, "1"},
   {registered, []},
   {applications, [

@@ -9,3 +9,5 @@ dialyzer_warnings
 
 .deps_plt
 deps/
+
+rel/adpreplic/
