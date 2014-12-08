@@ -68,47 +68,15 @@ $(TEST_DEPS):
 
 test: compile eunit
   
-PLT ?= $(HOME)/.combo_dialyzer_plt
-LOCAL_PLT = .local_dialyzer_plt
-DIALYZER_FLAGS ?= -Wunmatched_returns -Werror_handling -Wrace_conditions -Wunderspecs
-
-${PLT}: compile
-	@if [ -f $(PLT) ]; then \
-		dialyzer --check_plt --plt $(PLT) && \
-		dialyzer --add_to_plt --plt $(PLT) --output_plt $(PLT) ; test $$? -ne 1; \
-	else \
-		dialyzer --build_plt --output_plt $(PLT) ; test $$? -ne 1; \
-	fi
-
-${LOCAL_PLT}: compile
-	@if [ -d deps ]; then \
-		if [ -f $(LOCAL_PLT) ]; then \
-			dialyzer --check_plt --plt $(LOCAL_PLT) deps/*/ebin  && \
-			dialyzer --add_to_plt --plt $(LOCAL_PLT) --output_plt $(LOCAL_PLT) deps/*/ebin ; test $$? -ne 1; \
-		else \
-			dialyzer --build_plt --output_plt $(LOCAL_PLT) deps/*/ebin ; test $$? -ne 1; \
-		fi \
-	fi
-
-dialyzer: ${PLT} ${LOCAL_PLT}
-	@echo "==> $(shell basename $(shell pwd)) (dialyzer)"
-	@if [ -f $(LOCAL_PLT) ]; then \
-		PLTS="$(PLT) $(LOCAL_PLT)"; \
-	else \
-		PLTS=$(PLT); \
-	fi; \
-	if [ -f dialyzer.ignore-warnings ]; then \
-		if [ $$(grep -cvE '[^[:space:]]' dialyzer.ignore-warnings) -ne 0 ]; then \
-			echo "ERROR: dialyzer.ignore-warnings contains a blank/empty line, this will match all messages!"; \
-			exit 1; \
-		fi; \
-		dialyzer $(DIALYZER_FLAGS) --plts $${PLTS} -c ebin > dialyzer_warnings ; \
-		egrep -v "^[[:space:]]*(done|Checking|Proceeding|Compiling)" dialyzer_warnings | grep -F -f dialyzer.ignore-warnings -v > dialyzer_unhandled_warnings ; \
-		cat dialyzer_unhandled_warnings ; \
-		[ $$(cat dialyzer_unhandled_warnings | wc -l) -eq 0 ] ; \
-	else \
-		dialyzer $(DIALYZER_FLAGS) --plts $${PLTS} -c ebin; \
-	fi
+$(DEPS_PLT):
+	@echo Building local plt at $(DEPS_PLT)
+	@echo
+	dialyzer --output_plt $(DEPS_PLT) --build_plt \
+	   --apps $(DEPS) -r deps
+ 
+# -DEUNIT for the unit-tests
+dialyzer: $(DEPS_PLT)
+	dialyzer --fullpath --src --plt $(DEPS_PLT) -Wrace_conditions -r ./src ./test -I ./include -DEUNIT
 
 typer:
 	typer --plt $(DEPS_PLT) -r ./src
