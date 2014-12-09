@@ -72,12 +72,32 @@ write_test() ->
 	Key = 'write_test',
 	Value = "value1",
 	NewValue = "new_value",
+	% Test - does not exist
+	Response = adprep:update(Key, Value),
+	?assertEqual({error, timeout}, Response),
 	% Test - already exist
 	create(Key, Value),
 	Response1 = adprep:update(Key, NewValue),
 	?assertEqual({ok}, Response1),
 	Response2 = adprep:read(Key),
 	?assertEqual({ok, NewValue}, Response2),
+	% Clean-up
+	adprep:stop(),
+	erlang:yield().
+
+delete_test() ->
+	% Initialise
+	adprep:start(),
+	Key = 'delete_test',
+	Value = "value",
+	% Test - already exist
+	create(Key, Value),
+	Response1 = adprep:delete(Key),
+	?assertEqual({ok}, Response1),
+	Response2 = adprep:read(Key),  % should not exists
+	?assertEqual({error, timeout}, Response2),
+	Respose3 = create(Key, Value), % should be able to create it again
+	?assertEqual({ok}, Respose3),
 	% Clean-up
 	adprep:stop(),
 	erlang:yield().

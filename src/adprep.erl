@@ -20,7 +20,7 @@
 -else.
 -compile(report).
 % Interface calls
--export([start/0, stop/0, create/4, read/1, update/2, remove/1, getNumReplicas/1]).
+-export([start/0, stop/0, create/4, delete/1, read/1, update/2, remove/1, getNumReplicas/1]).
 % gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 -endif.
@@ -57,7 +57,12 @@ update(Key, Value) ->
 %    lager:info("Updating entry for ~p",[Key]),
     gen_server:call(?MODULE, {write, Key, Value}).
 
-%% Removes an entry
+%% Deletes an entry from withon all the DCs with replica
+delete(Key) ->
+%    lager:info("Removing entry for ~p",[Key]),
+    gen_server:call(?MODULE, {delete, Key}).
+
+%% Removes locally an entry
 remove(Key) ->
 %    lager:info("Removing entry for ~p",[Key]),
     gen_server:call(?MODULE, {remove, Key}).
@@ -136,6 +141,9 @@ handle_call({create, Key, {Value, NextDCFunc, Args}}, _From, {OwnId, Map}) ->
 			{reply, {error, already_exists_replica}, {OwnId, Map}}
 	end;
 
+%% @spec handle_call({rmv_replica, Dc, Key}, From, Args) -> Result::tuple()
+%%
+%% @doc Removes the specified DC from the list of DCs with replica.
 handle_call({rmv_replica, Dc, Key}, _From, {OwnId, Map}) ->
 	% The data should already exist
 	{Reply, Args} = case getRecord(Key, Map) of
@@ -185,18 +193,20 @@ handle_call({write, Key, Value}, _From, {OwnId, Map}) ->
 	{Response, OwnId1, Map1} = write(Key, OwnId, Value, Map),
 	{reply, Response, {OwnId1, Map1}};
 
-handle_call({remove, Key}, _From, {OwnId, Map}) ->
-	{Response, OwnId1, Map1} = remove(Key, OwnId, Map),
+handle_call({delete, Key}, _From, {OwnId, Map}) ->
+	{Response, OwnId1, Map1} = rmvDel(Key, OwnId, Map, forward_delete),
 	{reply, Response, {OwnId1, Map1}};
 
-handle_call({has_a_replica, Key}, _From, {OwnId, Map}) ->
-	Exits = case getNumReplicas(Key, Map) of
-		0 ->
-			fase;
-		_ ->
-			true
-	end,
-	{reply, {ok, Exits}, {OwnId, Map}}.
+handle_call({forward_delete, Key}, _From, {OwnId, Map}) ->
+	% Remove Strategy Layer for the key
+	gen_server:cast({node(), Key}, shutdown),
+	% Remove replica
+	Map1 = maps:remove(Key, Map),
+	{reply, {ok}, {OwnId, Map1}};
+
+handle_call({remove, Key}, _From, {OwnId, Map}) ->
+	{Response, OwnId1, Map1} = rmvDel(Key, OwnId, Map, rmv_replica),
+	{reply, Response, {OwnId1, Map1}}.
 
 handle_cast({update, Id, Key, Value}, {OwnId, Map}) ->
 	case getRecord(Key, Map) of
@@ -292,26 +302,20 @@ getAllDCs() ->
 %%
 %% @doc Get the number of replicas, if any, or zero otherwise.
 getNumReplicas(Key, Map) ->
-	try maps:get(Key, Map, 0) of
+	case maps:get(Key, Map, 0) of
 		0 ->
 			0;
 		Value ->
 			#replica{num_replicas=Num}=Value,
 			Num
-	catch
-		_ ->
-			0
 	end.
 
 getRecord(Key, Map) ->
-	try maps:get(Key, Map, 0) of
+	case maps:get(Key, Map, 0) of
 		0 ->
 			none;
 		Record ->
 			Record
-	catch
-		_ ->
-			 none
 	end.
 
 %% @spec create_(Key::atom(), Value, Map::map(), OwnId::integer()) -> Result::tuple()
@@ -431,29 +435,9 @@ write(Key, OwnId, Value, Map) ->
 					{{ok}, OwnId+1, Map};
 				{error, ErrorCode} ->
 					% An error
-					{{ereor, ErrorCode}, OwnId+1, Map}
+					{{error, ErrorCode}, OwnId+1, Map}
 			end
 	end.
-
-remove(Key, OwnId, Map) ->
-	try maps:get(Key, Map) of
-		Record ->
-			% DCs with replica
-			Map1 = maps:remove(Key, Map),
-			#replica{list_dcs_with_replicas=DCs}=Record,
-			Response = forward({forward_remove, Key, OwnId}, DCs),
-			{Response, OwnId + 1, Map1}
-	catch
-		_:_ ->
-			% TODO: Not locally so find it and forward delete command
-			{{ok}, OwnId, Map}
-	end.
-
-forward(_Msg, []) ->
-	{ok};
-forward(Msg, [Dc | DCs]) ->
-	{Dc, adprep} ! Msg,
-	forward(Msg, DCs).
 
 %% @spec getAllDCsWithReplicas(Key::atom(), OwnId::integer()) -> Result::tuple()
 %%
@@ -502,4 +486,42 @@ flush(Id) ->
 	after
 		0 ->
 			{ok}
+	end.
+
+rmvDel(Key, OwnId, Map, Type) ->
+	try maps:get(Key, Map) of
+		Record ->
+			% DCs with replica
+			#replica{list_dcs_with_replicas=DCs}=Record,
+			{Response, Map1} = case forward({Type, node(), Key}, DCs) of
+				{ok} ->
+					% Success - Remove local replica
+					Map2 = maps:remove(Key, Map),
+					{{ok}, Map2};
+				{error, no_replica} ->
+					% Success- Remove local replica
+					Map2 = maps:remove(Key, Map),
+					{{ok}, Map2};
+				R ->
+					% Failure - should alreday have rolled back
+					{R, Map}
+			end,
+			{Response, OwnId + 1, Map1}
+	catch
+		_:_ ->
+			{{ok}, OwnId, Map}
+	end.
+
+forward(_Msg, []) ->
+	{ok};
+forward(Msg, [Dc | DCs]) ->
+	Result = gen_server:call({adpref, Dc}, Msg),
+	case Result of
+		{error, no_replica} ->
+			forward(Msg, DCs);
+		{error, _} ->
+			% TODO: roll back
+			Result;
+		_ ->
+			forward(Msg, DCs)
 	end.
