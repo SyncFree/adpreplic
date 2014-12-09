@@ -23,10 +23,13 @@
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
+buildPid_test() ->
+	?assertEqual(decay:buildPid("test_"), decay).
+
 startStopDecay_test() ->
 	% Initialise
 	DecayTime = 1000,
-	Key = pid_to_list(self()),
+	Key = test,
 	StopPrevious = false,
 	Name = decay:buildPid(Key),
 	% Test - Initialy the decays process is not running, test it, then it is started and 
@@ -44,7 +47,7 @@ startStopDecay_test() ->
 startStartDecay_test() ->
 	% Initialise
 	DecayTime = 1000,
-	Key = pid_to_list(self()),
+	Key = "test",
 	StopPrevious = true,
 	Name = decay:buildPid(Key),
 	% Test - It does not axist any previous decay process so call to startDecay should 
@@ -52,9 +55,6 @@ startStartDecay_test() ->
 	?assertEqual(whereis(Name), undefined),
 	?assertException(error, function_clause, decay:startDecay(DecayTime, Key, StopPrevious)),
 	?assertNotEqual(whereis(Name), undefined).
-
-buildPid_test() ->
-	?assertEqual(decay:buildPid("test_"), 'test_decay').
 
 
 %%%%%%

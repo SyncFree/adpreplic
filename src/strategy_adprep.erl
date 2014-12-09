@@ -20,6 +20,7 @@
 -compile(export_all).
 -else.
 -compile(report).
+% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 -endif.
 -behaviour(gen_server).
@@ -84,14 +85,15 @@ code_change(_PreviousVersion, State, _Extra) ->
 %% =============================================================================
 %% Messages handlers
 %% =============================================================================
+handle_cast(shutdown, LoopData) ->
+%    lager:info("Shutting down the replication layer"),
+    {stop, normal, LoopData};
+
 handle_cast({decay, _Id}, {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}) ->
 	% Time decay
 	Strength1 = Strength - Decay,
 	Replicated1 = processStrength(Key, Replicated, Strength1, MinNumReplicas, RmvThreshold),
-	{noreply, {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
-
-handle_cast({stop, _Dc, _Id}, LoopData) ->
-	{stop, normal, LoopData}.
+	{noreply, {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}}.
 
 handle_call({write, Id, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}) ->
 	{Replicated1, Strength1, Result} = write(Key, Id, Value, Replicated, Strength, ReplicationThreshold, WStrength, MaxStrength),

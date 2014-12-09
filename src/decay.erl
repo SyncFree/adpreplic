@@ -38,7 +38,7 @@ init({Time, Key}) ->
 %% @doc Processes the messages hold by the mailbox.
 loop(Time, Key) ->
 	receive
-		{stop, _Pid, _Id} ->
+		shutdown ->
 			{ok}
 	after 
         Time ->
@@ -68,7 +68,7 @@ stopDecay(Key) ->
 	% Stops the decay process
 	DecayKey = buildPid(Key),
 	% No reply is sent back to sender
-	try DecayKey ! {stop, self(), 0} of
+	try DecayKey ! shutdown of
 		_ ->
 			% Succeed
 			{ok}
@@ -80,5 +80,8 @@ stopDecay(Key) ->
 %% @spec buildPid(Key::atom()) -> Pid::atom()
 %%
 %% @doc Builds the decay process ID for the specified key.
-buildPid(Key) ->
-	list_to_atom(string:concat(Key, "decay")).
+%buildPid(Key) when is_atom(Key) ->
+%	list_to_atom("decay" ++ atom_to_list(Key));
+buildPid(_Key) ->
+	decay.
+%	list_to_atom("decay" ++ Key).

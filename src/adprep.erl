@@ -19,9 +19,9 @@
 -compile(export_all).
 -else.
 -compile(report).
-%% ====================================================================
-%% API functions
-%% ====================================================================
+% interface calls
+-export([start/0, stop/0, create/4, read/1, update/2, remove/1, getNumReplicas/1]).
+% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 -endif.
 -behaviour(gen_server).
@@ -30,12 +30,51 @@
 
 
 %% =============================================================================
+%% Server interface
+%% =============================================================================
+%% Starting server
+start() -> 
+%    lager:info("Starting~n"),
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+
+%% Stopping server asynchronously
+stop() ->
+%    lager:info("Stopping~n"),
+    gen_server:cast(?MODULE, shutdown).
+
+%% Create a new entry
+create(Key, Value, NextDCFunc, Args) ->
+%    lager:info("Creating entry for ~p",[Key]),
+    gen_server:call(?MODULE, {create, Key, {Value, NextDCFunc, Args}}).
+
+%% Reads an entry
+read(Key) ->
+%    lager:info("Reading entry for ~p",[Key]),
+    gen_server:call(?MODULE, {read, Key}).
+
+%% Updates an entry by merging the states
+update(Key, Value) ->
+%    lager:info("Updating entry for ~p",[Key]),
+    gen_server:call(?MODULE, {write, Key, Value}).
+
+%% Removes an entry
+remove(Key) ->
+%    lager:info("Removing entry for ~p",[Key]),
+    gen_server:call(?MODULE, {remove, Key}).
+
+%% Gets number of replicas
+getNumReplicas(Key) ->
+%    lager:info("Getting number of replicas of entry for ~p",[Key]),
+    gen_server:call(?MODULE, {num_replicas, Key}).
+	
+
+%% =============================================================================
 %% Propossed Adaptive Replication Strategy process
 %% =============================================================================
-%% @spec init(Args) -> {ok, LoopData::tuple()}
+%% @spec init([]) -> {ok, LoopData::tuple()}
 %%
-%% @doc Initialises the process and start the process with the specified arguments.
-init(_Args) ->
+%% @doc Initialises the process and start the process.
+init([]) ->
 	{ok, {0, maps:new()}}.
 
 %% @spec handle_info(Msg, LoopData) -> {noreply, LoopData}
@@ -61,74 +100,69 @@ code_change(_PreviousVersion, State, _Extra) ->
 %% =============================================================================
 %% Messages handlers
 %% =============================================================================
-handle_call({num_replicas, Key, Id}, _From, {OwnId, Map}) ->
-	NumReplicas = try maps:get(Key, Map) of
-		Value ->
-			#replica{num_replicas=Num}=Value,
-			Num
-	catch
-		_ ->
-			-1
-	end,
-	{reply, dcs:buildReply(num_replicas, Id, NumReplicas), {OwnId, Map}};
+handle_call({num_replicas, Key}, _From, {OwnId, Map}) ->
+	NumReplicas = getNumReplicas(Key, Map),
+	{reply, NumReplicas, {OwnId, Map}};
 
-handle_call({get_dcs, Key, Id}, _From, {OwnId, Map}) ->
-	{Response, OwnId1} = try maps:get(Key, Map) of
+handle_call({get_dcs, Key}, _From, {OwnId, Map}) ->
+	{Response, OwnId1} = case getRecord(Key, Map) of
+		none ->
+			Response1 = getAllDCsWithReplicas(Key, OwnId),
+			Response2 = case Response1 of
+				{error, _} ->
+					{exists, []};
+				R ->
+					R
+			end,
+			{Response2, OwnId+1};
 		Record ->
 			#replica{list_dcs_with_replicas=List}=Record,
 			{{ok, List}, OwnId}
-	catch
-		_ ->
-			Response1 = getAllDCsWithReplicas(Key, OwnId),
-			{Response1, OwnId+1}
 	end,
-	{reply, dcs:buildReply(get_dcs, Id, Response), {OwnId1, Map}};
+	{reply, Response, {OwnId1, Map}};
 
-handle_call({new_id, Id, _Key}, _From, {OwnId, Map}) ->
-	{reply, dcs:buildReply(new_id, Id, OwnId), {OwnId+1, Map}};
-
-handle_call({create, Key, Id, {Value, NextDCFunc, Args}}, _From, {OwnId, Map}) ->
+handle_call({create, Key, {Value, NextDCFunc, Args}}, _From, {OwnId, Map}) ->
 	% The data should not already exist
-	{Reply, Args} = try maps:get(Key, Map) of
-		_Record ->
-			% Ignore as there is a replica
-			{dcs:buildReply(rmv_replica, Id, {error, no_replica}), {OwnId, Map}}
-	catch
-		_ ->
+	case getNumReplicas(Key, Map) of
+		0 ->
 			% Create the record for the specified key and save it
-			{Response, OwnId1, Record, Map1} = create(Key, Value, Map, OwnId),
+			{Response, OwnId1, Record, Map1} = create_(Key, Value, Map, OwnId),
 			% Create all necessary replicas
 			{Record1, OwnId2} = createOtherReplicas(Record, OwnId1, NextDCFunc, Args),
 			Map2 = maps:put(Key, Record1, Map1),
-			{dcs:buildReply(create, Id, Response), {OwnId2, Map2}}
-	end,
-	{reply, Reply, Args};
+			{reply, Response, {OwnId2, Map2}};
+		_ ->
+			% Ignore as there is a local replica
+			{reply, {error, already_exists_replica}, {OwnId, Map}}
+	end;
 
-handle_call({rmv_replica, Dc, Id, Key}, _From, {OwnId, Map}) ->
+handle_call({rmv_replica, Dc, Key}, _From, {OwnId, Map}) ->
 	% The data should already exist
-	{Reply, Args} = try maps:get(Key, Map) of
+	{Reply, Args} = case getRecord(Key, Map) of
+		none ->
+			% Ignore as there is no replica
+			{{error, no_replica}, {OwnId, Map}};
 		Record ->
 			% The data exists
 			#replica{num_replicas=Num,list_dcs_with_replicas=List}=Record,
 			List1 = sets:del_element(Dc, List),
 			Record1 = Record#replica{num_replicas=Num-1,list_dcs_with_replicas=List1},
 			Map2 = maps:put(Key, Record1, Map),
-			{dcs:buildReply(rmv_replica, Id, {ok}), {OwnId, Map2}}
-	catch
-		_ ->
-			% Ignore as there is no replica
-			{dcs:buildReply(rmv_replica, Id, {error, no_replica}), {OwnId, Map}}
+			{{ok}, {OwnId, Map2}}
 	end,
 	{reply, Reply, Args};
 
-handle_call({new_replica, Dc, Id, Key, Value}, _From, {OwnId, Map}) ->
+handle_call({new_replica, Dc, Key, Value}, _From, {OwnId, Map}) ->
 	{Reply, Args} = if 
 		Dc == self() ->
 			% Unable to update record of itself
-			{dcs:buildReply(new_replica, Id, {error, self}), {OwnId, Map}};
+			{{error, self}, {OwnId, Map}};
 		true ->
 			% The data should already exist as it comes from another DC
-			try maps:get(Key, Map) of
+			case getRecord(Key, Map) of
+				none ->
+					% It does not alreday exist
+					{{error, does_not_exist}, {OwnId, Map}};
 				Record ->
 					% Create it
 					#replica{value=Value,
@@ -138,47 +172,68 @@ handle_call({new_replica, Dc, Id, Key, Value}, _From, {OwnId, Map}) ->
 					Record1 = Record#replica{num_replicas = NumReplicas+1, 
 							 	   			 list_dcs_with_replicas=List1},
 					Map1 = maps:put(Key, Record1, Map),
-					{dcs:buildReply(new_replica, Id, {ok}), {OwnId, Map1}}
-			catch
-				_ ->
-					% It does not alreday exist
-					{dcs:buildReply(new_replica, Id, {error, does_not_exist}), {OwnId, Map}}
+					{{ok}, {OwnId, Map1}}
 			end
 	end,
-	{reply, Reply, Args}.
+	{reply, Reply, Args};
 
-handle_cast({has_replica, Id, Key}, {OwnId, Map}) ->
-	try maps:get(Key, Map) of
-		_Record ->
-			{reply, dcs:buildReply(has_replica, Id, {exits, self()}), {OwnId, Map}}
-	catch
+handle_call({read, Key}, _From, {OwnId, Map}) ->
+	{Response, OwnId1} = read(Key, OwnId, Map),
+	{reply, Response, {OwnId1, Map}};
+
+handle_call({write, Key, Value}, _From, {OwnId, Map}) ->
+	{Response, OwnId1, Map1} = write(Key, OwnId, Value, Map),
+	{reply, Response, {OwnId1, Map1}};
+
+handle_call({remove, Key}, _From, {OwnId, Map}) ->
+	{Response, OwnId1, Map1} = remove(Key, OwnId, Map),
+	{reply, Response, {OwnId1, Map1}};
+
+handle_call({has_a_replica, Key}, _From, {OwnId, Map}) ->
+	Exits = case getNumReplicas(Key, Map) of
+		0 ->
+			fase;
 		_ ->
-		{noreply, {OwnId, Map}}
+			true
+	end,
+	{reply, {ok, Exits}, {OwnId, Map}}.
+
+handle_cast({update, Id, Key, Value}, {OwnId, Map}) ->
+	case getRecord(Key, Map) of
+		none ->
+			% Ignore as there is no replica
+			{reply, dcs:buildReply(update, Id, {error, no_replica}), {OwnId, Map}};
+		Record ->
+			Record1 = Record#replica{value=Value},
+			Map1 = maps:put(Key, Record1, Map),
+			{reply, dcs:buildReply(update, Id, {ok, updated}), {OwnId, Map1}}
 	end;
 
-handle_cast({has_a_replica, Id, Key}, {OwnId, Map}) ->
-	try maps:get(Key, Map) of
-		_Record ->
-			{reply, dcs:buildReply(has_replica, Id, {ok, true}), {OwnId, Map}}
-	catch
-		_ ->
-			{reply, dcs:buildReply(has_replica, Id, {ok, false}), {OwnId, Map}}
+handle_cast(shutdown, {OwnId, Map}) ->
+    {stop, normal, {OwnId, Map}};
+
+handle_cast({has_replica, Id, Key}, {OwnId, Map}) ->
+	case getRecord(Key, Map) of
+		none ->
+			{noreply, {OwnId, Map}};
+		Record ->
+			#replica{list_dcs_with_replicas=DCs}=Record,
+			{reply, dcs:buildReply(has_replica, Id, {exists, [node() | DCs]}), {OwnId, Map}}
 	end;
 
 handle_cast({create_new, Id, Key, Value, DCs}, {OwnId, Map}) ->
 	% Create replica but do not notify anyone
 	% The data should not already exist
-	{Reply, Args} = try maps:get(Key, Map) of
-		_Record ->
-			% Ignore as there is a replica
-			{dcs:buildReply(create_new, Id, {error, no_replica}), {OwnId, Map}}
-	catch
-		_ ->
+	{Reply, Args} = case getRecord(Key, Map) of
+		0 ->
 			% Create the record for the specified key and save it
 			List = sets:del_element(self(), DCs),
 			Record=#replica{key=Key,value=Value,num_replicas=sets:size(DCs),list_dcs_with_replicas=List},
 			Map1 = maps:put(Key, Record, Map),
-			{dcs:buildReply(create_new, Id, {ok}), {OwnId, Map1}}
+			{dcs:buildReply(create_new, Id, {ok}), {OwnId, Map1}};
+		_ ->
+			% Ignore as there is a replica
+			{dcs:buildReply(create_new, Id, {error, no_replica}), {OwnId, Map}}
 	end,
 	{reply, Reply, Args};
 
@@ -187,31 +242,10 @@ handle_cast({new_replica, Id, Key}, {OwnId, Map}) ->
 	{Response, OwnId1} = read(Key, OwnId, Map),
 	case Response of
 		{ok, Value} ->
-			handle_call({new_replica, self(), Id, Key, Value}, self(), {OwnId1, Map});
+			Result = handle_call({new_replica, ?MODULE, Key, Value}, ?MODULE, {OwnId1, Map}),
+			{reply, dcs:buildReply(new_replica, Id, Result), {OwnId1, Map}};
 		_ ->
 			{reply, dcs:buildReply(new_replica, Id, Response), {OwnId1, Map}}
-	end;
-
-handle_cast({read, Key, Id}, {OwnId, Map}) ->
-	{Response, OwnId1} = read(Key, OwnId, Map),
-	{reply, dcs:buildReply(read, Id, Response), {OwnId1, Map}};
-
-handle_cast({write, Key, Id, Value}, {OwnId, Map}) ->
-	{Response, OwnId1, Map1} = write(Key, OwnId, Value, Map),
-	{reply, dcs:buildReply(write, Id, Response), {OwnId1, Map1}};
-
-handle_cast({update, Key, _Id, Value}, {OwnId, Map}) ->
-	try maps:get(Key, Map) of
-		Record ->
-			Record1 = Record#replica{value=Value},
-			Map1 = maps:put(Key, Record1, Map),
-%			{reply, {ok, updated}, {OwnId, Map1}} % maybe it should not be sent back
-			{noreply, {OwnId, Map1}}
-	catch
-		_ ->
-			% Ignore as there is no replica
-			{{error, no_replica, node()}, Map}
-		%	{reply, dcs:buildReply(update, Id, Response), {OwnId, Map1}};
 	end;
 
 handle_cast({reply, has_replica, _Id, _Key, _DCs}, {OwnId, Map}) ->
@@ -241,17 +275,51 @@ handle_cast({reply, update, _Id, Key, Result}, {OwnId, Map}) ->
 	end,
 	{noreply, {OwnId, Map1}}.
 
+
 %% =============================================================================
 %% Support functions
 %% =============================================================================
 
-%% @spec create(Key::atom(), Value, Map::map(), OwnId::integer()) -> Result::tuple()
+%% @spec getAllDCs() -> DCs::List
+%% 
+%% @doc The list of all the DCs.
+getAllDCs() ->
+	% TODO: complete it
+    [node() | []].
+
+%% @spec getNumReplicas(Key::atom(), Map::map()) -> Result::integer()
+%%
+%% @doc Get the number of replicas, if any, or zero otherwise.
+getNumReplicas(Key, Map) ->
+	try maps:get(Key, Map, 0) of
+		0 ->
+			0;
+		Value ->
+			#replica{num_replicas=Num}=Value,
+			Num
+	catch
+		_ ->
+			0
+	end.
+
+getRecord(Key, Map) ->
+	try maps:get(Key, Map, 0) of
+		0 ->
+			none;
+		Value ->
+			Value
+	catch
+		_ ->
+			 none
+	end.
+
+%% @spec create_(Key::atom(), Value, Map::map(), OwnId::integer()) -> Result::tuple()
 %%
 %% @doc Ceates a record for the specified data, adds it to the passed map and return all 
-%%		new information.
+%%		the new information.
 %%
 %%		Returns {{ok}, Id::integer(), Record, NewMap}.
-create(Key, Value, Map, OwnId) ->
+create_(Key, Value, Map, OwnId) ->
 	% Create the record for the specified key and save it
 	List = sets:new(),
 	Record=#replica{key=Key,value=Value,num_replicas=1,list_dcs_with_replicas=List},
@@ -268,8 +336,8 @@ create(Key, Value, Map, OwnId) ->
 %%		provided arguments, Args and return a tuple with a list of DC to replicat in and a 
 %%		list of potential DCs to replicate in if any of others fail.
 createOtherReplicas(Record, OwnId, NextDCsFunc, Args) ->
-	AllDCs = dcs:getAllDCs(), % get the list of all DCs with or without replica
-	{DCs, PotentialDCs} = NextDCsFunc(self(), AllDCs, Args),
+	AllDCs = getAllDCs(), % get the list of all DCs with or without replica
+	{DCs, PotentialDCs} = NextDCsFunc(adprep, AllDCs, Args),
 	Ds = sets:del_element(self(), sets:from_list(DCs)),
 	Size = sets:size(Ds),
 	DCs1 = sets:to_list(Ds),
@@ -323,13 +391,13 @@ read(Key, OwnId, Map) ->
 			#replica{value=Value}=Record,
 			{{ok, Value}, OwnId}
 	catch
-		_ ->
+		_:_ ->
 			% Find DCs with replica
 			case getAllDCsWithReplicas(Key, OwnId) of
-				{ok, Ds} ->
+				{ok, DCs} ->
 					%% Get the data from one of the DCs with replica
 					{registered_name, RegName} = process_info(self(), registered_name),
-					{Response, OwnId1} = sendOne(read, OwnId+1, Key, {read, OwnId, Key}, RegName, Ds),
+					{Response, OwnId1} = sendOne(read, OwnId+1, Key, {read, OwnId, Key}, RegName, DCs),
 					{Response, OwnId1};
 				{error, ErrorCode} ->
 					% An error
@@ -351,9 +419,9 @@ write(Key, OwnId, Value, Map) ->
 			% Send updates to other DCs
 			#replica{list_dcs_with_replicas=DCs}=Record1,
 			gen_server:abcast(DCs, Key, {update, OwnId, Key, Value}),
-			{{ok, Value}, OwnId+1, Map1}
+			{{ok}, OwnId+1, Map1}
 	catch
-		_ ->
+		_:_ ->
 			% Find DCs with replica
 			case getAllDCsWithReplicas(Key, OwnId) of
 				{ok, DCs} ->
@@ -366,6 +434,26 @@ write(Key, OwnId, Value, Map) ->
 			end
 	end.
 
+remove(Key, OwnId, Map) ->
+	try maps:get(Key, Map) of
+		Record ->
+			% DCs with replica
+			Map1 = maps:remove(Key, Map),
+			#replica{list_dcs_with_replicas=DCs}=Record,
+			Response = forward({forward_remove, Key, OwnId}, DCs),
+			{Response, OwnId + 1, Map1}
+	catch
+		_:_ ->
+			% TODO: Not locally so find it and forward delete command
+			{{ok}, OwnId, Map}
+	end.
+
+forward(_Msg, []) ->
+	{ok};
+forward(Msg, [Dc | DCs]) ->
+	{Dc, adprep} ! Msg,
+	forward(Msg, DCs).
+
 %% @spec getAllDCsWithReplicas(Key::atom(), OwnId::integer()) -> Result::tuple()
 %%
 %% @doc Gets all the DCs with a replica.
@@ -373,12 +461,12 @@ write(Key, OwnId, Value, Map) ->
 %%		Returs a tuple that can be {ok, DCS} on success or {error, timeout} otherwise.
 getAllDCsWithReplicas(Key, OwnId) ->
 	% Discover the DCs with replicas
-	AllDCs = dcs:getAllDCs(),
-	gen_server:abcast(AllDCs, Key, {has_replica, OwnId, Key}),
+	AllDCs = getAllDCs(),
 	flush({has_replica, OwnId, Key}),
+	gen_server:abcast(AllDCs, Key, {has_replica, OwnId, Key}),
 	% Only take the first one
 	receive
-		{reply, has_replica, OwnId, Key, DCs} ->
+		{reply, has_replica, OwnId, {exists, DCs}} ->
 			{ok, DCs}
 	after
 		1000 ->
