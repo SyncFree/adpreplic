@@ -24,7 +24,8 @@
 %% Internal functions
 %% ====================================================================
 buildPid_test() ->
-	?assertEqual(decay:buildPid("test_"), decay).
+	Value = decay:buildPid("_test"),
+	?assertEqual(decay_test, Value).
 
 startStopDecay_test() ->
 	% Initialise
@@ -34,15 +35,24 @@ startStopDecay_test() ->
 	Name = decay:buildPid(Key),
 	% Test - Initialy the decays process is not running, test it, then it is started and 
 	%		 should be running, so test it too
-	?assertEqual(whereis(Name), undefined),
+	?assertEqual(undefined, whereis(Name)),
+	register(Key, self()),
 	decay:startDecay(DecayTime, Key, StopPrevious),
-	?assertNotEqual(whereis(Name), undefined),
+	?assertNotEqual(undefined, whereis(Name)),
+	Result = receive
+		{decay, _Pid, 0} -> 
+			{ok}
+	after
+		DecayTime ->
+			{error, timeout}
+	end,
+	?assertNotEqual({ok}, Result),
 	% Test that we are receiving decay notifications
 	repeat(DecayTime, Key, 1),
 	% Stop decay test and test it is not running
 	decay:stopDecay(Key),
-	timer:sleep(200),
-	?assertEqual(whereis(Name), undefined).
+	timer:sleep(100),
+	?assertEqual(undefined, whereis(Name)).
 
 startStartDecay_test() ->
 	% Initialise
@@ -52,9 +62,10 @@ startStartDecay_test() ->
 	Name = decay:buildPid(Key),
 	% Test - It does not axist any previous decay process so call to startDecay should 
 	%        failed
-	?assertEqual(whereis(Name), undefined),
-	?assertException(error, function_clause, decay:startDecay(DecayTime, Key, StopPrevious)),
-	?assertNotEqual(whereis(Name), undefined).
+	?assertEqual(undefined, whereis(Name)),
+	decay:startDecay(DecayTime, Key, StopPrevious),
+	?assertNotEqual(undefined, whereis(Name)),
+	decay:stopDecay(Key).
 
 
 %%%%%%
@@ -70,4 +81,4 @@ repeat(DelayTime, Key, Num) when Num > 0 ->
 		DelayTime+100 ->
 			{error}
 	end,
-	?assertEqual(Result, {ok}).
+	?assertEqual({ok}, Result).

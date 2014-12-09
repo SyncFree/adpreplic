@@ -27,17 +27,18 @@
 getNumReplicas_test() ->
 	% Initialise
 	adprep:start(),
-	Key = 'test',
-	% Test
+	Key = 'getNumReplicas_test',
+	% Test - already running process
 	NumReplicas = adprep:getNumReplicas(Key),
 	?assertEqual(0, NumReplicas),
 	% Clean-up
-	adprep:stop().
+	adprep:stop(),
+	erlang:yield().
 
 create_test() ->
 	% Initialise
 	adprep:start(),
-	Key = first,
+	Key = 'create_test',
 	Value = "value",
 	% Test - does not exist
 	Response = create(Key, Value),
@@ -46,12 +47,13 @@ create_test() ->
 	Response1 = create(Key, Value),
 	?assertEqual({error, already_exists_replica}, Response1),
 	% Clean-up
-	adprep:stop().
+	adprep:stop(),
+	erlang:yield().
 
 read_test() ->
 	% Initialise
 	adprep:start(),
-	Key = 'first',
+	Key = 'read_test',
 	Value = "value1",
 	% Test - does not exist
 	Response = adprep:read(Key),
@@ -61,12 +63,13 @@ read_test() ->
 	Response1 = adprep:read(Key),
 	?assertEqual({ok, Value}, Response1),
 	% Clean-up
-	adprep:stop().
+	adprep:stop(),
+	erlang:yield().
 
 write_test() ->
 	% Initialise
 	adprep:start(),
-	Key = 'first',
+	Key = 'write_test',
 	Value = "value1",
 	NewValue = "new_value",
 	% Test - already exist
@@ -76,30 +79,32 @@ write_test() ->
 	Response2 = adprep:read(Key),
 	?assertEqual({ok, NewValue}, Response2),
 	% Clean-up
-	adprep:stop().
+	adprep:stop(),
+	erlang:yield().
 
 
 %% ============================================================================
 getDCs_test() ->
 	% Initialise
 	adprep:start(),
-	Key = 'test',
+	Key = 'getDCs_test',
 	% Test
 	?assertEqual({exists, []}, gen_server:call(adprep, {get_dcs, Key})),
 	% Clean-up
-	adprep:stop().
+	adprep:stop(),
+	erlang:yield().
 
 hasReplica_test() ->
 	% Initialise
 	adprep:start(),
-	Key = 'first',
-	Id = 0,
+	Key = 'hasReplica_test',
+	Id = 1,
 	Value = "value",
 	% Test - data does not exist
 	gen_server:cast(adprep, {has_replica, self(), Id, Key}),
 	Result = receive
-		_ ->
-			invalid
+		R ->
+			R
 	after
 		1000 ->
 			time_out
@@ -117,7 +122,8 @@ hasReplica_test() ->
 	end,
 	?assertEqual({exists, [node()]}, Result1),
 	% Clean-up
-	adprep:stop().
+	adprep:stop(),
+	erlang:yield().
 
 %% ============================================================================
 create(Key, Value) ->

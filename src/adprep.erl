@@ -19,7 +19,7 @@
 -compile(export_all).
 -else.
 -compile(report).
-% interface calls
+% Interface calls
 -export([start/0, stop/0, create/4, read/1, update/2, remove/1, getNumReplicas/1]).
 % gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
@@ -307,8 +307,8 @@ getRecord(Key, Map) ->
 	try maps:get(Key, Map, 0) of
 		0 ->
 			none;
-		Value ->
-			Value
+		Record ->
+			Record
 	catch
 		_ ->
 			 none

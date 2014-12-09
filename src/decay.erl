@@ -18,8 +18,10 @@
 -compile(export_all).
 -else.
 -compile(report).
+% Interface calls
 -export([startDecay/3,stopDecay/1]).
--export([init/1]).
+% Callbacks
+-export([init/1,buildPid/1]).
 -endif.
 
 
@@ -31,19 +33,19 @@
 %% 
 %% @doc Applies the decay as time passes.
 init({Time, Key}) ->
-	loop(Time, Key).
+	loop(Time, Key, 0).
 
 %% @spec loop(Time::integer(), Key::atom()) -> {ok}
 %% 
 %% @doc Processes the messages hold by the mailbox.
-loop(Time, Key) ->
+loop(Time, Key, Index) ->
 	receive
 		shutdown ->
 			{ok}
 	after 
         Time ->
-			Key ! {decay, self(), 0},
-			loop(Time, Key)
+			Key ! {decay, self(), Index},
+			loop(Time, Key, Index+1)
 	end.
 
 %% =============================================================================
@@ -82,6 +84,7 @@ stopDecay(Key) ->
 %% @doc Builds the decay process ID for the specified key.
 %buildPid(Key) when is_atom(Key) ->
 %	list_to_atom("decay" ++ atom_to_list(Key));
-buildPid(_Key) ->
-	decay.
-%	list_to_atom("decay" ++ Key).
+buildPid(Key) when is_list(Key) ->
+	list_to_atom("decay" ++ Key);
+buildPid(Key) when is_atom(Key) ->
+	buildPid(atom_to_list(Key)).
