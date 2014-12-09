@@ -212,13 +212,14 @@ handle_cast({update, Id, Key, Value}, {OwnId, Map}) ->
 handle_cast(shutdown, {OwnId, Map}) ->
     {stop, normal, {OwnId, Map}};
 
-handle_cast({has_replica, Id, Key}, {OwnId, Map}) ->
+handle_cast({has_replica, Origin, Id, Key}, {OwnId, Map}) ->
 	case getRecord(Key, Map) of
 		none ->
 			{noreply, {OwnId, Map}};
 		Record ->
 			#replica{list_dcs_with_replicas=DCs}=Record,
-			{reply, dcs:buildReply(has_replica, Id, {exists, [node() | DCs]}), {OwnId, Map}}
+			Origin ! dcs:buildReply(has_replica, Id, {exists, [node() | DCs]}),
+			{noreply, {OwnId, Map}}
 	end;
 
 handle_cast({create_new, Id, Key, Value, DCs}, {OwnId, Map}) ->
@@ -248,7 +249,7 @@ handle_cast({new_replica, Id, Key}, {OwnId, Map}) ->
 			{reply, dcs:buildReply(new_replica, Id, Response), {OwnId1, Map}}
 	end;
 
-handle_cast({reply, has_replica, _Id, _Key, _DCs}, {OwnId, Map}) ->
+handle_cast({reply, has_replica, _Id, _Result}, {OwnId, Map}) ->
 	% Ignore
 	{noreply, {OwnId, Map}};
 handle_cast({reply, update, _Id, Key, Result}, {OwnId, Map}) ->
@@ -462,7 +463,7 @@ forward(Msg, [Dc | DCs]) ->
 getAllDCsWithReplicas(Key, OwnId) ->
 	% Discover the DCs with replicas
 	AllDCs = getAllDCs(),
-	flush({has_replica, OwnId, Key}),
+	flush(OwnId),
 	gen_server:abcast(AllDCs, Key, {has_replica, OwnId, Key}),
 	% Only take the first one
 	receive
@@ -491,13 +492,13 @@ sendOne(Type, OwnId, Key, Msg, RegName, [Dc | DCs]) ->
 sendOne(_Type, OwnId, _Key, _Msg, _RegName, []) ->
 	{{error, no_dcs}, OwnId+1}.
 
-%% @spec flush(Msg) -> {ok}
+%% @spec flush(Id::integer()) -> {ok}
 %%
 %% @doc Removes all the messages that match the specified one from the mailbox.
-flush(Msg) ->
+flush(Id) ->
 	receive
-		Msg ->
-			flush(Msg)
+		{reply, has_replica, _Id, {exists, _DCs}} ->
+			flush(Id)
 	after
 		0 ->
 			{ok}

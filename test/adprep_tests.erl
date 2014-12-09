@@ -96,10 +96,8 @@ hasReplica_test() ->
 	Id = 0,
 	Value = "value",
 	% Test - data does not exist
-	gen_server:cast(adprep, {has_replica, Id, Key}),
+	gen_server:cast(adprep, {has_replica, self(), Id, Key}),
 	Result = receive
-		{reply, has_replica, Id, {exists, _DCs}} ->
-			invalid;
 		_ ->
 			invalid
 	after
@@ -109,7 +107,7 @@ hasReplica_test() ->
 	?assertEqual(time_out, Result),
 	% Test - data exist
 	create(Key, Value),
-	gen_server:cast(adprep, {has_replica, Id, Key}),
+	gen_server:cast(adprep, {has_replica, self(), Id, Key}),
 	Result1 = receive
 		{reply, has_replica, Id, Response1} ->
 			Response1
@@ -117,12 +115,9 @@ hasReplica_test() ->
 		1000 ->
 			false
 	end,
-	?assertEqual({exits, []}, Result1),
+	?assertEqual({exists, [node()]}, Result1),
 	% Clean-up
 	adprep:stop().
-
-flush_test() ->
-	?assertEqual({ok}, adprep:flush(none)).
 
 %% ============================================================================
 create(Key, Value) ->
