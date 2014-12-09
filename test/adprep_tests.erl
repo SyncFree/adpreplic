@@ -82,6 +82,22 @@ write_test() ->
 	adprep:stop(),
 	erlang:yield().
 
+remove_test() ->
+	% Initialise
+	adprep:start(),
+	Key = 'remove_test',
+	Value = "value",
+	% Test - already exist
+	create(Key, Value),
+	Response1 = adprep:remove(Key),
+	?assertEqual({ok}, Response1),
+	Response2 = adprep:read(Key),  % should not exists
+	?assertEqual({error, timeout}, Response2),
+	Respose3 = create(Key, Value), % should be able to create it again
+	?assertEqual({ok}, Respose3),
+	% Clean-up
+	adprep:stop(),
+	erlang:yield().
 
 %% ============================================================================
 getDCs_test() ->
