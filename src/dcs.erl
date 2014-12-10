@@ -19,21 +19,13 @@
 -compile(export_all).
 -else.
 -compile(report).
--export([buildReply/2,buildReply/3,create/2,createReplica/1,createReplica/2,forwardMsg/2,forwardMsg/3,getAllDCs/0,getDCsReplica/1,getNewID/1,getNewID/0,newReplica/2,read/1,replicated/1,rmvFromReplica/2,rmvReplica/2,setDCsReplica/2,sendReply/4,sendToAllDCs/1,write/2,updates/2]).
+-export([buildReply/2,buildReply/3,createReplica/1,createReplica/2,forwardMsg/2,forwardMsg/3,getAllDCs/0,getDCsReplica/1,getNewID/1,getNewID/0,newReplica/2,setDCsReplica/2,sendReply/4,sendToAllDCs/1]).
 -endif.
 
 
 %% =============================================================================
 %% Data Centers support
 %% =============================================================================
-%% @spec create(Key::atom(), Value::tuple()) -> Result::typle()
-%% 
-%% @doc Creates the replica locally. The result may have the values {ok} or 
-%%		{error, ErrorCode}.
-%%
-%%		The passed Value is a tuple that contains {Value, NextDCFunc::function(), Args}.
-create(Key, {Value, NextDCFunc, Args}) ->
-    send(create, Key, {Value, NextDCFunc, Args}).
 
 %% @spec createReplica(Key::atom(), Value) -> Result::typle()
 %% 
@@ -50,22 +42,6 @@ createReplica(Key, Value) ->
 createReplica(Key) ->
 	send(new_replica, Key).
 
-%% @spec read(Key::atom()) -> Result::typle()
-%% 
-%% @doc Reads the data locally. The result may have the values {ok, Value} or 
-%%		{error, ErrorCode}.
-read(Key) ->
-    send(read, Key).
-
-%% @spec write(Key::atom(), Value) -> Result::typle()
-%% 
-%% @doc Writes the specified value into the local data and forward update messages to the 
-%%		other DCs with replicas. The result may have the values {ok} or 
-%%		{error, ErrorCode}.
-write(Key, Value) ->
-	% Write new value
-    send(write, Key, Value).
-
 %% @spec newReplica(Key::atom(), Dc) -> {ok}
 %% 
 %% @doc Sends a new replica message to the replication layer.
@@ -76,85 +52,11 @@ newReplica(Key, Dc) ->
     Pid ! {new_replica, Dc, Id},
 	{ok}.
 
-%% @spec rmvFromReplica(Key::atom(), MinNumReplicas::integer()) -> Result::typle()
-%% 
-%% @doc Removes this replica if the data is sufficiently replicated and notify all other 
-%%		replicas. The result may have the values {ok} or {error, insuficient_replicas}.
-rmvFromReplica(Key, MinNumReplicas) ->
-	% Only process it if there are not sufficient no. of replicas when this 
-	% replica is removed
-	NumReplicas = getNumReplicas(),
-	if 
-		NumReplicas > MinNumReplicas ->
-			% There may be sufficient then try to remove
-	    	dcs:sendToAllDCs({rmv_replica, {node(), Key}, 0}),
-			NumReplicas1 = getNumRemovedFromReplicas({node(), Key}),
-			if
-				NumReplicas1 >= MinNumReplicas ->
-					% There are sufficient then try to remove locally
-					rmvReplica(Key, Key);
-
-				NumReplicas1 > 0 ->
-					% There are insufficient
-					Result = dcs:read(Key),
-					case Result of
-						{ok, Value} ->
-							createReplica(Key, Value)
-					end,
-					{error, insuficient_replicas}
-			end;
-
-		true ->
-			{error, insuficient_replicas}
-	end.
-
-%% @spec rmvReplica(Key::atom(), Dc::pid()) -> {ok}
-%% 
-%% @doc Sends a removed replica message to the replication layer.
-rmvReplica(Key, Dc) ->
-    % Send to the replication layer
-    Pid = getReplicationLayerPid(Key),
-    Id = getNewID(Key),
-    Pid ! {rmv_replica, Dc, Id},
-    {ok}.
-
-%% @spec update(Key::atom(), Value) -> {ok}
-%% 
-%% @doc Updates the local replica.
-update(Key, Value) ->
-    send(update, Key, Value).
-
-%% @spec updates(Key::atom(), Value) -> Result
-%% 
-%% @doc Updates the local replica and sends appropiate messages to the other DCs with 
-%%		replicas to update their replica too. Returns the message ID used to send update 
-%%		message to other DCs.
-updates(Key, Value) ->
-    % Update new value locally
-    Result = update(Key, Value),
-    % Notify all other DCs with replica irrespective of result from previous
-    Id = getNewID(Key),
-    sendToDCsReplica(Key, {update, Key, Id, Value}),
-    Result.
-
-%% @spec replicated(Key::atom()) -> HasReply::boolean()
-%% 
-%% @doc Checks if the data is locally replicated.
-replicated(Key) ->
-	{reply, has_a_replica, 0, {ok, HasReply}} = gen_server:call(getReplicationLayerPid(key), {has_a_replica, 0, Key}, 1000),
-	HasReply.
-
 %% @spec sendToAllDCs(Msg) -> {ok}
 %% 
 %% @doc Sends the specified message to all the DCs.
 sendToAllDCs(Msg) ->
 	sendToDCs(getAllDCs(), Msg).
-
-%% @spec sendToDCsReplica(Key::atom(), Msg) -> {ok}
-%% 
-%% @doc Sends the specified message to all the DCs with replica.
-sendToDCsReplica(Key, Msg) ->
-	sendToDCs(getDCsReplica(Key), Msg).
 
 %% @spec sendToOneDC(Key::atom(), Msg) -> {ok}
 %% 
@@ -262,13 +164,6 @@ setDCsReplica(Key, DCs) ->
 	end,
 	Result.
 
-%% @spec getNumReplicas() -> NumReplicas::integer()
-%% 
-%% @doc Provides the current number of replicas.
-getNumReplicas() ->
-	%% TODO: implement it
-	0.
-
 %% @spec getNewID(Key::atom()) -> Id::integer()
 %% 
 %% @doc Provides a new ID for the specified key.
@@ -318,24 +213,6 @@ getDCsReplica(Key) ->
         600000 ->
             []
     end.
-
-%% @spec getNumRemovedFromReplicas(Sender::pid()) -> NumRemoved::integer()
-%% 
-%% @doc Sends message to the replication layer.
-getNumRemovedFromReplicas(Sender) ->
-	getNumRemovedFromReplicas(Sender, geNumReplicas, 0).
-getNumRemovedFromReplicas(Sender, NumReplicas, NumResponses) ->
-	receive
-		{reply, rmv_replica, Sender, _Id, _Result} ->
-			NumResponses1 = NumResponses + 1,
-			if
-				NumResponses < NumReplicas ->
-					getNumRemovedFromReplicas(Sender, NumReplicas, NumResponses1)
-			end
-	after
-		100 ->
-			NumResponses
-	end.
 
 %% @spec send(Type::atom(), Key::atom()) -> Result::tuple()
 %% 

@@ -25,6 +25,7 @@
 -endif.
 -behaviour(gen_server).
 
+-include("adprep.hrl").
 -include("strategy_adprep.hrl").
 
 
@@ -43,18 +44,15 @@ init({Key, #adpargs{decay_time=DecayTime,
 					wdecay=WDecay,
 					rstrength=RStrength,
 					wstrength=WStrength}}) ->
-	Result = dcs:replicated(Key),
+	Result = adprep:hasReplica(Key),
 	% Calculate strength of the replica
 	{Replicated, Strength} = case Result of
-		{ok, Replicated1} ->
-			case Replicated1 of
-				true -> 
-					% With Replica
-					{Replicated1, ReplicationThreshold + WStrength};
-				false ->
-					% No replica
-					{Replicated1, 0}
-			end;
+		{true} ->
+			% With Replica
+			{true, ReplicationThreshold + WStrength};
+		{false} ->
+			% No replica
+			{false, 0};
 		_ ->
 			% No replica
 			{false, 0}
@@ -101,7 +99,7 @@ handle_call({write, Id, Value}, _From, {Key, Replicated, Strength, DecayTime, Mi
 
 handle_call({create, Id, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}) ->
 	NextDCsFunc = fun nextDCsFunc/3,
-	Result = dcs:create(Key, {Value, NextDCsFunc, MinNumReplicas}),
+	Result = adprep:create(Key, Value, NextDCsFunc, MinNumReplicas),
 	{Replicated1, Strength1} = case Result of
 		{ok} ->
 			% Successful creation implies the data has been replicated
@@ -117,7 +115,7 @@ handle_call({read, Id}, _From, {Key, Replicated, Strength, DecayTime, MinNumRepl
 
 handle_call({update, Id, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}) ->
 	% Should only come from another DC. Maybe it should be cheked before it is processed
-	dcs:updates(Key, Value),
+	adprep:update(Key, Value),
 	Strength1 = Strength - WDecay,
 	Replicated1 = processStrength(Key, Replicated, Strength1, MinNumReplicas, RmvThreshold),
 	{reply, dcs:buildReply(update, Id, {ok}), {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}}.
@@ -140,7 +138,8 @@ processStrength(Key, Replicated, Strength, MinNumReplicas, RmvThreshold) ->
 			if 
 				Strength =< 0 ->
 					% Remove the current replica and stop this process
-					Response = dcs:rmvFromReplica(Key, MinNumReplicas),
+					VerifyRemove = fun verifyRemove/2,
+					Response = adprep:remove(Key, VerifyRemove, MinNumReplicas),
 					if
 						Response == {ok} ->
 							adpreps_:stop(Key),
@@ -152,7 +151,8 @@ processStrength(Key, Replicated, Strength, MinNumReplicas, RmvThreshold) ->
 
 				Strength =< RmvThreshold ->
 					% Remove the current replica, but don't stop
-					Response = dcs:rmvFromReplica(Key, MinNumReplicas),
+					VerifyRemove = fun verifyRemove/2,
+					Response = adprep:remove(Key, VerifyRemove, MinNumReplicas),
 					if
 						Response == {ok} ->
                     		false;
@@ -177,6 +177,10 @@ processStrength(Key, Replicated, Strength, MinNumReplicas, RmvThreshold) ->
 	end,
 	{Replicated1, Strength1}.
 
+verifyRemove(Record, MinNumReplicas) ->
+	#replica{num_replicas=NumReplicas}=Record,
+	NumReplicas > MinNumReplicas.
+
 %% @spec read(Key::atom(), Id::integer(), Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), RStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float()}
 %% 
 %% @doc Reads the specified data, irrespective of where it is located.
@@ -187,12 +191,12 @@ read(Key, Id, Replicated, Strength, ReplicationThreshold, RStrength, MaxStrength
 	Replicated1 = if 
 		Strength1 > ReplicationThreshold -> 
 			% Create replica
-			Result = dcs:createReplica(Key),
+			Result = adprep:create(Key),
 			true;
 
 		true ->
             % Already replicated or not
-			Result = dcs:read(Key),
+			Result = adprep:read(Key),
             Replicated
 	end,
 	{Replicated1, Strength1, dcs:buildReply(read, Id, Result)}.
@@ -213,7 +217,7 @@ write(Key, Id, Value, Replicated, Strength, ReplicationThreshold, WStrength, Max
 
 		true ->
 			% Already replicated or not
-			Result = dcs:write(Key, Value),
+			Result = adprep:update(Key, Value),
 			Replicated
 	end,
 	{Replicated1, Strength1, dcs:buildReply(write, Id, Result)}.

@@ -92,12 +92,28 @@ delete_test() ->
 	Value = "value",
 	% Test - already exist
 	create(Key, Value),
-	Response1 = adprep:delete(Key),
-	?assertEqual({ok}, Response1),
-	Response2 = adprep:read(Key),  % should not exists
-	?assertEqual({error, timeout}, Response2),
-	Respose3 = create(Key, Value), % should be able to create it again
-	?assertEqual({ok}, Respose3),
+	Response = adprep:delete(Key),
+	?assertEqual({ok}, Response),
+	Response1 = adprep:read(Key),  % should not exists
+	?assertEqual({error, timeout}, Response1),
+	Respose2 = create(Key, Value), % should be able to create it again
+	?assertEqual({ok}, Respose2),
+	% Clean-up
+	adprep:stop(),
+	erlang:yield().
+
+hasAReplica_test() ->
+	% Initialise
+	adprep:start(),
+	Key = 'hasAReplica_test',
+	Value = "value",
+	% Test - no replica
+	Response = adprep:hasReplica(Key),
+	?assertEqual({no}, Response),
+	% Test - with replica
+	create(Key, Value),
+	Response1 = adprep:hasReplica(Key),
+	?assertEqual({yes}, Response1),
 	% Clean-up
 	adprep:stop(),
 	erlang:yield().
