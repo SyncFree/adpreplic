@@ -85,9 +85,15 @@ code_change(_PreviousVersion, State, _Extra) ->
 %% Messages handler
 %% =============================================================================
 
-handle_cast(shutdown, LoopData) ->
+handle_cast(shutdown, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
+					   ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay,
+					   RStrength, WStrength}) ->
 %    lager:info("Shutting down the replication layer"),
-    {stop, normal, LoopData};
+	% Stop the decay process
+	decay:stopDecay(Key),
+    {stop, normal, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
+					ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay,
+					RStrength, WStrength}};
 
 handle_cast({decay, _Id}, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
 						   ReplicationThreshold, RmvThreshold, MaxStrength, Decay, 
@@ -95,7 +101,9 @@ handle_cast({decay, _Id}, {Key, Replicated, Strength, DecayTime, MinNumReplicas,
 	% Time decay
 	Strength1 = Strength - Decay,
 	Replicated1 = processStrength(Key, Replicated, Strength1, MinNumReplicas, RmvThreshold),
-	{noreply, {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}}.
+	{noreply, {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, 
+			   ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, 
+			   WStrength}}.
 
 handle_call({create, Value}, _From, {Key, Replicated, Strength, DecayTime, 
 									 MinNumReplicas, ReplicationThreshold, RmvThreshold, 
@@ -109,19 +117,25 @@ handle_call({create, Value}, _From, {Key, Replicated, Strength, DecayTime,
 		true ->
 			{Replicated, Strength}
 	end,
-	{reply, adpreps_:buildReply(create, Result), {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
+	{reply, adpreps_:buildReply(create, Result), 
+	 {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, 
+	  RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
 
 handle_call({read}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
 							ReplicationThreshold, RmvThreshold, MaxStrength, Decay, 
 							WDecay, RStrength, WStrength}) ->
 	{Replicated1, Strength1, ReplyMsg} = read(Key, Replicated, Strength, ReplicationThreshold, RStrength, MaxStrength),
-	{reply, ReplyMsg, {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
+	{reply, ReplyMsg, 
+	 {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, 
+	  RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
 
 handle_call({write, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
 									ReplicationThreshold, RmvThreshold, MaxStrength, 
 									Decay, WDecay, RStrength, WStrength}) ->
 	{Replicated1, Strength1, Result} = write(Key, Value, Replicated, Strength, ReplicationThreshold, WStrength, MaxStrength),
-	{reply, Result, {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
+	{reply, Result, 
+	 {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, 
+	  RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
 
 handle_call({update, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
 									 ReplicationThreshold, RmvThreshold, MaxStrength, 
@@ -130,7 +144,9 @@ handle_call({update, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNu
 	adprep:update(Key, Value),
 	Strength1 = Strength - WDecay,
 	Replicated1 = processStrength(Key, Replicated, Strength1, MinNumReplicas, RmvThreshold),
-	{reply, adpreps_:buildReply(update, {ok}), {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
+	{reply, adpreps_:buildReply(update, {ok}), 
+	 {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, 
+	  RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
 
 handle_call({delete}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
 							  ReplicationThreshold, RmvThreshold, MaxStrength, Decay, 
@@ -138,9 +154,13 @@ handle_call({delete}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplic
 	case adprep:delete(Key) of
 		{ok} -> 
 			gen_server:cast(self(), shutdown),
-			{reply, adpreps_:buildReply(delete, {ok}), {Key, false, 0, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
+			{reply, adpreps_:buildReply(delete, {ok}), 
+			 {Key, false, 0, DecayTime, MinNumReplicas, ReplicationThreshold, 
+			  RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
 		Result ->
-			{reply, adpreps_:buildReply(delete, {error, Result}), {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}}
+			{reply, adpreps_:buildReply(delete, {error, Result}), 
+			 {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, 
+			  RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}}
 	end.
 
 
