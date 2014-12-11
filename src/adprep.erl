@@ -200,6 +200,7 @@ handle_call({create, Key}, _From, {OwnId, Map}) ->
 			% Ignore as there is a local replica
 			{reply, {error, already_exists_replica}, {OwnId, Map}}
 	end;
+%% Returns {reply,create,{ok}} | {reply,create,{error, already_exists_replica}}
 handle_call({create, Key, {Value, RegName}}, _From, {OwnId, Map}) ->
 	% The data should not already exist
 	case getNumReplicas(Key, Map) of
@@ -218,6 +219,7 @@ handle_call({create, Key, {Value, RegName}}, _From, {OwnId, Map}) ->
 			% Ignore as there is a local replica
 			{reply, {error, already_exists_replica}, {OwnId, Map}}
 	end;
+%% Returns {reply,create,{ok}} | {reply,create,{error, already_exists_replica}}
 handle_call({create, Key, {Value, NextDCFunc, Args}}, _From, {OwnId, Map}) ->
 	% The data should not already exist
 	case getNumReplicas(Key, Map) of
@@ -364,11 +366,11 @@ handle_cast({update, Id, Key, Value}, {OwnId, Map}) ->
 	case getRecord(Key, Map) of
 		none ->
 			% Ignore as there is no replica
-			{reply, dcs:buildReply(update, Id, {error, no_replica}), {OwnId, Map}};
+			{reply, adpreps_:buildReply(update, Id, {error, no_replica}), {OwnId, Map}};
 		Record ->
 			Record1 = Record#replica{value=Value},
 			Map1 = maps:put(Key, Record1, Map),
-			{reply, dcs:buildReply(update, Id, {ok, updated}), {OwnId, Map1}}
+			{reply, adpreps_:buildReply(update, Id, {ok, updated}), {OwnId, Map1}}
 	end;
 
 handle_cast(shutdown, {OwnId, Map}) ->
@@ -380,7 +382,7 @@ handle_cast({has_replica, Origin, Id, Key}, {OwnId, Map}) ->
 			{noreply, {OwnId, Map}};
 		Record ->
 			#replica{list_dcs_with_replicas=DCs}=Record,
-			Origin ! dcs:buildReply(has_replica, Id, {exists, [node() | DCs]}),
+			Origin ! adpreps_:buildReply(has_replica, Id, {exists, [node() | DCs]}),
 			{noreply, {OwnId, Map}}
 	end;
 
@@ -393,10 +395,10 @@ handle_cast({create_new, Id, Key, Value, DCs}, {OwnId, Map}) ->
 			List = sets:del_element(self(), DCs),
 			Record=#replica{key=Key,value=Value,num_replicas=sets:size(DCs),list_dcs_with_replicas=List},
 			Map1 = maps:put(Key, Record, Map),
-			{dcs:buildReply(create_new, Id, {ok}), {OwnId, Map1}};
+			{adpreps_:buildReply(create_new, Id, {ok}), {OwnId, Map1}};
 		_ ->
 			% Ignore as there is a replica
-			{dcs:buildReply(create_new, Id, {error, no_replica}), {OwnId, Map}}
+			{adpreps_:buildReply(create_new, Id, {error, no_replica}), {OwnId, Map}}
 	end,
 	{reply, Reply, Args};
 
@@ -406,9 +408,9 @@ handle_cast({new_replica, Id, Key}, {OwnId, Map}) ->
 	case Response of
 		{ok, Value} ->
 			Result = handle_call({new_replica, ?MODULE, Key, Value}, ?MODULE, {OwnId1, Map}),
-			{reply, dcs:buildReply(new_replica, Id, Result), {OwnId1, Map}};
+			{reply, adpreps_:buildReply(new_replica, Id, Result), {OwnId1, Map}};
 		_ ->
-			{reply, dcs:buildReply(new_replica, Id, Response), {OwnId1, Map}}
+			{reply, adpreps_:buildReply(new_replica, Id, Response), {OwnId1, Map}}
 	end;
 
 handle_cast({reply, has_replica, _Id, _Result}, {OwnId, Map}) ->
@@ -494,7 +496,7 @@ create_(Key, Value, Map, OwnId) ->
 %%		list of potential DCs to replicate in if any of others fail.
 createOtherReplicas(Record, OwnId, NextDCsFunc, Args) ->
 	AllDCs = getAllDCs(), % get the list of all DCs with or without replica
-	{DCs, PotentialDCs} = NextDCsFunc(adprep, AllDCs, Args),
+	{DCs, PotentialDCs} = NextDCsFunc(node(), AllDCs, Args),
 	Ds = sets:del_element(self(), sets:from_list(DCs)),
 	Size = sets:size(Ds),
 	DCs1 = sets:to_list(Ds),

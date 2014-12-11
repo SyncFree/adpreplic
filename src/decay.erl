@@ -79,12 +79,13 @@ stopDecay(Key) ->
 			{error, may_not_exists}
 	end.
 
+%% @spec buildPid(Key::list()) -> Pid::atom()
+%%
+%% @doc Builds the decay process ID for the specified key.
+buildPid(Key) when is_list(Key) ->
+	list_to_atom("decay" ++ Key);
 %% @spec buildPid(Key::atom()) -> Pid::atom()
 %%
 %% @doc Builds the decay process ID for the specified key.
-%buildPid(Key) when is_atom(Key) ->
-%	list_to_atom("decay" ++ atom_to_list(Key));
-buildPid(Key) when is_list(Key) ->
-	list_to_atom("decay" ++ Key);
 buildPid(Key) when is_atom(Key) ->
 	buildPid(atom_to_list(Key)).

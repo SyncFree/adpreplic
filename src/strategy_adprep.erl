@@ -80,24 +80,26 @@ code_change(_PreviousVersion, State, _Extra) ->
 	% next
 	{ok, State}.
 
+
 %% =============================================================================
-%% Messages handlers
+%% Messages handler
 %% =============================================================================
+
 handle_cast(shutdown, LoopData) ->
 %    lager:info("Shutting down the replication layer"),
     {stop, normal, LoopData};
 
-handle_cast({decay, _Id}, {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}) ->
+handle_cast({decay, _Id}, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
+						   ReplicationThreshold, RmvThreshold, MaxStrength, Decay, 
+						   WDecay, RStrength, WStrength}) ->
 	% Time decay
 	Strength1 = Strength - Decay,
 	Replicated1 = processStrength(Key, Replicated, Strength1, MinNumReplicas, RmvThreshold),
 	{noreply, {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}}.
 
-handle_call({write, Id, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}) ->
-	{Replicated1, Strength1, Result} = write(Key, Id, Value, Replicated, Strength, ReplicationThreshold, WStrength, MaxStrength),
-	{reply, dcs:buildReply(write, Id, Result), {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
-
-handle_call({create, Id, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}) ->
+handle_call({create, Value}, _From, {Key, Replicated, Strength, DecayTime, 
+									 MinNumReplicas, ReplicationThreshold, RmvThreshold, 
+									 MaxStrength, Decay, WDecay, RStrength, WStrength}) ->
 	NextDCsFunc = fun nextDCsFunc/3,
 	Result = adprep:create(Key, Value, NextDCsFunc, MinNumReplicas),
 	{Replicated1, Strength1} = case Result of
@@ -107,18 +109,44 @@ handle_call({create, Id, Value}, _From, {Key, Replicated, Strength, DecayTime, M
 		true ->
 			{Replicated, Strength}
 	end,
-	{reply, dcs:buildReply(create, Id, Result), {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
+	{reply, adpreps_:buildReply(create, Result), {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
 
-handle_call({read, Id}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}) ->
-	{Replicated1, Strength1, ReplyMsg} = read(Key, Id, Replicated, Strength, ReplicationThreshold, RStrength, MaxStrength),
+handle_call({read}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
+							ReplicationThreshold, RmvThreshold, MaxStrength, Decay, 
+							WDecay, RStrength, WStrength}) ->
+	{Replicated1, Strength1, ReplyMsg} = read(Key, Replicated, Strength, ReplicationThreshold, RStrength, MaxStrength),
 	{reply, ReplyMsg, {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
 
-handle_call({update, Id, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}) ->
+handle_call({write, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
+									ReplicationThreshold, RmvThreshold, MaxStrength, 
+									Decay, WDecay, RStrength, WStrength}) ->
+	{Replicated1, Strength1, Result} = write(Key, Value, Replicated, Strength, ReplicationThreshold, WStrength, MaxStrength),
+	{reply, Result, {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
+
+handle_call({update, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
+									 ReplicationThreshold, RmvThreshold, MaxStrength, 
+									 Decay, WDecay, RStrength, WStrength}) ->
 	% Should only come from another DC. Maybe it should be cheked before it is processed
 	adprep:update(Key, Value),
 	Strength1 = Strength - WDecay,
 	Replicated1 = processStrength(Key, Replicated, Strength1, MinNumReplicas, RmvThreshold),
-	{reply, dcs:buildReply(update, Id, {ok}), {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}}.
+	{reply, adpreps_:buildReply(update, {ok}), {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
+
+handle_call({delete}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
+							  ReplicationThreshold, RmvThreshold, MaxStrength, Decay, 
+							  WDecay, RStrength, WStrength}) ->
+	case adprep:delete(Key) of
+		{ok} -> 
+			gen_server:cast(self(), shutdown),
+			{reply, adpreps_:buildReply(delete, {ok}), {Key, false, 0, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
+		Result ->
+			{reply, adpreps_:buildReply(delete, {error, Result}), {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}}
+	end.
+
+
+%% =============================================================================
+%% Support functions
+%% =============================================================================
 
 %% @spec processStrength(Key::atom(), Replicated::boolean(), Strength::float(), MinNumReplicas::float(), RmvThreshold::float()) -> {Replicated1::boolean(), Strength::float()}
 %% 
@@ -181,46 +209,58 @@ verifyRemove(Record, MinNumReplicas) ->
 	#replica{num_replicas=NumReplicas}=Record,
 	NumReplicas > MinNumReplicas.
 
-%% @spec read(Key::atom(), Id::integer(), Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), RStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float()}
+%% @spec read(Key::atom(), Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), RStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float()}
 %% 
 %% @doc Reads the specified data, irrespective of where it is located.
-read(Key, Id, Replicated, Strength, ReplicationThreshold, RStrength, MaxStrength) ->
+read(Key, Replicated, Strength, ReplicationThreshold, RStrength, MaxStrength) ->
 	% Calculate new strength
 	Strength1 = incStrength(Strength, RStrength, MaxStrength),
-	% Continue processing based on new strength
-	Replicated1 = if 
-		Strength1 > ReplicationThreshold -> 
-			% Create replica
-			Result = adprep:create(Key),
-			true;
-
-		true ->
-            % Already replicated or not
+	Replicated1 = if
+		Replicated == true ->
+            % Already replicated
 			Result = adprep:read(Key),
-            Replicated
+			Replicated;
+		true ->
+			% Continue processing based on new strength
+			if 
+				Strength1 > ReplicationThreshold -> 
+					% Create replica
+					Result = adprep:create(Key),
+					true;
+				true ->
+		            % Not replicated
+					Result = adprep:read(Key),
+		            Replicated
+			end
 	end,
-	{Replicated1, Strength1, dcs:buildReply(read, Id, Result)}.
+	{Replicated1, Strength1, adpreps_:buildReply(read, Result)}.
 
-%% @spec write(Key::atom(), Id::integer(), Value, Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), WStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float()}
+%% @spec write(Key::atom(), Value, Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), WStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float()}
 %% 
 %% @doc Writes the new value of the specified data and take appropiate action to update 
 %%		replicated sites (DCs).
-write(Key, Id, Value, Replicated, Strength, ReplicationThreshold, WStrength, MaxStrength) ->
+write(Key, Value, Replicated, Strength, ReplicationThreshold, WStrength, MaxStrength) ->
 	% Calculate new strength
 	Strength1 = incStrength(Strength, WStrength, MaxStrength),
-	% Continue processing based on new strength
-	Replicated1 = if 
-		Strength1 > ReplicationThreshold -> 
-			% Create replica
-			Result = dcs:createReplica(Key, Value),
-			true;
-
-		true ->
-			% Already replicated or not
+	Replicated1 = if
+		Replicated == true ->
+            % Already replicated
 			Result = adprep:update(Key, Value),
-			Replicated
+			Replicated;
+		true ->
+			% Continue processing based on new strength
+			if 
+				Strength1 > ReplicationThreshold -> 
+					% Create replica
+					Result = adprep:create(Key, Value),
+					true;
+				true ->
+		            % Not replicated
+					Result = adprep:update(Key, Value),
+					Replicated
+			end
 	end,
-	{Replicated1, Strength1, dcs:buildReply(write, Id, Result)}.
+	{Replicated1, Strength1, adpreps_:buildReply(write, Result)}.
 
 %% @spec incStrength(Strength::float(), Inc::float(), MaxStrength::float()) -> Strength1::float()
 %% 
@@ -240,22 +280,22 @@ incStrength(Strength, Inc, MaxStrength) ->
 %%		provides list of all DCs, except fro specified DC, and another to select from in 
 %%		case any of the previous fail.
 nextDCsFunc(Dc, AllDCs, MinNumReplicas) -> 
-	nextDCsFunc_(Dc, AllDCs, MinNumReplicas, []).
+	nextDCsFunc_(Dc, AllDCs, MinNumReplicas - 1, []).
 
-nextDCsFunc_(Dc, [D | AllDCs], MinNumReplicas, ListDCs) -> 
+nextDCsFunc_(Dc, [D | AllDCs], MinNumExtrReplicas, ListDCs) -> 
 	if
-		MinNumReplicas > 0 ->
-			{MinNumReplicas1, ListDCs1} = if
+		MinNumExtrReplicas > 0 ->
+			{MinNumExtrReplicas1, ListDCs1} = if
 				D == Dc ->
 					% Ignore
-					{MinNumReplicas, ListDCs};
+					{MinNumExtrReplicas, ListDCs};
 				true ->
-					{MinNumReplicas-1, [D | ListDCs]}
+					{MinNumExtrReplicas - 1, [D | ListDCs]}
 			end,
-			nextDCsFunc_(Dc, AllDCs, MinNumReplicas1, ListDCs1);
+			nextDCsFunc_(Dc, AllDCs, MinNumExtrReplicas1, ListDCs1);
 		true ->
 			{ListDCs, AllDCs}
 	end;
-nextDCsFunc_(_Dc, [], _MinNumReplicas, List) -> 
+nextDCsFunc_(_Dc, [], _MinNumExtrReplicas, List) -> 
 	% No sufficient DCs, full replication
 	{List, []}.

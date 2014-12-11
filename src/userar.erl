@@ -13,31 +13,40 @@
 -module(userar).
 -author('aas@trifork.co.uk').
 
+-ifdef(EUNIT).
 -compile(export_all).
--export([create/5, read/2, write/3]).
-%-import(adpreps_, [create/5, read/2, write/3]).
+-else.
+-export([create/4, delete/1, read/1, update/2]).
+-endif.
 
 
 %% =============================================================================
 %% User Adaptive Replication support
 %% =============================================================================
-%% @spec create(Key::atom(), Id::integer(), Value, Strategy::atom(), Args::tuple()) -> Result::tuple()
+%% @spec create(Key::atom(), Value::term(), Strategy::atom(), Args::term()) -> Result::tuple()
 %% 
-%% @doc Creates a local replica of the data. The results may have any of the values {ok} or 
-%%		{error, ErrorCode}.
-create(Key, Id, Value, Strategy, Args) ->
-	adpreps_:create(Key, Id, Value, Strategy, Args).
+%% @doc Creates a local replica of the data. The results may have any of the values {ok} 
+%%		or {error, ErrorCode}.
+create(Key, Value, Strategy, Args) ->
+	adpreps_:create(Key, Value, Strategy, Args).
 
-%% @spec read(Key::atom(), Id::integer())-> Result::tuple()
+%% @spec read(Key::atom())-> Result::tuple()
 %% 
-%% @doc Reads the data value for the local replica. The results may have any of the values {ok} or 
-%%		{error, ErrorCode}.
-read(Key, Id) ->
-	adpreps_:read(Key, Id).
+%% @doc Reads the data value for the local replica. The results may have any of the 
+%%		values {ok, Value::term()} or {error, ErrorCode::term()}.
+read(Key) ->
+	adpreps_:read(Key).
 
-%% @spec write(Key::atom(), Id::integer(), Value)-> Result::tuple()
+%% @spec write(Key::atom(), Value::term())-> Result::tuple()
 %% 
 %% @doc Writes the new value for the data. The results may have any of the values {ok} or 
 %%		{error, ErrorCode}.
-write(Key, Id, Value) ->
-	adpreps_:write(Key, Id, Value).
+update(Key, Value) ->
+	adpreps_:update(Key, Value).
+
+%% @spec write(Key::atom(), Value)-> Result::tuple()
+%% 
+%% @doc Writes the new value for the data. The results may have any of the values {ok} or 
+%%		{error, ErrorCode::term()}.
+delete(Key) ->
+	adpreps_:delete(Key).
