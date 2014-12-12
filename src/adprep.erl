@@ -128,7 +128,7 @@ remove(Key, VerifyRemove, Args) ->
 %    lager:info("Removing entry for ~p",[Key]),
     gen_server:call(?MODULE, {remove, Key, VerifyRemove, Args}).
 
-%% @spec ipdate(Key::atom(), Value) -> Result::typle()
+%% @spec update(Key::atom(), Value) -> Result::typle()
 %% 
 %% @doc Updates the specified value into the local data and forward update messages to the 
 %%        other DCs with replicas. The result may have the values {ok} or 

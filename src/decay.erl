@@ -35,7 +35,7 @@
 init({Time, Key}) ->
     loop(Time, Key, 0).
 
-%% @spec loop(Time::integer(), Key::atom()) -> {ok}
+%% @spec loop(Time::integer(), Key::atom(), Index::integer()) -> {ok}
 %% 
 %% @doc Processes the messages hold by the mailbox.
 loop(Time, Key, Index) ->

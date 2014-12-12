@@ -39,16 +39,16 @@ create(Key, Value, Strategy, Args) ->
 read(Key) ->
     adpreps_:read(Key).
 
-%% @spec write(Key::atom(), Value::term())-> Result::tuple()
+%% @spec update(Key::atom(), Value::term())-> Result::tuple()
 %% 
 %% @doc Writes the new value for the data. The results may have any of the values {ok} or 
 %%      {error, ErrorCode}.
 update(Key, Value) ->
     adpreps_:update(Key, Value).
 
-%% @spec write(Key::atom(), Value)-> Result::tuple()
+%% @spec delete(Key::atom())-> Result::tuple()
 %% 
-%% @doc Writes the new value for the data. The results may have any of the values {ok} or 
-%%      {error, ErrorCode::term()}.
+%% @doc Delstes the data from every replica. The results may have any of the values {ok} 
+%%      or {error, ErrorCode::term()}.
 delete(Key) ->
     adpreps_:delete(Key).

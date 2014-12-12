@@ -8,6 +8,7 @@
 %% @end
 %% =============================================================================
 
+%% @doc Record with all the data required by the Replication Layer.
 -record(replica,   {key, % the key associated with the record/data
                     value, % the data stored in the replica/record
                     num_replicas = 1 :: integer(), % the number of replicas of this data

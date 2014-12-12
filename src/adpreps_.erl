@@ -44,7 +44,7 @@ create(Key, Value, Strategy, Args) ->
 read(Key) ->
     send(Key, {read}).
 
-%% @spec write(Key::atom()) -> Result::tuple()
+%% @spec update(Key::atom(), Value::term()) -> Result::tuple()
 %% 
 %% @doc Writes the new value of the specified data. The results is of the format {ok} or 
 %%      {error, ErrorCode}.
@@ -258,9 +258,10 @@ buildPid(Key) when is_atom(Key) ->
 
 %% @spec buildReply(Type::atom(), Id::integer(), Result) -> Msg::atom()
 %%
+%% @doc Builds the reply from the passed parameters.
 buildReply(Type, Id, Results) ->
     {reply, Type, Id, Results}.
-%% @spec buildReply(Type::atom(), Id) -> Msg::atom()
-%% Id could be an integer or the result.
+%% @spec buildReply(Type::atom(), Id::integer()) -> Msg::atom()
+%% @doc Builds the reply from the passed parameters. Id could be an integer or the result.
 buildReply(Type, Id) ->
     {reply, Type, Id}.

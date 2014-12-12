@@ -8,6 +8,7 @@
 %% @end
 %% =============================================================================
 
+%% @doc Record with all the data requited by the startegy.
 -record(adpargs,   {decay_time :: integer(), %% time in milliseconds between decays
                     min_num_replicas = 1 :: integer() , %% the minimum number of replicas at any time
                     replication_threshold :: float(), %% the strength threshold to replicat the data locally
