@@ -79,6 +79,7 @@ delete_test() ->
 	% Test - exits
 	Result = userar:delete(Key),
 	?assertEqual({ok}, Result),
+	erlang:yield(),
 	% Test - does not exist
 	Result1 = userar:delete(Key),
 	?assertEqual({error, does_not_exists}, Result1),

@@ -20,6 +20,8 @@
 -compile(export_all).
 -else.
 -compile(report).
+% StrateInterface for decay
+-export([decay/2]).
 % gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 -endif.
@@ -80,6 +82,11 @@ code_change(_PreviousVersion, State, _Extra) ->
 	% next
 	{ok, State}.
 
+%% @spec decay(Key::atom(), Id::integer()) -> {ok}
+%%
+%% @doc Does nothing. No change planned yet.
+decay(Key, Id) ->
+	gen_server:cast(Key, {decay, Id}).
 
 %% =============================================================================
 %% Messages handler
@@ -214,9 +221,10 @@ processStrength(Key, Replicated, Strength, MinNumReplicas, RmvThreshold) ->
 					true
 			end;
 
-		Strength =< 0 ->
+		Strength1 =< 0 ->
 			% Stop this process
 			adpreps_:stop(Key),
+			erlang:yield(), % give a chance to shutdown
             false;
 
 		true ->

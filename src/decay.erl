@@ -44,7 +44,7 @@ loop(Time, Key, Index) ->
 			{ok}
 	after 
         Time ->
-			Key ! {decay, self(), Index},
+			gen_server:cast(Key, {decay, Index}),
 			loop(Time, Key, Index+1)
 	end.
 
@@ -57,6 +57,7 @@ loop(Time, Key, Index) ->
 %% @doc Starts the decay process for the specified key and time period.
 startDecay(DecayTime, Key, true) ->
 	stopDecay(Key),
+	erlang:yield(), % give a chance to shutdown
 	startDecay(DecayTime, Key, false);
 startDecay(DecayTime, Key, false) ->
 	DecayKey = buildPid(Key),
@@ -67,16 +68,16 @@ startDecay(DecayTime, Key, false) ->
 %% @doc Stops the dacay process. Returns {ok} if no problem was found requesting the stop 
 %%		of the process or {error, may_not_exists} otherwise.
 stopDecay(Key) ->
-	% Stops the decay process
 	DecayKey = buildPid(Key),
+	% Stops the decay process
 	% No reply is sent back to sender
 	try DecayKey ! shutdown of
 		_ ->
 			% Succeed
 			{ok}
 	catch
-		error:badarg -> 
-			{error, may_not_exists}
+		error:badarg ->
+			{error, does_not_exist}
 	end.
 
 %% @spec buildPid(Key::list()) -> Pid::atom()

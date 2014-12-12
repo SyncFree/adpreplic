@@ -56,7 +56,13 @@ update(Key, Value) ->
 %% @doc Deletes the data in all DCs where there is a replica. The results may have any of 
 %%		the values {ok} or {error, ErrorCode::term()}.
 delete(Key) ->
-	send(Key, {delete}).
+	try send(Key, {delete}) of 
+		Result ->
+			Result
+	catch
+		error:badarg ->
+			{error, does_not_exists}
+	end.
 
 %% @spec stop(Key::atom()) -> Result::tuple()
 %% 

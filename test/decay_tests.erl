@@ -17,6 +17,7 @@
 %% ====================================================================
 -export([]).
 
+
 -include_lib("eunit/include/eunit.hrl").
 
 
@@ -29,56 +30,51 @@ buildPid_test() ->
 
 startStopDecay_test() ->
 	% Initialise
-	DecayTime = 1000,
+	DecayTime = 10000,
 	Key = test,
 	StopPrevious = false,
 	Name = decay:buildPid(Key),
+	% Test - it is not already running
+	Reg = registered(),
+	?assertEqual(false, lists:member(Name, Reg)),
 	% Test - Initialy the decays process is not running, test it, then it is started and 
 	%		 should be running, so test it too
-	?assertEqual(undefined, whereis(Name)),
-	register(Key, self()),
 	decay:startDecay(DecayTime, Key, StopPrevious),
-	?assertNotEqual(undefined, whereis(Name)),
-	Result = receive
-		{decay, _Pid, 0} -> 
-			{ok}
-	after
-		DecayTime ->
-			{error, timeout}
-	end,
-	?assertNotEqual({ok}, Result),
-	% Test that we are receiving decay notifications
-	repeat(DecayTime, Key, 1),
-	% Stop decay test and test it is not running
+	Reg1 = registered(),
+	?assertEqual(true, lists:member(Name, Reg1)),
+	% Stop decay test and test it is not running anymore
 	decay:stopDecay(Key),
 	timer:sleep(100),
-	?assertEqual(undefined, whereis(Name)).
+	Reg2 = registered(),
+	?assertEqual(false, lists:member(Name, Reg2)).
 
 startStartDecay_test() ->
 	% Initialise
-	DecayTime = 1000,
+	DecayTime = 10000,
 	Key = "test",
-	StopPrevious = true,
 	Name = decay:buildPid(Key),
+	% Test - it is not already running
+	Reg = registered(),
+	?assertEqual(false, lists:member(Name, Reg)),
 	% Test - It does not axist any previous decay process so call to startDecay should 
 	%        failed
-	?assertEqual(undefined, whereis(Name)),
-	decay:startDecay(DecayTime, Key, StopPrevious),
-	?assertNotEqual(undefined, whereis(Name)),
+	decay:startDecay(DecayTime, Key, false),
+	Reg1 = registered(),
+	?assertEqual(true, lists:member(Name, Reg1)),
+	% Test - It is already running
+	decay:startDecay(DecayTime, Key, true),
+	Reg2 = registered(),
+	?assertEqual(true, lists:member(Name, Reg2)),
 	decay:stopDecay(Key).
 
-
-%%%%%%
-repeat(_DelayTime, _Key, 0) ->
-	{ok};
-repeat(DelayTime, Key, Num) when Num > 0 ->
-	Result = receive
-		{decay, _Pid, 0} ->
-			repeat(DelayTime, Key, Num-1);
-		_ ->
-			{error}
-	after
-		DelayTime+100 ->
-			{error}
-	end,
-	?assertEqual({ok}, Result).
+startStopStoppedDecay_test() ->
+	% Initialise
+	Key = "test",
+	Name = decay:buildPid(Key),
+	% Test - it is not already running
+	Reg = registered(),
+	?assertEqual(false, lists:member(Name, Reg)),
+	% Test - It does not axist any previous decay process so call to startDecay should 
+	%        failed
+	Result = decay:stopDecay(Key),
+	?assertEqual({error, does_not_exist}, Result).
