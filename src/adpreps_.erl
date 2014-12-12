@@ -61,7 +61,7 @@ delete(Key) ->
 			Result
 	catch
 		error:badarg ->
-			{error, does_not_exists}
+			{error, does_not_exist}
 	end.
 
 %% @spec stop(Key::atom()) -> Result::tuple()
@@ -175,7 +175,7 @@ send(Key, Msg, WaitReply) ->
 						Response
 				catch
 					exit:{noproc,R} ->
-						{error, does_not_exists}
+						{error, does_not_exist}
 				end;
 			_ ->
         		sendIt(Key, Type1, Msg1, WaitReply)

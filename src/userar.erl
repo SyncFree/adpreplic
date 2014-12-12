@@ -1,6 +1,8 @@
 %% =============================================================================
 %% Adapive Replication User Interface - SyncFree
 %%
+%% Public API, can be called by clients using RPC.
+%%
 %% @author Amadeo Asco
 %% @version 1.0.0
 %% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>

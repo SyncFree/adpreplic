@@ -8,7 +8,7 @@
 %% @end
 %% =============================================================================
 
--module(userar_tests).
+-module(adpreplic_tests).
 -author('aas@trifork.co.uk').
 
 %% =============================================================================
@@ -43,10 +43,10 @@ create_test() ->
 	adprep:start(),
 	erlang:yield(),
 	% Test
-	Result = userar:create(Key, Value, Strategy, Args),
+	Result = adpreplic:create(Key, Value, Strategy, Args),
 	?assertEqual({ok}, Result),
 	NewValue = "NEWVALUE",
-	Result1 = userar:create(Key, NewValue, Strategy, Args),
+	Result1 = adpreplic:create(Key, NewValue, Strategy, Args),
 	?assertEqual({error, already_exists}, Result1),
 	stop(Key).
 
@@ -66,7 +66,7 @@ update_test() ->
 	initialise(Key, Value),
 	% Test
 	NewValue = "NEWVALUE",
-	Result = userar:update(Key, NewValue),
+	Result = adpreplic:update(Key, NewValue),
 	?assertEqual({ok}, Result),
 	checkValue(Key, NewValue),
 	stop(Key).
@@ -77,14 +77,13 @@ delete_test() ->
 	Value = "VALUE",
 	initialise(Key, Value),
 	% Test - exits
-	Result = userar:delete(Key),
+	Result = adpreplic:delete(Key),
 	?assertEqual({ok}, Result),
 	erlang:yield(),
 	% Test - does not exist
-	Result1 = userar:delete(Key),
+	Result1 = adpreplic:delete(Key),
 	?assertEqual({error, does_not_exist}, Result1),
 	stop(Key).
-
 
 %% =============================================================================
 %% Internal functions
@@ -100,10 +99,10 @@ create(Key, Value) ->
 					wdecay = 0.5,
 					rstrength = 1,
 					wstrength = 1.5},
-	userar:create(Key, Value, adprep, Args).
+	adpreplic:create(Key, Value, adprep, Args).
 
 checkValue(Key, Value) ->
-	case userar:read(Key) of 
+	case adpreplic:read(Key) of 
 		{ok, Value1} ->
 			?assertEqual(Value, Value1);
 		{error, ErrorCode} ->

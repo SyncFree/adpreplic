@@ -1,43 +1,54 @@
-%% -------------------------------------------------------------------
+%% =============================================================================
+%% Adapive Replication User Interface - SyncFree
 %%
-%% Copyright (c) 2014 SyncFree Consortium.  All Rights Reserved.
-%%
-%% This file is provided to you under the Apache License,
-%% Version 2.0 (the "License"); you may not use this file
-%% except in compliance with the License.  You may obtain
-%% a copy of the License at
-%%
-%%   http://www.apache.org/licenses/LICENSE-2.0
-%%
-%% Unless required by applicable law or agreed to in writing,
-%% software distributed under the License is distributed on an
-%% "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-%% KIND, either express or implied.  See the License for the
-%% specific language governing permissions and limitations
-%% under the License.
-%%
-%% -------------------------------------------------------------------
--module(adpreplic).
-
 %% Public API, can be called by clients using RPC.
+%%
+%% @author Amadeo Asco
+%% @version 1.0.0
+%% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
+%% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
+%% @end
+%% =============================================================================
 
--export([create/3,
-         read/2,
-         write/3]).
+%% @doc Provides the user interface to execute requests.
+%% 
+-module(adpreplic).
+-author('aas@trifork.co.uk').
 
-%% Public API
+-ifdef(EUNIT).
+-compile(export_all).
+-else.
+-export([create/4, delete/1, read/1, update/2]).
+-endif.
 
-%% @doc The create/2 function creates a new entry under some key,
-%%      with an initial value.
-create(Key, _Type, Obj) ->
-    datastore:create(Key,Obj).
 
-%% @doc The read/2 function returns the current value for the
-%%      object stored at some key.
-read(Key, _Type) ->
-    datastore:read(Key).
+%% =============================================================================
+%% User Adaptive Replication support
+%% =============================================================================
+%% @spec create(Key::atom(), Value::term(), Strategy::atom(), Args::term()) -> Result::tuple()
+%% 
+%% @doc Creates a local replica of the data. The results may have any of the values {ok} 
+%%		or {error, ErrorCode}.
+create(Key, Value, Strategy, Args) ->
+	adpreps_:create(Key, Value, Strategy, Args).
 
-%% @doc The write/3 function updates the current value for the
-%%      object stored at some key.
-write(Key, _Type, Obj) ->
-    datastore:update(Key,Obj).
+%% @spec read(Key::atom())-> Result::tuple()
+%% 
+%% @doc Reads the data value for the local replica. The results may have any of the 
+%%		values {ok, Value::term()} or {error, ErrorCode::term()}.
+read(Key) ->
+	adpreps_:read(Key).
+
+%% @spec write(Key::atom(), Value::term())-> Result::tuple()
+%% 
+%% @doc Writes the new value for the data. The results may have any of the values {ok} or 
+%%		{error, ErrorCode}.
+update(Key, Value) ->
+	adpreps_:update(Key, Value).
+
+%% @spec write(Key::atom(), Value)-> Result::tuple()
+%% 
+%% @doc Writes the new value for the data. The results may have any of the values {ok} or 
+%%		{error, ErrorCode::term()}.
+delete(Key) ->
+	adpreps_:delete(Key).

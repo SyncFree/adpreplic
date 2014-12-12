@@ -162,6 +162,14 @@ remove_test() ->
 	adprep:stop(),
 	erlang:yield().
 
+removeUnexisting_test() ->
+    % Initialise
+    adprep:start(),
+    Key = 'remove_test',
+    % Test - does not exist
+    Response = adprep:remove(Key),
+    ?assertEqual({ok}, Response).
+
 removeVerify_test() ->
 	% Initialise
 	adprep:start(),

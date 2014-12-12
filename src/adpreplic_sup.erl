@@ -20,8 +20,5 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-	Datastore = {datastore, {datastore, start_link, []}, 
-	             permanent, 5000, worker, [datastore]},	
-
-    {ok, { {one_for_one, 5, 10}, [Datastore]} }.
+    {ok, { {one_for_one, 5, 10}, []} }.
 

@@ -674,7 +674,22 @@ rmvDel(Key, OwnId, Map, Type) ->
 			{Response, OwnId + 1, Map1}
 	catch
 		_:_ ->
-			{{ok}, OwnId, Map}
+			% No local record
+			case Type of
+				forward_delete ->
+					% Forward the delettion
+					Value = getAllDCsWithReplicas(Key, OwnId),
+					Result = case Value of
+						{error, ErrorCode} ->
+							{error, ErrorCode};
+						{ok, DCs} ->
+							% Forward
+							forward({Type, Key}, DCs)
+					end,
+					{Result, OwnId+1, Map};
+				_ ->
+					{{ok}, OwnId, Map}
+			end
 	end.
 
 forward(_Msg, []) ->
