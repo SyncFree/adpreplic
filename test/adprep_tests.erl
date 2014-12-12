@@ -50,6 +50,33 @@ create_test() ->
 	adprep:stop(),
 	erlang:yield().
 
+create1_test() ->
+	% Initialise
+	adprep:start(),
+	Key = 'create1_test',
+	Value = "value",
+	% Test - does not exist
+	Response = adprep:create(Key, Value),
+	?assertEqual({ok}, Response),
+	% Test - altready exists
+	Response1 = create(Key, Value),
+	?assertEqual({error, already_exists_replica}, Response1),
+	% Clean-up
+	adprep:stop(),
+	erlang:yield().
+
+createNone_test() ->
+	% Initialise
+	adprep:start(),
+	Key = 'createNone_test',
+	% Test - does not exist and cannot be created; missing value an no replica anywhere 
+	%		 else
+	Response = adprep:create(Key),
+	?assertEqual({error, does_not_exist}, Response),
+	% Clean-up
+	adprep:stop(),
+	erlang:yield().
+
 read_test() ->
 	% Initialise
 	adprep:start(),
@@ -125,12 +152,28 @@ remove_test() ->
 	Value = "value",
 	% Test - already exist
 	create(Key, Value),
-	Response1 = adprep:remove(Key),
-	?assertEqual({ok}, Response1),
-	Response2 = adprep:read(Key),  % should not exists
-	?assertEqual({error, timeout}, Response2),
-	Respose3 = create(Key, Value), % should be able to create it again
-	?assertEqual({ok}, Respose3),
+	Response = adprep:remove(Key),
+	?assertEqual({ok}, Response),
+	Response1 = adprep:read(Key),  % should not exists
+	?assertEqual({error, timeout}, Response1),
+	Respose2 = create(Key, Value), % should be able to create it again
+	?assertEqual({ok}, Respose2),
+	% Clean-up
+	adprep:stop(),
+	erlang:yield().
+
+removeVerify_test() ->
+	% Initialise
+	adprep:start(),
+	Key = 'removeVerify_test',
+	Value = "value",
+	% Test - already exist
+	create(Key, Value),
+	VerifyRemove = fun(_Record, _Args) -> false end,
+	Response = adprep:remove(Key, VerifyRemove, []),
+	?assertEqual({ok, failed_verification}, Response),
+	Response1 = adprep:read(Key),  % should not exists
+	?assertEqual({ok, Value}, Response1),
 	% Clean-up
 	adprep:stop(),
 	erlang:yield().

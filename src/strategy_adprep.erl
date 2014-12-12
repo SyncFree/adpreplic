@@ -84,7 +84,7 @@ code_change(_PreviousVersion, State, _Extra) ->
 
 %% @spec decay(Key::atom(), Id::integer()) -> {ok}
 %%
-%% @doc Does nothing. No change planned yet.
+%% @doc Sends a decay message. Not to be used directly but from decay.erl.
 decay(Key, Id) ->
 	gen_server:cast(Key, {decay, Id}).
 

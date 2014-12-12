@@ -44,7 +44,7 @@ loop(Time, Key, Index) ->
 			{ok}
 	after 
         Time ->
-			gen_server:cast(Key, {decay, Index}),
+			strategy_adprep:decay(Key, Index),
 			loop(Time, Key, Index+1)
 	end.
 

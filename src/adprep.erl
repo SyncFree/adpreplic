@@ -119,9 +119,10 @@ remove(Key) ->
 
 %% @spec remove(Key::atom(), VerifyRemove::function(), Args) -> Result::tuple()
 %% 
-%% @doc Removes the local entry id the conditios are apropiated, which is check by calling 
+%% @doc Removes the local entry if the conditios are apropiated, which is check by calling 
 %%		function VerifyRemove with the record associated to the passed key and the passed 
-%%		arguments. The result may have the values {ok} or {error, ErrorCode}.
+%%		arguments. The result may have the values {ok}, {ok, failed_verification} or 
+%%		{error, ErrorCode}.
 remove(Key, VerifyRemove, Args) ->
 %    lager:info("Removing entry for ~p",[Key]),
     gen_server:call(?MODULE, {remove, Key, VerifyRemove, Args}).
@@ -194,8 +195,12 @@ handle_call({create, Key}, _From, {OwnId, Map}) ->
 	case getNumReplicas(Key, Map) of
 		0 ->
 			% Get current value
-			{{ok, Value}, OwnId1} = read(Key, OwnId, Map),
-			handle_call({create, Key, {Value, ?MODULE}}, _From, {OwnId1, Map}); % could be made more efficient
+			case read(Key, OwnId, Map) of
+				{{ok, Value}, OwnId1} ->
+					handle_call({create, Key, {Value, ?MODULE}}, _From, {OwnId1, Map}); % could be made more efficient
+				{{error, timeout}, OwnId1} ->
+					{reply, {error, does_not_exist}, {OwnId1, Map}}
+			end;
 		_ ->
 			% Ignore as there is a local replica
 			{reply, {error, already_exists_replica}, {OwnId, Map}}
@@ -207,14 +212,20 @@ handle_call({create, Key, {Value, RegName}}, _From, {OwnId, Map}) ->
 		0 ->
 			% Create the record for the specified key and save it
 			{Response, OwnId1, Record, Map1} = create_(Key, Value, Map, OwnId),
-			{ok, DCs} = getAllDCsWithReplicas(Key, OwnId1),
-			Record1 = Record#replica{num_replicas=sets:size(DCs)+1, 
-					 	   			 list_dcs_with_replicas=DCs},
-			Map2 = maps:put(Key, Record1, Map1),
-			% Notify other DCs with replica
-			% TODO: should be asynchronous
-			gen_server:multi_call(sets:to_list(DCs), RegName, {new_replica, node(), Key, Value}),
-			{reply, Response, {OwnId1+1, Map2}};
+			case getAllDCsWithReplicas(Key, OwnId1) of
+				{ok, DCs} ->
+					Record1 = Record#replica{num_replicas=sets:size(DCs)+1, 
+							 	   			 list_dcs_with_replicas=DCs},
+					Map2 = maps:put(Key, Record1, Map1),
+					% Notify other DCs with replica
+					% TODO: should be asynchronous
+					gen_server:multi_call(sets:to_list(DCs), RegName, {new_replica, node(), Key, Value}),
+					{reply, Response, {OwnId1+1, Map2}};
+				{error, timeout} ->
+					% Create the record for the specified key and save it
+					{Response, OwnId1, Record, Map1} = create_(Key, Value, Map, OwnId),
+					{reply, Response, {OwnId1, Map1}}
+			end;
 		_ ->
 			% Ignore as there is a local replica
 			{reply, {error, already_exists_replica}, {OwnId, Map}}
@@ -347,7 +358,7 @@ handle_call({remove, Key, VerifyRemove, Args}, _From, {OwnId, Map}) ->
 							{reply, R, {OwnId, Map}}
 					end;
 				false ->
-					{reply, {error, failed_verification}, {OwnId, Map}}
+					{reply, {ok, failed_verification}, {OwnId, Map}}
 			end
 	catch
 		_:_ ->
@@ -472,12 +483,12 @@ getRecord(Key, Map) ->
 			Record
 	end.
 
-%% @spec create_(Key::atom(), Value, Map::map(), OwnId::integer()) -> Result::tuple()
+%% @spec create_(Key::atom(), Value::item(), Map::map(), OwnId::integer()) -> Result::tuple()
 %%
 %% @doc Ceates a record for the specified data, adds it to the passed map and return all 
 %%		the new information.
 %%
-%%		Returns {{ok}, Id::integer(), Record, NewMap}.
+%%		Returns {{ok}, Id::integer(), Record::record(), NewMap::map()}.
 create_(Key, Value, Map, OwnId) ->
 	% Create the record for the specified key and save it
 	List = sets:new(),
@@ -500,7 +511,7 @@ createOtherReplicas(Record, OwnId, NextDCsFunc, Args) ->
 	Ds = sets:del_element(self(), sets:from_list(DCs)),
 	Size = sets:size(Ds),
 	DCs1 = sets:to_list(Ds),
-	DCs2 = [self() | DCs1],
+	DCs2 = [node() | DCs1],
 	Record1 = Record#replica{num_replicas=Size+1,list_dcs_with_replicas=DCs1},
 	{registered_name, RegName} = process_info(self(), registered_name),
 	createOtherReplicas_(RegName, Record1, OwnId, DCs2, DCs1, PotentialDCs).
@@ -602,8 +613,8 @@ getAllDCsWithReplicas(Key, OwnId) ->
 	% Discover the DCs with replicas
 	AllDCs = getAllDCs(),
 	flush(OwnId),
-	gen_server:abcast(AllDCs, Key, {has_replica, OwnId, Key}),
-	% Only take the first one
+	gen_server:abcast(AllDCs, Key, {has_replica, self(), OwnId, Key}),
+	% Only take response from the first one
 	receive
 		{reply, has_replica, OwnId, {exists, DCs}} ->
 			{ok, DCs}
@@ -635,7 +646,7 @@ sendOne(_Type, OwnId, _Key, _Msg, _RegName, []) ->
 %% @doc Removes all the messages that match the specified one from the mailbox.
 flush(Id) ->
 	receive
-		{reply, has_replica, _Id, {exists, _DCs}} ->
+		{reply, has_replica, Id, {exists, _DCs}} ->
 			flush(Id)
 	after
 		0 ->
