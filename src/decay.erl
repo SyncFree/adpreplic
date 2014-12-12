@@ -33,20 +33,20 @@
 %% 
 %% @doc Applies the decay as time passes.
 init({Time, Key}) ->
-	loop(Time, Key, 0).
+    loop(Time, Key, 0).
 
 %% @spec loop(Time::integer(), Key::atom()) -> {ok}
 %% 
 %% @doc Processes the messages hold by the mailbox.
 loop(Time, Key, Index) ->
-	receive
-		shutdown ->
-			{ok}
-	after 
+    receive
+        shutdown ->
+            {ok}
+    after 
         Time ->
-			strategy_adprep:decay(Key, Index),
-			loop(Time, Key, Index+1)
-	end.
+            strategy_adprep:decay(Key, Index),
+            loop(Time, Key, Index+1)
+    end.
 
 %% =============================================================================
 %% Decay process interface
@@ -56,37 +56,37 @@ loop(Time, Key, Index) ->
 %% 
 %% @doc Starts the decay process for the specified key and time period.
 startDecay(DecayTime, Key, true) ->
-	stopDecay(Key),
-	erlang:yield(), % give a chance to shutdown
-	startDecay(DecayTime, Key, false);
+    stopDecay(Key),
+    erlang:yield(), % give a chance to shutdown
+    startDecay(DecayTime, Key, false);
 startDecay(DecayTime, Key, false) ->
-	DecayKey = buildPid(Key),
-	register(DecayKey, spawn_link(decay, init, [{DecayTime, Key}])).
+    DecayKey = buildPid(Key),
+    register(DecayKey, spawn_link(decay, init, [{DecayTime, Key}])).
 
 %% @spec stopDecay(Key::atom()) -> Results::tuple()
 %%
 %% @doc Stops the dacay process. Returns {ok} if no problem was found requesting the stop 
-%%		of the process or {error, may_not_exists} otherwise.
+%%        of the process or {error, may_not_exists} otherwise.
 stopDecay(Key) ->
-	DecayKey = buildPid(Key),
-	% Stops the decay process
-	% No reply is sent back to sender
-	try DecayKey ! shutdown of
-		_ ->
-			% Succeed
-			{ok}
-	catch
-		error:badarg ->
-			{error, does_not_exist}
-	end.
+    DecayKey = buildPid(Key),
+    % Stops the decay process
+    % No reply is sent back to sender
+    try DecayKey ! shutdown of
+        _ ->
+            % Succeed
+            {ok}
+    catch
+        error:badarg ->
+            {error, does_not_exist}
+    end.
 
 %% @spec buildPid(Key::list()) -> Pid::atom()
 %%
 %% @doc Builds the decay process ID for the specified key.
 buildPid(Key) when is_list(Key) ->
-	list_to_atom("decay" ++ Key);
+    list_to_atom("decay" ++ Key);
 %% @spec buildPid(Key::atom()) -> Pid::atom()
 %%
 %% @doc Builds the decay process ID for the specified key.
 buildPid(Key) when is_atom(Key) ->
-	buildPid(atom_to_list(Key)).
+    buildPid(atom_to_list(Key)).

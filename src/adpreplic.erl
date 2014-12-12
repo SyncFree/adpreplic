@@ -28,27 +28,27 @@
 %% @spec create(Key::atom(), Value::term(), Strategy::atom(), Args::term()) -> Result::tuple()
 %% 
 %% @doc Creates a local replica of the data. The results may have any of the values {ok} 
-%%		or {error, ErrorCode}.
+%%      or {error, ErrorCode}.
 create(Key, Value, Strategy, Args) ->
-	adpreps_:create(Key, Value, Strategy, Args).
+    adpreps_:create(Key, Value, Strategy, Args).
 
 %% @spec read(Key::atom())-> Result::tuple()
 %% 
 %% @doc Reads the data value for the local replica. The results may have any of the 
-%%		values {ok, Value::term()} or {error, ErrorCode::term()}.
+%%      values {ok, Value::term()} or {error, ErrorCode::term()}.
 read(Key) ->
-	adpreps_:read(Key).
+    adpreps_:read(Key).
 
 %% @spec write(Key::atom(), Value::term())-> Result::tuple()
 %% 
 %% @doc Writes the new value for the data. The results may have any of the values {ok} or 
-%%		{error, ErrorCode}.
+%%      {error, ErrorCode}.
 update(Key, Value) ->
-	adpreps_:update(Key, Value).
+    adpreps_:update(Key, Value).
 
 %% @spec write(Key::atom(), Value)-> Result::tuple()
 %% 
 %% @doc Writes the new value for the data. The results may have any of the values {ok} or 
-%%		{error, ErrorCode::term()}.
+%%      {error, ErrorCode::term()}.
 delete(Key) ->
-	adpreps_:delete(Key).
+    adpreps_:delete(Key).

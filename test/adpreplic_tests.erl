@@ -27,98 +27,98 @@
 %% =============================================================================
 
 create_test() ->
-	% Initialise
-	Key = 'create_test',
-	Value = "Value",
-	Strategy = adprep,
-	Args = #adpargs{decay_time = 5 * 1000,
-					min_num_replicas = 1,
-					replication_threshold = 2.0,
-					rmv_threshold = 0.0,
-					max_strength = 10.0,
-					decay = 0.5,
-					wdecay = 0.5,
-					rstrength = 1,
-					wstrength = 1.5},
-	adprep:start(),
-	erlang:yield(),
-	% Test
-	Result = adpreplic:create(Key, Value, Strategy, Args),
-	?assertEqual({ok}, Result),
-	NewValue = "NEWVALUE",
-	Result1 = adpreplic:create(Key, NewValue, Strategy, Args),
-	?assertEqual({error, already_exists}, Result1),
-	stop(Key).
+    % Initialise
+    Key = 'create_test',
+    Value = "Value",
+    Strategy = adprep,
+    Args = #adpargs{decay_time = 5 * 1000,
+                    min_num_replicas = 1,
+                    replication_threshold = 2.0,
+                    rmv_threshold = 0.0,
+                    max_strength = 10.0,
+                    decay = 0.5,
+                    wdecay = 0.5,
+                    rstrength = 1,
+                    wstrength = 1.5},
+    adprep:start(),
+    erlang:yield(),
+    % Test
+    Result = adpreplic:create(Key, Value, Strategy, Args),
+    ?assertEqual({ok}, Result),
+    NewValue = "NEWVALUE",
+    Result1 = adpreplic:create(Key, NewValue, Strategy, Args),
+    ?assertEqual({error, already_exists}, Result1),
+    stop(Key).
 
 read_test() ->
-	% Initialise
-	Key = 'read_test',
-	Value = "VALUE",
-	initialise(Key, Value),
-	% Test
-	checkValue(Key, Value),
-	stop(Key).
+    % Initialise
+    Key = 'read_test',
+    Value = "VALUE",
+    initialise(Key, Value),
+    % Test
+    checkValue(Key, Value),
+    stop(Key).
 
 update_test() ->
-	% Initialise
-	Key = 'update_test',
-	Value = "VALUE",
-	initialise(Key, Value),
-	% Test
-	NewValue = "NEWVALUE",
-	Result = adpreplic:update(Key, NewValue),
-	?assertEqual({ok}, Result),
-	checkValue(Key, NewValue),
-	stop(Key).
+    % Initialise
+    Key = 'update_test',
+    Value = "VALUE",
+    initialise(Key, Value),
+    % Test
+    NewValue = "NEWVALUE",
+    Result = adpreplic:update(Key, NewValue),
+    ?assertEqual({ok}, Result),
+    checkValue(Key, NewValue),
+    stop(Key).
 
 delete_test() ->
-	% Initialise
-	Key = 'delete_test',
-	Value = "VALUE",
-	initialise(Key, Value),
-	% Test - exits
-	Result = adpreplic:delete(Key),
-	?assertEqual({ok}, Result),
-	erlang:yield(),
-	% Test - does not exist
-	Result1 = adpreplic:delete(Key),
-	?assertEqual({error, does_not_exist}, Result1),
-	stop(Key).
+    % Initialise
+    Key = 'delete_test',
+    Value = "VALUE",
+    initialise(Key, Value),
+    % Test - exits
+    Result = adpreplic:delete(Key),
+    ?assertEqual({ok}, Result),
+    erlang:yield(),
+    % Test - does not exist
+    Result1 = adpreplic:delete(Key),
+    ?assertEqual({error, does_not_exist}, Result1),
+    stop(Key).
 
 %% =============================================================================
 %% Internal functions
 %% =============================================================================
 create(Key, Value) ->
-	% Initialise
-	Args = #adpargs{decay_time = 5 * 1000,
-					min_num_replicas = 1,
-					replication_threshold = 2.0,
-					rmv_threshold = 0.0,
-					max_strength = 10.0,
-					decay = 0.5,
-					wdecay = 0.5,
-					rstrength = 1,
-					wstrength = 1.5},
-	adpreplic:create(Key, Value, adprep, Args).
+    % Initialise
+    Args = #adpargs{decay_time = 5 * 1000,
+                    min_num_replicas = 1,
+                    replication_threshold = 2.0,
+                    rmv_threshold = 0.0,
+                    max_strength = 10.0,
+                    decay = 0.5,
+                    wdecay = 0.5,
+                    rstrength = 1,
+                    wstrength = 1.5},
+    adpreplic:create(Key, Value, adprep, Args).
 
 checkValue(Key, Value) ->
-	case adpreplic:read(Key) of 
-		{ok, Value1} ->
-			?assertEqual(Value, Value1);
-		{error, ErrorCode} ->
-			?assertEqual(Value, ErrorCode);
-		Result ->
-			?assertEqual(Value, Result)
-	end.
+    case adpreplic:read(Key) of 
+        {ok, Value1} ->
+            ?assertEqual(Value, Value1);
+        {error, ErrorCode} ->
+            ?assertEqual(Value, ErrorCode);
+        Result ->
+            ?assertEqual(Value, Result)
+    end.
 
 
 initialise(Key, Value) ->
-	adprep:start(),
-	erlang:yield(),
-	create(Key, Value),
-	erlang:yield().
+    adprep:start(),
+    erlang:yield(),
+    create(Key, Value),
+    erlang:yield().
 
 stop(Key) ->
-	adpreps_:stop(Key),
-	erlang:yield(),
-	adprep:stop().
+    adpreps_:stop(Key),
+    erlang:yield(),
+    adprep:stop().
