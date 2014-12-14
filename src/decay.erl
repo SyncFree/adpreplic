@@ -15,6 +15,7 @@
 
 
 -ifdef(EUNIT).
+% Unit-test
 -compile(export_all).
 -else.
 -compile(report).
@@ -24,29 +25,6 @@
 -export([init/1,buildPid/1]).
 -endif.
 
-
-%% =============================================================================
-%% Decay process
-%% =============================================================================
-
-%% @spec init({Time::integer(), Key::atom()}) -> {ok}
-%% 
-%% @doc Applies the decay as time passes.
-init({Time, Key}) ->
-    loop(Time, Key, 0).
-
-%% @spec loop(Time::integer(), Key::atom(), Index::integer()) -> {ok}
-%% 
-%% @doc Processes the messages hold by the mailbox.
-loop(Time, Key, Index) ->
-    receive
-        shutdown ->
-            {ok}
-    after 
-        Time ->
-            strategy_adprep:decay(Key, Index),
-            loop(Time, Key, Index+1)
-    end.
 
 %% =============================================================================
 %% Decay process interface
@@ -78,6 +56,30 @@ stopDecay(Key) ->
     catch
         error:badarg ->
             {error, does_not_exist}
+    end.
+
+
+%% =============================================================================
+%% Decay process
+%% =============================================================================
+
+%% @spec init({Time::integer(), Key::atom()}) -> {ok}
+%% 
+%% @doc Applies the decay as time passes.
+init({Time, Key}) ->
+    loop(Time, Key, 0).
+
+%% @spec loop(Time::integer(), Key::atom(), Index::integer()) -> {ok}
+%% 
+%% @doc Processes the messages hold by the mailbox.
+loop(Time, Key, Index) ->
+    receive
+        shutdown ->
+            {ok}
+    after 
+        Time ->
+            strategy_adprep:decay(Key, Index),
+            loop(Time, Key, Index+1)
     end.
 
 %% @spec buildPid(Key::list()) -> Pid::atom()

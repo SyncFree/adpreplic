@@ -16,8 +16,10 @@
 -author('aas@trifork.co.uk').
 
 -ifdef(EUNIT).
+% Unit-test
 -compile(export_all).
 -else.
+% User interface
 -export([create/4, delete/1, read/1, update/2]).
 -endif.
 

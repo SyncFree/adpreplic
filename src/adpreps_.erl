@@ -16,11 +16,14 @@
 -author('aas@trifork.co.uk').
 
 -ifdef(EUNIT).
+% Unit-test
 -compile(export_all).
 -else.
 -compile(report).
--export([buildReply/2, buildReply/3, create/4, delete/1, read/1, update/2, send/2, 
-         send/3, stop/1]).
+% Interface to the Startegy Layer
+-export([create/4, delete/1, read/1, update/2, send/2, send/3, stop/1, buildReply/2, 
+         buildReply/3]).
+% Extra support
 -export([getNewID/0, getNewID/1,getReplicationLayerPid/1]).
 -endif.
 
