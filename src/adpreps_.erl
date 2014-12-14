@@ -33,9 +33,9 @@
 %% @spec create(Key::atom(), Value, Strategy::float(), Args::tuple()) -> Result::tuple()
 %% 
 %% @doc Creates the first instance of the specified data in this DC. The results is of 
-%%      the format {ok} or {error, ErrorCode}.
+%%      the format ok or {error, ErrorCode}.
 %%
-%%      Returns: {reply,create,{ok}} | {reply,create,{error, already_exists_replica}}.
+%%      Returns: {reply,create,ok} | {reply,create,{error, already_exists_replica}}.
 create(Key, Value, Strategy, Args) ->
     send(Key, {create, {Value, Strategy, Args}}).
 
@@ -48,7 +48,7 @@ read(Key) ->
 
 %% @spec update(Key::atom(), Value::term()) -> Result::tuple()
 %% 
-%% @doc Writes the new value of the specified data. The results is of the format {ok} or 
+%% @doc Writes the new value of the specified data. The results is of the format ok or 
 %%      {error, ErrorCode}.
 update(Key, Value) ->
     send(Key, {write, Value}).
@@ -56,7 +56,7 @@ update(Key, Value) ->
 %% @spec delete(Key::atom())-> Result::tuple()
 %% 
 %% @doc Deletes the data in all DCs where there is a replica. The results may have any of 
-%%      the values {ok} or {error, ErrorCode::term()}.
+%%      the values ok or {error, ErrorCode::term()}.
 delete(Key) ->
     try send(Key, {delete}) of 
         Result ->
@@ -68,7 +68,7 @@ delete(Key) ->
 
 %% @spec stop(Key::atom()) -> Result::tuple()
 %% 
-%% @doc Requests to stop the process for the specified data. The results is of the format {ok} or 
+%% @doc Requests to stop the process for the specified data. The results is of the format ok or 
 %%      {error, ErrorCode}.
 stop(Key) ->
     send(Key, shutdown, false).
@@ -84,23 +84,21 @@ stop(Key) ->
 getAllDCs() ->
     nodes().
 
-%% @spec getNewID(Key::atom()) -> Id::integer()
-%% 
 %% @doc Provides a new ID for the specified key.
+-spec getNewID(key()) -> integer().
 getNewID(Key) ->
     Pid = getReplicationLayerPid(Key),
     {reply, new_id, 0, Results} = gen_server:call(Pid, {new_id, 0, Key}, 1000),
     Results.
-%% @spec getNewID() -> Id::integer()
-%% 
+
 %% @doc Provides a new ID.
+-spec getNewID() -> integer().
 getNewID() ->
     Key = process_info(self(), registered_name),
     getNewID(Key).
 
-%% @spec getReplicationLayerPid(Key::atom()) -> Pid::pid()
-%% 
 %% @doc Provides the local Replication Layer process ID for the specified data.
+%% @spec getReplicationLayerPid(Key::atom()) -> Pid::pid()
 getReplicationLayerPid(_Key) ->
     getReplicationLayerPid().
 getReplicationLayerPid() ->
@@ -108,12 +106,12 @@ getReplicationLayerPid() ->
     'rl'.
 
 %% @doc Sends the specified message to all the DCs.
--spec sendToAllDCs(key(), {'has_replica',pid(),_,_}) -> ok.
+-spec sendToAllDCs(key(), {'has_replica', pid(), integer(), atom()}) -> ok.
 sendToAllDCs(Key, Msg) ->
     sendToDCs(getAllDCs(), Key, Msg).
 
 %% @doc Sends the specified message to each of the provided list of DCs.
--spec sendToDCs([atom()], key(), {'has_replica',pid(),_,_}) -> ok.
+-spec sendToDCs([atom()], key(), {'has_replica', pid(), integer(), atom()}) -> ok.
 sendToDCs([], _Key, _Msg) ->
     ok;
 sendToDCs([Dc | DCs], Key, Msg) ->
@@ -123,28 +121,26 @@ sendToDCs([Dc | DCs], Key, Msg) ->
         sendToDCs(DCs, Key, Msg)
     end.
 
-%% @spec send(Key::atom(), Msg) -> Response::tuple()
-%% 
 %% @doc Sends the specified message for the specified data and wait for the replay, 
-%%      synchronous. The results is of the format {ok, Value} or {error, ErrorCode}.
+%%      synchronous.
+ -spec send(key(), _ ) -> {create, {create, _ }} | {error, {error, _ }}.
 send(Key, Msg) ->
     send(Key, Msg, true).
-%% @spec send(Key::atom(), Msg, WaitReply::boolean()) -> Response::tuple()
-%% 
+
 %% @doc Sends the specified message for the specified data and wait for the replay if 
 %%      WaitReply is true. The results is of the format {ok, Value}, 
 %%      {ok, without_replay}, {error, invalid_msg_format} or {error, timeout}.
+-spec send(key(), _ , boolean()) -> {create, {create, term()}} | {error, {error, _ }}.
 send(Key, Msg, WaitReply) ->
     {Type1, Msg1} = case Msg of
         {create, {Value, Strategy, Args}} ->
-            Result = startProcess(Key, Strategy, Args),
-            if
-                Result =:= created ->
+            case startProcess(Key, Strategy, Args) of
+                created ->
                     {create, {create, Value}};
-                Result =:= already_started ->
+                already_started ->
                     {error, {error, already_exists}};
-                true ->
-                    {error, Result}
+                {error, Reason} ->
+                    {error, {error, Reason}}
             end;
 
         {Type, _Value} ->
@@ -191,6 +187,7 @@ send(Key, Msg, WaitReply) ->
                     ok = sendToAllDCs(Key, {has_replica, self(), Id1, Key}),
                     receive
                         {reply, has_replica, _, {ok, {Strategy1, _DCs, Args1}}} ->
+                            %TODO Fix error case!
                             _ = startProcess(Key, Strategy1, Args1),
                             sendIt(Key, Type1, Msg1, WaitReply)
                     after 
@@ -200,35 +197,29 @@ send(Key, Msg, WaitReply) ->
             end
     end.
 
-%% @spec sendIt(Key::atom(), Type, Msg1, WaitReply::boolean()) -> Response::tuple()
-%% 
 %% @doc Sends the specified message of the specified type (Type) and waits for reply if 
-%%      WaitReply is true. The results is of the format {ok}, {ok, Value}, 
-%%      {ok, without_replay} or {error, timeout}.
+%%      WaitReply is true. 
+-spec sendIt(key(), _, _, boolean()) -> ok | {ok, term()} | {ok, without_replay} | {error, timeout}.
 sendIt(Key, Type, Msg, WaitReply) ->
-    if
-        WaitReply == true ->
+    case WaitReply of
+         true ->
             case gen_server:call(Key, Msg, 5000) of
                 {reply, Type, Key, Response} ->
                     Response;
-
                 {reply, Type, Response} ->
                     Response;
-
                 Response ->
                     Response
             end;
-
-        WaitReply == false ->
+        false ->
             % Don't wait for reply
             gen_server:cast(Key, Msg),
-            {ok}
+            ok
     end.
 
-%% @spec startProcess(Key::atom(), Strategy::atom(), Args::tuple()) -> Result::atom()
-%% 
 %% @doc Sends the specified message for the specified data. The result may be 
 %%      already_exist, ok or created.
+-spec startProcess(key(), atom(), tuple()) -> already_started | created | ignore | {error, _ }.
 startProcess(Key, StrategyName, Args) ->
     % Start the strategy process
     case gen_server:start({local, Key}, buildPid(StrategyName), % Strategy

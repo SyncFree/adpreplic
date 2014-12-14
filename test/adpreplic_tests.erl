@@ -44,7 +44,7 @@ create_test() ->
     erlang:yield(),
     % Test
     Result = adpreplic:create(Key, Value, Strategy, Args),
-    ?assertEqual({ok}, Result),
+    ?assertEqual(ok, Result),
     NewValue = "NEWVALUE",
     Result1 = adpreplic:create(Key, NewValue, Strategy, Args),
     ?assertEqual({error, already_exists}, Result1),
@@ -67,7 +67,7 @@ update_test() ->
     % Test
     NewValue = "NEWVALUE",
     Result = adpreplic:update(Key, NewValue),
-    ?assertEqual({ok}, Result),
+    ?assertEqual(ok, Result),
     checkValue(Key, NewValue),
     stop(Key).
 
@@ -78,7 +78,7 @@ delete_test() ->
     initialise(Key, Value),
     % Test - exits
     Result = adpreplic:delete(Key),
-    ?assertEqual({ok}, Result),
+    ?assertEqual(ok, Result),
     erlang:yield(),
     % Test - does not exist
     Result1 = adpreplic:delete(Key),

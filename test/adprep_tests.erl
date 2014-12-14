@@ -42,7 +42,7 @@ create_test() ->
     Value = "value",
     % Test - does not exist
     Response = create(Key, Value),
-    ?assertEqual({ok}, Response),
+    ?assertEqual(ok, Response),
     % Test - altready exists
     Response1 = create(Key, Value),
     ?assertEqual({error, already_exists_replica}, Response1),
@@ -57,7 +57,7 @@ create1_test() ->
     Value = "value",
     % Test - does not exist
     Response = adprep:create(Key, Value),
-    ?assertEqual({ok}, Response),
+    ?assertEqual(ok, Response),
     % Test - altready exists
     Response1 = create(Key, Value),
     ?assertEqual({error, already_exists_replica}, Response1),
@@ -105,7 +105,7 @@ write_test() ->
     % Test - already exist
     create(Key, Value),
     Response1 = adprep:update(Key, NewValue),
-    ?assertEqual({ok}, Response1),
+    ?assertEqual(ok, Response1),
     Response2 = adprep:read(Key),
     ?assertEqual({ok, NewValue}, Response2),
     % Clean-up
@@ -120,11 +120,11 @@ delete_test() ->
     % Test - already exist
     create(Key, Value),
     Response = adprep:delete(Key),
-    ?assertEqual({ok}, Response),
+    ?assertEqual(ok, Response),
     Response1 = adprep:read(Key),  % should not exists
     ?assertEqual({error, timeout}, Response1),
     Respose2 = create(Key, Value), % should be able to create it again
-    ?assertEqual({ok}, Respose2),
+    ?assertEqual(ok, Respose2),
     % Clean-up
     adprep:stop(),
     erlang:yield().
@@ -136,11 +136,11 @@ hasAReplica_test() ->
     Value = "value",
     % Test - no replica
     Response = adprep:hasReplica(Key),
-    ?assertEqual({no}, Response),
+    ?assertEqual(false, Response),
     % Test - with replica
     create(Key, Value),
     Response1 = adprep:hasReplica(Key),
-    ?assertEqual({yes}, Response1),
+    ?assertEqual(true, Response1),
     % Clean-up
     adprep:stop(),
     erlang:yield().
@@ -153,11 +153,11 @@ remove_test() ->
     % Test - already exist
     create(Key, Value),
     Response = adprep:remove(Key),
-    ?assertEqual({ok}, Response),
+    ?assertEqual(ok, Response),
     Response1 = adprep:read(Key),  % should not exists
     ?assertEqual({error, timeout}, Response1),
     Respose2 = create(Key, Value), % should be able to create it again
-    ?assertEqual({ok}, Respose2),
+    ?assertEqual(ok, Respose2),
     % Clean-up
     adprep:stop(),
     erlang:yield().
@@ -168,7 +168,7 @@ removeUnexisting_test() ->
     Key = 'remove_test',
     % Test - does not exist
     Response = adprep:remove(Key),
-    ?assertEqual({ok}, Response).
+    ?assertEqual(ok, Response).
 
 removeVerify_test() ->
     % Initialise
@@ -234,7 +234,7 @@ create(Key, Value) ->
     adprep:create(Key, Value, NextDCFunc, []).
 
 checkNewId(_Pid, _Id, _ExpectedId, 0) ->
-    {ok};
+    ok;
 checkNewId(Pid, Id, ExpectedId, NumTimes) when NumTimes > 0 ->
     {reply, 'new_id', Id, Response} = gen_server:call(Pid, {new_id, Id, any}),
     ?assertEqual(Response, ExpectedId),

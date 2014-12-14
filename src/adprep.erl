@@ -269,7 +269,7 @@ handle_call({rmv_replica, Dc, Key}, _From, {OwnId, Map}) ->
             List1 = sets:del_element(Dc, List),
             Record1 = Record#replica{num_replicas=Num-1,list_dcs_with_replicas=List1},
             Map2 = maps:put(Key, Record1, Map),
-            {{ok}, {OwnId, Map2}}
+            {ok, {OwnId, Map2}}
     end,
     {reply, Reply, Args};
 
@@ -293,7 +293,7 @@ handle_call({new_replica, Dc, Key, Value}, _From, {OwnId, Map}) ->
                                              num_replicas = NumReplicas+1, 
                                                  list_dcs_with_replicas=List1},
                     Map1 = maps:put(Key, Record1, Map),
-                    {{ok}, {OwnId, Map1}}
+                    {ok, {OwnId, Map1}}
             end
     end,
     {reply, Reply, Args};
@@ -317,7 +317,7 @@ handle_call({new_replica, Dc, Key}, _From, {OwnId, Map}) ->
                     Record1 = Record#replica{num_replicas = NumReplicas+1, 
                                                  list_dcs_with_replicas=List1},
                     Map1 = maps:put(Key, Record1, Map),
-                    {{ok}, {OwnId, Map1}}
+                    {ok, {OwnId, Map1}}
             end
     end,
     {reply, Reply, Args};
@@ -339,7 +339,7 @@ handle_call({forward_delete, Key}, _From, {OwnId, Map}) ->
     gen_server:cast({node(), Key}, shutdown),
     % Remove replica
     Map1 = maps:remove(Key, Map),
-    {reply, {ok}, {OwnId, Map1}};
+    {reply, ok, {OwnId, Map1}};
 
 handle_call({remove, Key}, _From, {OwnId, Map}) ->
     {Response, OwnId1, Map1} = rmvDel(Key, OwnId, Map, rmv_replica),
@@ -353,14 +353,14 @@ handle_call({remove, Key, VerifyRemove, Args}, _From, {OwnId, Map}) ->
                     % Proceed
                     #replica{list_dcs_with_replicas=DCs}=Record,
                     case forward({rmv_replica, node(), Key}, DCs) of
-                        {ok} ->
+                        ok ->
                             % Success - Remove local replica
                             Map1 = maps:remove(Key, Map),
-                            {reply, {ok}, {reply, Map1}};
+                            {reply, ok, {reply, Map1}};
                         {error, no_replica} ->
                             % Success- Remove local replica
                             Map1 = maps:remove(Key, Map),
-                            {reply, {ok}, {OwnId, Map1}};
+                            {reply, ok, {OwnId, Map1}};
                         R ->
                             % Failure - should alreday have rolled back
                             {reply, R, {OwnId, Map}}
@@ -370,7 +370,8 @@ handle_call({remove, Key, VerifyRemove, Args}, _From, {OwnId, Map}) ->
             end
     catch
         _:_ ->
-            {reply, {ok}, {OwnId, Map}}
+            % TODO Shouldn't something be fixed here?
+            {reply, ok, {OwnId, Map}}
     end;
 
 handle_call({has_a_replica, Key}, _From, {OwnId, Map}) ->
@@ -414,7 +415,7 @@ handle_cast({create_new, Id, Key, Value, DCs}, {OwnId, Map}) ->
             List = sets:del_element(self(), DCs),
             Record=#replica{key=Key,value=Value,num_replicas=sets:size(DCs),list_dcs_with_replicas=List},
             Map1 = maps:put(Key, Record, Map),
-            {adpreps_:buildReply(create_new, Id, {ok}), {OwnId, Map1}};
+            {adpreps_:buildReply(create_new, Id, ok), {OwnId, Map1}};
         _ ->
             % Ignore as there is a replica
             {adpreps_:buildReply(create_new, Id, {error, no_replica}), {OwnId, Map}}
@@ -506,7 +507,7 @@ create_(Key, Value, Map, OwnId) ->
     List = sets:new(),
     Record=#replica{key=Key,value=Value,num_replicas=1,list_dcs_with_replicas=List},
     Map1 = maps:put(Key, Record, Map),
-    {{ok}, OwnId, Record, Map1}.
+    {ok, OwnId, Record, Map1}.
 
 %% @spec createOtherReplicas(Record, OwnId::integer(), NextDCsFunc::function(), Args) -> Result::tuple()
 %%
@@ -603,7 +604,7 @@ write(Key, OwnId, Value, Map) ->
             % Send updates to other DCs
             #replica{list_dcs_with_replicas=DCs}=Record1,
             gen_server:abcast(DCs, Key, {update, OwnId, Key, Value}),
-            {{ok}, OwnId+1, Map1}
+            {ok, OwnId+1, Map1}
     catch
         _:_ ->
             % Find DCs with replica
@@ -611,7 +612,7 @@ write(Key, OwnId, Value, Map) ->
                 {ok, DCs} ->
                     % Send updates to each of the replicated sites
                     gen_server:abcast(DCs, Key, {update, OwnId, Key, Value}),
-                    {{ok}, OwnId+1, Map};
+                    {ok, OwnId+1, Map};
                 {error, ErrorCode} ->
                     % An error
                     {{error, ErrorCode}, OwnId+1, Map}
@@ -676,14 +677,14 @@ rmvDel(Key, OwnId, Map, Type) ->
             % DCs with replica
             #replica{list_dcs_with_replicas=DCs}=Record,
             {Response, Map1} = case forward({Type, node(), Key}, DCs) of
-                {ok} ->
+                ok ->
                     % Success - Remove local replica
                     Map2 = maps:remove(Key, Map),
-                    {{ok}, Map2};
+                    {ok, Map2};
                 {error, no_replica} ->
                     % Success- Remove local replica
                     Map2 = maps:remove(Key, Map),
-                    {{ok}, Map2};
+                    {ok, Map2};
                 R ->
                     % Failure - should alreday have rolled back
                     {R, Map}
@@ -705,7 +706,7 @@ rmvDel(Key, OwnId, Map, Type) ->
                     end,
                     {Result, OwnId+1, Map};
                 _ ->
-                    {{ok}, OwnId, Map}
+                    {ok, OwnId, Map}
             end
     end.
 
@@ -714,7 +715,7 @@ rmvDel(Key, OwnId, Map, Type) ->
 %% @doc Removes the local replica and depending of the Type passed also forward apropiate 
 %%      messages to other DCs with replicas to remove them.
 forward(_Msg, []) ->
-    {ok};
+    ok;
 forward(Msg, [Dc | DCs]) ->
     Result = gen_server:call({adpref, Dc}, Msg),
     case Result of

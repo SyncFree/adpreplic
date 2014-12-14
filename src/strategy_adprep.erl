@@ -32,6 +32,14 @@
 -include("strategy_adprep.hrl").
 
 
+
+
+%% @doc Sends a decay message. Not to be used directly but from decay.erl.
+-spec decay(key(), integer()) -> ok.
+decay(Key, Id) ->
+    gen_server:cast(Key, {decay, Id}).
+
+
 %% =============================================================================
 %% Propossed Adaptive Replication Strategy process
 %% =============================================================================
@@ -80,11 +88,6 @@ code_change(_PreviousVersion, State, _Extra) ->
     % next
     {ok, State}.
 
-%% @spec decay(Key::atom(), Id::integer()) -> {ok}
-%%
-%% @doc Sends a decay message. Not to be used directly but from decay.erl.
-decay(Key, Id) ->
-    gen_server:cast(Key, {decay, Id}).
 
 %% =============================================================================
 %% Messages handler
@@ -150,7 +153,7 @@ handle_call({update, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNu
     ok = adprep:update(Key, Value),
     Strength1 = Strength - WDecay,
     Replicated1 = processStrength(Key, Replicated, Strength1, MinNumReplicas, RmvThreshold),
-    {reply, adpreps_:buildReply(update, {ok}), 
+    {reply, adpreps_:buildReply(update, ok), 
      {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, 
       RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
 
@@ -160,7 +163,7 @@ handle_call({delete}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplic
     case adprep:delete(Key) of
         ok -> 
             gen_server:cast(self(), shutdown),
-            {reply, adpreps_:buildReply(delete, {ok}), 
+            {reply, adpreps_:buildReply(delete, ok), 
              {Key, false, 0, DecayTime, MinNumReplicas, ReplicationThreshold, 
               RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
         Result ->
@@ -192,22 +195,21 @@ processStrength(Key, Replicated, Strength, MinNumReplicas, RmvThreshold) ->
                 Strength =< 0 ->
                     % Remove the current replica and stop this process
                     VerifyRemove = fun verifyRemove/2,
-                    Response = adprep:remove(Key, VerifyRemove, MinNumReplicas),
-                    if
-                        Response == {ok} ->
-                            adpreps_:stop(Key),
+                    case adprep:remove(Key, VerifyRemove, MinNumReplicas) of
+                        ok ->
+                        % TODO Fix the error case here!
+                            _ = adpreps_:stop(Key),
                             false;
-                        true ->
+                        _ ->
                             Replicated
                     end;
                 Strength =< RmvThreshold ->
                     % Remove the current replica, but don't stop
                     VerifyRemove = fun verifyRemove/2,
-                    Response = adprep:remove(Key, VerifyRemove, MinNumReplicas),
-                    if
-                        Response == {ok} ->
+                    case adprep:remove(Key, VerifyRemove, MinNumReplicas) of
+                        ok ->
                             false;
-                        true ->
+                        _ ->
                             Replicated
                     end;
                 true ->
@@ -216,7 +218,8 @@ processStrength(Key, Replicated, Strength, MinNumReplicas, RmvThreshold) ->
             end;
         Strength1 =< 0 ->
             % Stop this process
-            adpreps_:stop(Key),
+            % TODO Fix the error case here!
+            _ = adpreps_:stop(Key),
             erlang:yield(), % give a chance to shutdown
             false;
         true ->
