@@ -95,7 +95,7 @@ handle_cast(shutdown, {Key, Replicated, Strength, DecayTime, MinNumReplicas,
                        RStrength, WStrength}) ->
 %    lager:info("Shutting down the replication layer"),
     % Stop the decay process
-    decay:stopDecay(Key),
+    ok = decay:stopDecay(Key),
     {stop, normal, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
                     ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay,
                     RStrength, WStrength}};

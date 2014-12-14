@@ -1,12 +1,31 @@
+%% -------------------------------------------------------------------
+%%
+%% Copyright (c) 2014 SyncFree Consortium.  All Rights Reserved.
+%%
+%% This file is provided to you under the Apache License,
+%% Version 2.0 (the "License"); you may not use this file
+%% except in compliance with the License.  You may obtain
+%% a copy of the License at
+%%
+%%   http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing,
+%% software distributed under the License is distributed on an
+%% "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+%% KIND, either express or implied.  See the License for the
+%% specific language governing permissions and limitations
+%% under the License.
+%%
+%% -------------------------------------------------------------------
+
 %% =============================================================================
-%% Adapive Replications DC - SyncFree
+%% Adaptive Replications DC - SyncFree
 %%
 %% Support function to access the current DC and other DCs
 %% 
 %% @author Amadeo Asco
 %% @version 1.0.0
 %% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
-%% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
 %% @end
 %% =============================================================================
 
@@ -19,15 +38,14 @@
 -compile(export_all).
 -else.
 -compile(report).
-% Interface calls
+%% Interface calls
 -export([start/0, stop/0, create/1, create/2, create/4, delete/1, hasReplica/1, read/1, 
          update/2, remove/1, remove/3, getNumReplicas/1]).
-% gen_server callbacks
+%% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, 
          terminate/2]).
 -endif.
 -behaviour(gen_server).
-
 
 -include("adprep.hrl").
 
@@ -35,24 +53,19 @@
 %% =============================================================================
 %% Server interface
 %% =============================================================================
-%% @spec start() -> Result
-%% 
-%% @doc Start the server.
 %%
-%%      Result = {ok, Pid::pid()} | ignore | {error, Error} with
-%%        Error = {already_started, Pid} | term()
+%% @doc Start the server.
+-spec start() -> {ok, pid()} | ignore | {error, {already_started, pid()} | term()}.
 start() -> 
-%    lager:info("Starting~n"),
+    io:format("Starting adprep server ~n"),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
-%% @spec stop() -> {ok}
-%% 
 %% @doc Stops the server asynchronously.
+-spec stop() -> ok.
 stop() ->
-%    lager:info("Stopping~n"),
+    io:format("Stopping adprep server ~n"),
     gen_server:cast(?MODULE, shutdown).
 
-%% @spec create(Key::atom(), Value, NextDCFunc::function(), Args) -> Result::tuple()
 %% 
 %% @doc Creates the replica locally and creates other replicas if the startegy requires. 
 %        The result may have the values {ok} or {error, ErrorCode}.
@@ -62,6 +75,7 @@ stop() ->
 %%        of DCs to replicate and another list of potential DCs to replicate. If any 
 %%        replication to a DC from the list of DCs to replicate in failes a DC from the 
 %%        potential list will be used instead.
+%%spec create(Key::atom(), Value, NextDCFunc::function(), Args) -> Result::tuple().
 create(Key, Value, NextDCFunc, Args) ->
 %    lager:info("Creating entry for ~p",[Key]),
     gen_server:call(?MODULE, {create, Key, {Value, NextDCFunc, Args}}).
@@ -558,13 +572,12 @@ createReplicasPotentialDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDC
 createReplicasPotentialDcs(_RegName, _Record, _OwnId, _AllReplicatedDCs, PotentialDCs, []) ->
     PotentialDCs.
 
-%% @spec read(Key::atom(), OwnId::integer(), Map::map()) -> Result::tuple()
-%%
 %% @doc Reads the data locally if exist, i.e. replicated, or alternativelly get the data 
 %%        from any of the other DCs with replicas.
 %%
 %%        The returned value is a tuple with the response of the form 
 %%        {{ok, Value}, NewOwnId} or {{error, ErrorCode}, NewOwnId}.
+-spec read(key(), integer(), map()) -> {{ok, term()}, integer()} | {{error, _ }, integer()}.
 read(Key, OwnId, Map) ->
     try maps:get(Key, Map) of
         Record ->
@@ -622,7 +635,7 @@ write(Key, OwnId, Value, Map) ->
 getAllDCsWithReplicas(Key, OwnId) ->
     % Discover the DCs with replicas
     AllDCs = getAllDCs(),
-    flush(OwnId),
+    ok = flush(OwnId),
     gen_server:abcast(AllDCs, Key, {has_replica, self(), OwnId, Key}),
     % Only take response from the first one
     receive
@@ -651,16 +664,15 @@ sendOne(Type, OwnId, Key, Msg, RegName, [Dc | DCs]) ->
 sendOne(_Type, OwnId, _Key, _Msg, _RegName, []) ->
     {{error, no_dcs}, OwnId+1}.
 
-%% @spec flush(Id::integer()) -> {ok}
-%%
 %% @doc Removes all the messages that match the specified one from the mailbox.
+-spec flush(integer()) -> ok.
 flush(Id) ->
     receive
         {reply, has_replica, Id, {exists, _DCs}} ->
             flush(Id)
     after
         0 ->
-            {ok}
+            ok
     end.
 
 %% @spec rmvDel(Key::atom(), OwnId::integer(), Map::amp(), Type::atom()) -> {Result, OwnId1::integer(), Map1::map()}

@@ -56,7 +56,7 @@ loop(Time, Key, Index) ->
 %% 
 %% @doc Starts the decay process for the specified key and time period.
 startDecay(DecayTime, Key, true) ->
-    stopDecay(Key),
+    ok = stopDecay(Key),
     erlang:yield(), % give a chance to shutdown
     startDecay(DecayTime, Key, false);
 startDecay(DecayTime, Key, false) ->
@@ -74,7 +74,7 @@ stopDecay(Key) ->
     try DecayKey ! shutdown of
         _ ->
             % Succeed
-            {ok}
+            ok
     catch
         error:badarg ->
             {error, does_not_exist}

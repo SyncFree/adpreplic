@@ -22,6 +22,8 @@
 -module(datastore).
 -behaviour(gen_server).
 
+-include("adprep.hrl").
+
 % interface calls
 -export([start/0, stop/0, create/2, read/1, update/2, remove/1]).
     
@@ -33,30 +35,36 @@
 %% Server interface
 %%====================================================================
 %% Starting server
+-spec start() -> {ok, pid()} | ignore | {error, _ }.
 start() -> 
-    io:format("Starting~n"),
+    io:format("Starting datastore ~n"),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %% Stopping server asynchronously
+-spec stop() -> ok.
 stop() ->
-    io:format ("Stopping~n"),
+    io:format ("Stopping datastore ~n"),
     gen_server:cast(?MODULE, shutdown).
 
 %% Create a new entry
+-spec create(key(), term()) -> ok | {error, already_created}.
 create(Id, Obj) ->
-    io:format ("Creating entry for ~p",[Id]),
+    io:format ("Creating entry for ~p ~n",[Id]),
     gen_server:call(?MODULE, {create, Id, Obj}).
 
 %% Reads an entry
 read(Id) ->
+    io:format ("Reading entry for ~p ~n",[Id]),
     gen_server:call(?MODULE, {read, Id}).
 
 %% Updates an entry by merging the states
 update(Id, Obj) ->
+    io:format ("Updateing entry for ~p ~n",[Id]),
     gen_server:call(?MODULE, {update, Id, Obj}).
 
 %% Removes an entry
 remove(Id) ->
+    io:format ("Removing entry for ~p ~n",[Id]),
     gen_server:call(?MODULE, {remove, Id}).
 
 %%====================================================================
@@ -87,7 +95,7 @@ handle_call({read, Id}, _From, Tid) ->
 
 handle_call({update, Id, Obj}, _From, Tid) ->
 	case ets:lookup(Tid, Id) of
-		[{_Id,Obj}] ->
+		[{_Id,_Obj}] ->
 		    %%TODO: Add CRDT merge here! For now, just take the new version
 		    ets:insert(Tid, {Id, Obj}),
 			{reply, ok, Tid};

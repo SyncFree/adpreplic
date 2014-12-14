@@ -15,6 +15,8 @@
 -module(adpreps_).
 -author('aas@trifork.co.uk').
 
+-include("adprep.hrl").
+
 -ifdef(EUNIT).
 -compile(export_all).
 -else.
@@ -105,17 +107,15 @@ getReplicationLayerPid() ->
 %    list_to_atom(string:concat(Key, "_rl")).
     'rl'.
 
-%% @spec sendToAllDCs(Key::atom(), Msg::tuple()) -> {ok}
-%% 
 %% @doc Sends the specified message to all the DCs.
+-spec sendToAllDCs(key(), {'has_replica',pid(),_,_}) -> ok.
 sendToAllDCs(Key, Msg) ->
     sendToDCs(getAllDCs(), Key, Msg).
 
-%% @spec sendToDCs(DCs::list(), Key::atom(), Msg::tuple()) -> {ok}
-%% 
 %% @doc Sends the specified message to each of the provided list of DCs.
+-spec sendToDCs([atom()], key(), {'has_replica',pid(),_,_}) -> ok.
 sendToDCs([], _Key, _Msg) ->
-    {ok};
+    ok;
 sendToDCs([Dc | DCs], Key, Msg) ->
     try 
         gen_server:cast({Key, Dc}, Msg)
@@ -188,10 +188,10 @@ send(Key, Msg, WaitReply) ->
                 true ->
                     % The process for that data does not exist yet
                     Id1 = getNewID(Key),
-                    sendToAllDCs(Key, {has_replica, self(), Id1, Key}),
+                    ok = sendToAllDCs(Key, {has_replica, self(), Id1, Key}),
                     receive
                         {reply, has_replica, _, {ok, {Strategy1, _DCs, Args1}}} ->
-                            startProcess(Key, Strategy1, Args1),
+                            _ = startProcess(Key, Strategy1, Args1),
                             sendIt(Key, Type1, Msg1, WaitReply)
                     after 
                         6000 ->
