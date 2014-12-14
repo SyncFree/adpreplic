@@ -53,16 +53,19 @@ create(Id, Obj) ->
     gen_server:call(?MODULE, {create, Id, Obj}).
 
 %% Reads an entry
+-spec read(key()) -> {ok, term()} | {error, not_found}.
 read(Id) ->
     io:format ("Reading entry for ~p ~n",[Id]),
     gen_server:call(?MODULE, {read, Id}).
 
 %% Updates an entry by merging the states
+-spec update(key(), term()) -> ok | {error, not_found}.
 update(Id, Obj) ->
     io:format ("Updateing entry for ~p ~n",[Id]),
     gen_server:call(?MODULE, {update, Id, Obj}).
 
 %% Removes an entry
+-spec remove(key()) -> ok.
 remove(Id) ->
     io:format ("Removing entry for ~p ~n",[Id]),
     gen_server:call(?MODULE, {remove, Id}).
