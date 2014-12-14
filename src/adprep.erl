@@ -29,7 +29,7 @@
 %% @end
 %% =============================================================================
 
-%% 
+
 %% @doc Provides operations required in a database.
 -module(adprep).
 -author('aas@trifork.co.uk').
@@ -38,9 +38,11 @@
 -compile(export_all).
 -else.
 -compile(report).
+
 %% Interface calls
 -export([start/0, stop/0, create/1, create/2, create/4, delete/1, hasReplica/1, read/1, 
          update/2, remove/1, remove/3, getNumReplicas/1]).
+
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, 
          terminate/2]).
@@ -75,80 +77,69 @@ stop() ->
 %%        of DCs to replicate and another list of potential DCs to replicate. If any 
 %%        replication to a DC from the list of DCs to replicate in failes a DC from the 
 %%        potential list will be used instead.
-%%spec create(Key::atom(), Value, NextDCFunc::function(), Args) -> Result::tuple().
+-spec create(key(), term(), function(), term()) -> ok | {error, does_not_exist | already_exists_replica}.
 create(Key, Value, NextDCFunc, Args) ->
-%    lager:info("Creating entry for ~p",[Key]),
+    io:format("Creating entry for ~p",[Key]),
     gen_server:call(?MODULE, {create, Key, {Value, NextDCFunc, Args}}).
-%% @spec create(Key::atom(), Value) -> Result::tuple()
-%% 
-%% @doc Creates the local replica only. The result may have the values {ok} or 
-%%        {error, ErrorCode}.
+
+
+%% @doc Creates the local replica only. 
+-spec create(key(), term()) -> ok | {error, does_not_exist | already_exists_replica}.
 create(Key, Value) ->
-%    lager:info("Creating entry for ~p",[Key]),
+    io:format("Creating entry for ~p",[Key]),
     gen_server:call(?MODULE, {create, Key, {Value, Key}}).
-%% @spec create(Key::atom()) -> Result::tuple()
-%% 
+
+
 %% @doc Creates the local replica only. The value for the specified key must already 
-%%        exists in another DC. The result may have the values {ok} or {error, ErrorCode}. 
+%%        exists in another DC. 
+-spec create(key()) -> ok | {error, does_not_exist | already_exists_replica}.
 create(Key) ->
-%    lager:info("Creating entry for ~p",[Key]),
+    io:format("Creating entry for ~p",[Key]),
     gen_server:call(?MODULE, {create, Key}).
 
-%% @spec delete(Key::atom()) -> Result::tuple()
-%% 
-%% @doc Deletes an entry from within all the DCs with replica. The result is {ok} on 
-%%        success or {error, ErrorCode} otherwise.
+%% @doc Deletes an entry from within all the DCs with replica. 
+-spec delete(key()) -> ok | {error, does_not_exist | already_exists_replica}. 
 delete(Key) ->
-%    lager:info("Removing entry for ~p",[Key]),
+    io:format("Removing entry for ~p",[Key]),
     gen_server:call(?MODULE, {delete, Key}).
 
-%% @spec getNumReplicas(Key::atom()) -> Result::integer()
-%% 
 %% @doc Gets the number of replicas.
+-spec getNumReplicas(key()) -> integer().
 getNumReplicas(Key) ->
-%    lager:info("Getting number of replicas of entry for ~p",[Key]),
+    io:format("Getting number of replicas of entry for ~p",[Key]),
     gen_server:call(?MODULE, {num_replicas, Key}).
 
-%% @spec hasReplica(Key::atom()) -> Result::boolean()
-%% 
-%% @doc Checks if there is a local replica. The result may have the values {yes} or 
-%%        {no}.
+%% @doc Checks if there is a local replica. 
+-spec hasReplica(key()) -> boolean().
 hasReplica(Key) ->
     gen_server:call(?MODULE, {has_a_replica, Key}).
 
-%% @spec read(Key::atom()) -> Result::tuple()
-%% 
-%% @doc Reads specified entry. The result may have the values {ok, Value} or 
-%%        {error, ErrorCode}.
+%% @doc Reads specified entry. 
+-spec read(key()) -> {ok, term()} | {error}.
 read(Key) ->
-%    lager:info("Reading entry for ~p",[Key]),
+    io:format("Reading entry for ~p",[Key]),
     gen_server:call(?MODULE, {read, Key}).
 
-%% @spec remove(Key::atom()) -> Result::tuple()
-%% 
-%% @doc Removes the local entry. The result may have the values {ok} or 
-%%        {error, ErrorCode}.
+%% @doc Removes the local entry. 
+-spec remove(key()) -> ok | {error}.
 remove(Key) ->
-%    lager:info("Removing entry for ~p",[Key]),
+    io:format("Removing entry for ~p",[Key]),
     gen_server:call(?MODULE, {remove, Key}).
 
-%% @spec remove(Key::atom(), VerifyRemove::function(), Args) -> Result::tuple()
-%% 
+
 %% @doc Removes the local entry if the conditios are apropiated, which is check by calling 
 %%        function VerifyRemove with the record associated to the passed key and the passed 
-%%        arguments. The result may have the values {ok}, {ok, failed_verification} or 
-%%        {error, ErrorCode}.
+%%        arguments. 
+-spec remove(key(), function(), term()) -> ok | {ok, failed_verification} | {error}.
 remove(Key, VerifyRemove, Args) ->
-%    lager:info("Removing entry for ~p",[Key]),
+    io:format("Removing entry for ~p",[Key]),
     gen_server:call(?MODULE, {remove, Key, VerifyRemove, Args}).
 
-%% @spec update(Key::atom(), Value) -> Result::typle()
-%% 
 %% @doc Updates the specified value into the local data and forward update messages to the 
-%%        other DCs with replicas. The result may have the values {ok} or 
-%%        {error, ErrorCode}.
+%%        other DCs with replicas. 
+-spec update(key(), term()) -> ok | {error}.
 update(Key, Value) ->
-%    lager:info("Updating entry for ~p",[Key]),
+    io:format("Updating entry for ~p",[Key]),
     gen_server:call(?MODULE, {write, Key, Value}).
     
 
@@ -385,9 +376,9 @@ handle_call({remove, Key, VerifyRemove, Args}, _From, {OwnId, Map}) ->
 handle_call({has_a_replica, Key}, _From, {OwnId, Map}) ->
     case getRecord(Key, Map) of
         none ->
-            {reply, {no},  {OwnId, Map}};
+            {reply, false,  {OwnId, Map}};
         _Record ->
-            {reply, {yes}, {OwnId, Map}}
+            {reply, true, {OwnId, Map}}
     end.
 
 handle_cast({update, Id, Key, Value}, {OwnId, Map}) ->

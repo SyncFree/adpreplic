@@ -50,10 +50,10 @@ init({Key, #adpargs{decay_time=DecayTime,
     Result = adprep:hasReplica(Key),
     % Calculate strength of the replica
     {Replicated, Strength} = case Result of
-        {yes} ->
+        true ->
             % With Replica
             {true, ReplicationThreshold + WStrength};
-        {no} ->
+        false ->
             % No replica
             {false, 0}
     end,
@@ -116,7 +116,7 @@ handle_call({create, Value}, _From, {Key, Replicated, Strength, DecayTime,
     NextDCsFunc = fun nextDCsFunc/3,
     Result = adprep:create(Key, Value, NextDCsFunc, MinNumReplicas),
     {Replicated1, Strength1} = case Result of
-        {ok} ->
+        ok ->
             % Successful creation implies the data has been replicated
             {true, ReplicationThreshold + WStrength};
         _ ->
@@ -146,7 +146,8 @@ handle_call({update, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNu
                                      ReplicationThreshold, RmvThreshold, MaxStrength, 
                                      Decay, WDecay, RStrength, WStrength}) ->
     % Should only come from another DC. Maybe it should be cheked before it is processed
-    adprep:update(Key, Value),
+    % TODO: What to do in case of error?
+    ok = adprep:update(Key, Value),
     Strength1 = Strength - WDecay,
     Replicated1 = processStrength(Key, Replicated, Strength1, MinNumReplicas, RmvThreshold),
     {reply, adpreps_:buildReply(update, {ok}), 
@@ -157,7 +158,7 @@ handle_call({delete}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplic
                               ReplicationThreshold, RmvThreshold, MaxStrength, Decay, 
                               WDecay, RStrength, WStrength}) ->
     case adprep:delete(Key) of
-        {ok} -> 
+        ok -> 
             gen_server:cast(self(), shutdown),
             {reply, adpreps_:buildReply(delete, {ok}), 
              {Key, false, 0, DecayTime, MinNumReplicas, ReplicationThreshold, 
