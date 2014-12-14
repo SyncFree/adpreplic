@@ -252,6 +252,15 @@ newId__test() ->
     adprep:stop(),
     erlang:yield().
 
+handle_info_test() ->
+    % Initialise
+    adprep:start(),
+    Result = adprep ! {unsuported},
+    ?assertEqual({unsuported}, Result),
+    % Clean-up
+    adprep:stop(),
+    erlang:yield().
+
 %% ============================================================================
 create(Key, Value) ->
     NextDCFunc = fun(_Rl, _AllDCs, _Args) -> {[], []} end,
