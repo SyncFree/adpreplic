@@ -30,7 +30,8 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    adpreplic_sup:start_link().
+    adpreplic_sup:start_link(),
+    datastore:start().
     
 stop(_State) ->
-    ok.
+	ok.

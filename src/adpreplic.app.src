@@ -1,7 +1,7 @@
 {application, adpreplic,
  [
-  {description, "Adaptive replication prototype"},
-  {vsn, "1"},
+  {description, "Adaptive replication datastore prototype"},
+  {vsn, "1.0.0"},
   {registered, []},
   {applications, [
                   kernel,

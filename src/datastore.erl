@@ -34,17 +34,17 @@
 %%====================================================================
 %% Starting server
 start() -> 
-    lager:info("Starting~n"),
+    io:format("Starting~n"),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %% Stopping server asynchronously
 stop() ->
-    lager:info("Stopping~n"),
+    io:format ("Stopping~n"),
     gen_server:cast(?MODULE, shutdown).
 
 %% Create a new entry
 create(Id, Obj) ->
-    lager:info("Creating entry for ~p",[Id]),
+    io:format ("Creating entry for ~p",[Id]),
     gen_server:call(?MODULE, {create, Id, Obj}).
 
 %% Reads an entry
@@ -109,7 +109,7 @@ handle_call(_Message, _From, State) ->
 
 %% Termination
 handle_cast(shutdown, Tid) ->
-    lager:info("Shutting down the datastore"),
+    io:format ("Shutting down the datastore"),
     ets:delete(Tid),
     {stop, normal, Tid};
 handle_cast(_Message, State) ->
