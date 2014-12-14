@@ -21,29 +21,28 @@
 %% =============================================================================
 %% Adaptive Replications DC - SyncFree
 %%
-%% Support function to access the current DC and other DCs
+%% The Replication Layer. Support function to access the current DC and other DCs.
 %% 
 %% @author Amadeo Asco
 %% @version 1.0.0
 %% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
 %% @end
 %% =============================================================================
-
-
-%% @doc Provides operations required in a database.
+%% 
+%% @doc The Replication Layer.
 -module(adprep).
 -author('aas@trifork.co.uk').
 
 -ifdef(EUNIT).
+% Unit-test
 -compile(export_all).
 -else.
 -compile(report).
 
 %% Interface calls
 -export([start/0, stop/0, create/1, create/2, create/4, delete/1, hasReplica/1, read/1, 
-         update/2, remove/1, remove/3, getNumReplicas/1]).
-
-%% gen_server callbacks
+         update/2, remove/1, remove/3, getNumReplicas/1, newId/0, newId/1]).
+% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, 
          terminate/2]).
 -endif.
@@ -141,7 +140,19 @@ remove(Key, VerifyRemove, Args) ->
 update(Key, Value) ->
     io:format("Updating entry for ~p",[Key]),
     gen_server:call(?MODULE, {write, Key, Value}).
-    
+
+%% @spec newId(Key::atom()) -> Id::integer()
+%% 
+%% @doc Provides a new ID.
+newId(_Key) ->
+    gen_server:call(?MODULE, {new_id}).
+%% @spec newId() -> Id::integer()
+%% 
+%% @doc Provides a new ID.
+newId() ->
+    Key = process_info(self(), registered_name),
+    newId(Key).
+
 
 %% =============================================================================
 %% Propossed Adaptive Replication Strategy process
@@ -175,6 +186,9 @@ code_change(_PreviousVersion, State, _Extra) ->
 %% =============================================================================
 %% Messages handlers
 %% =============================================================================
+handle_call({new_id}, _From, {OwnId, Map}) ->
+    {reply, OwnId, {OwnId+1, Map}};
+
 handle_call({num_replicas, Key}, _From, {OwnId, Map}) ->
     NumReplicas = getNumReplicas(Key, Map),
     {reply, NumReplicas, {OwnId, Map}};

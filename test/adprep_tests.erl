@@ -228,6 +228,39 @@ hasReplica_test() ->
     adprep:stop(),
     erlang:yield().
 
+newId_test() ->
+    % Initialise
+    adprep:start(),
+    Key = 'newId_test',
+    Id = adprep:newId(Key),
+    ?assertEqual(0, Id),
+    Id1 = adprep:newId(),
+    ?assertEqual(1, Id1),
+    % Clean-up
+    adprep:stop(),
+    erlang:yield().
+
+newId__test() ->
+    % Initialise
+    adprep:start(),
+    Key = 'newId__test',
+    Id = adpreps_:getNewID(Key),
+    ?assertEqual(0, Id),
+    Id1 = adpreps_:getNewID(),
+    ?assertEqual(1, Id1),
+    % Clean-up
+    adprep:stop(),
+    erlang:yield().
+
+handle_info_test() ->
+    % Initialise
+    adprep:start(),
+    Result = adprep ! {unsuported},
+    ?assertEqual({unsuported}, Result),
+    % Clean-up
+    adprep:stop(),
+    erlang:yield().
+
 %% ============================================================================
 create(Key, Value) ->
     NextDCFunc = fun(_Rl, _AllDCs, _Args) -> {[], []} end,

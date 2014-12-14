@@ -1,0 +1,10 @@
+** SyncFree **
+@author Amadeo Asco <aas@trifork.com>
+@reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
+@reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
+@version 1.0.0
+@title Adaptive Replication Support
+@doc The system is composed of the Strategy layer and the Replication Layer. The Strategy 
+Layer is responsible to identify what Data Centre (DC) to replicate the data and for how 
+long, i.e. when to remove a replica and from which DC. The Replication Layer is 
+responsible to the eventual consistency between the different replicas in each DC.

@@ -15,6 +15,7 @@
 
 
 -ifdef(EUNIT).
+% Unit-test
 -compile(export_all).
 -else.
 -compile(report).
@@ -25,27 +26,6 @@
 -endif.
 
 -include("adprep.hrl").
-
-%% =============================================================================
-%% Decay process
-%% =============================================================================
-
-%% @doc Applies the decay as time passes.
--spec init({non_neg_integer(), key()}) -> ok.
-init({Time, Key}) ->
-    loop(Time, Key, 0).
-
-%% @doc Processes the messages hold by the mailbox.
--spec loop(non_neg_integer(), key(), non_neg_integer()) -> ok.
-loop(Time, Key, Index) ->
-    receive
-        shutdown ->
-            ok
-    after 
-        Time ->
-            strategy_adprep:decay(Key, Index),
-            loop(Time, Key, Index+1)
-    end.
 
 %% =============================================================================
 %% Decay process interface
@@ -78,6 +58,28 @@ stopDecay(Key) ->
         error:badarg ->
             {error, does_not_exist}
     end.
+
+%% =============================================================================
+%% Decay process
+%% =============================================================================
+
+%% @doc Applies the decay as time passes.
+-spec init({non_neg_integer(), key()}) -> ok.
+init({Time, Key}) ->
+    loop(Time, Key, 0).
+
+%% @doc Processes the messages hold by the mailbox.
+-spec loop(non_neg_integer(), key(), non_neg_integer()) -> ok.
+loop(Time, Key, Index) ->
+    receive
+        shutdown ->
+            ok
+    after 
+        Time ->
+            strategy_adprep:decay(Key, Index),
+            loop(Time, Key, Index+1)
+    end.
+
 
 %% @doc Builds the decay process ID for the specified key.
 % TODO Fix type spec!

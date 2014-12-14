@@ -18,72 +18,96 @@
 
 <h2><a name="description">Description</a></h2>Provides operations required in a database.
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#create-5">create/5</a></td><td>Creates the first instance of the specified data in this DC.</td></tr>
-<tr><td valign="top"><a href="#read-2">read/2</a></td><td>Reads the value of the specified data.</td></tr>
-<tr><td valign="top"><a href="#send-2">send/2</a></td><td>Sends the specified message for the specified data and wait for the replay, synchronous.</td></tr>
-<tr><td valign="top"><a href="#send-3">send/3</a></td><td>Sends the specified message for the specified data and wait for the replay if WaitReply is
- 		true.</td></tr>
-<tr><td valign="top"><a href="#sendIt-5">sendIt/5*</a></td><td>Sends the specified message of the specified type (Type) and identifier (Id) and waits for
- 		reply if WaitReply is true.</td></tr>
-<tr><td valign="top"><a href="#startProcess-3">startProcess/3*</a></td><td>Sends the specified message for the specified data.</td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#buildReply-2">buildReply/2</a></td><td>Builds the reply from the passed parameters.</td></tr>
+<tr><td valign="top"><a href="#buildReply-3">buildReply/3</a></td><td>Builds the reply from the passed parameters.</td></tr>
+<tr><td valign="top"><a href="#create-4">create/4</a></td><td>Creates the first instance of the specified data in this DC.</td></tr>
+<tr><td valign="top"><a href="#delete-1">delete/1</a></td><td>Deletes the data in all DCs where there is a replica.</td></tr>
+<tr><td valign="top"><a href="#getNewID-0">getNewID/0</a></td><td>Provides a new ID.</td></tr>
+<tr><td valign="top"><a href="#getNewID-1">getNewID/1</a></td><td>Provides a new ID for the specified key.</td></tr>
+<tr><td valign="top"><a href="#getReplicationLayerPid-1">getReplicationLayerPid/1</a></td><td>Provides the local Replication Layer process ID for the specified data.</td></tr>
+<tr><td valign="top"><a href="#read-1">read/1</a></td><td>Reads the value of the specified data.</td></tr>
+<tr><td valign="top"><a href="#send-2">send/2</a></td><td>Sends the specified message for the specified data and wait for the replay,
+       synchronous.</td></tr>
+<tr><td valign="top"><a href="#send-3">send/3</a></td><td>Sends the specified message for the specified data and wait for the replay if
+       WaitReply is true.</td></tr>
 <tr><td valign="top"><a href="#stop-1">stop/1</a></td><td>Requests to stop the process for the specified data.</td></tr>
-<tr><td valign="top"><a href="#write-3">write/3</a></td><td>Writes the new value of the specified data.</td></tr>
+<tr><td valign="top"><a href="#update-2">update/2</a></td><td>Writes the new value of the specified data.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
 
-<h3 class="function"><a name="create-5">create/5</a></h3>
+<h3 class="function"><a name="buildReply-2">buildReply/2</a></h3>
 <div class="spec">
-<p><tt>create(Key::atom(), Id::integer(), Value, Strategy::float(), Args::tuple()) -&gt; Result::tuple()</tt><br></p>
-</div><p>Creates the first instance of the specified data in this DC. The results is of the format
- 		{ok} or {error, ErrorCode}.</p>
+<p><tt>buildReply(Type::atom(), Id::integer()) -&gt; Msg::atom()</tt><br></p>
+</div><p>Builds the reply from the passed parameters. Id could be an integer or the result.</p>
 
-<h3 class="function"><a name="read-2">read/2</a></h3>
+<h3 class="function"><a name="buildReply-3">buildReply/3</a></h3>
 <div class="spec">
-<p><tt>read(Key::atom(), Id::integer) -&gt; Result::tuple()</tt><br></p>
-</div><p>Reads the value of the specified data. The results is of the format {ok, Value} or
- 		{error, ErrorCode}.</p>
+<p><tt>buildReply(Type::atom(), Id::integer(), Results::Result) -&gt; Msg::atom()</tt><br></p>
+</div><p>Builds the reply from the passed parameters.</p>
+
+<h3 class="function"><a name="create-4">create/4</a></h3>
+<div class="spec">
+<p><tt>create(Key::atom(), Value, Strategy::float(), Args::tuple()) -&gt; Result::tuple()</tt><br></p>
+</div><p><p>Creates the first instance of the specified data in this DC. The results is of       
+the format {ok} or {error, ErrorCode}.</p>
+ 
+       Returns: {reply,create,{ok}} | {reply,create,{error, already_exists_replica}}.</p>
+
+<h3 class="function"><a name="delete-1">delete/1</a></h3>
+<div class="spec">
+<p><tt>delete(Key::atom()) -&gt; Result::tuple()</tt><br></p>
+</div><p>Deletes the data in all DCs where there is a replica. The results may have any of
+       the values {ok} or {error, ErrorCode::term()}.</p>
+
+<h3 class="function"><a name="getNewID-0">getNewID/0</a></h3>
+<div class="spec">
+<p><tt>getNewID() -&gt; Id::integer()</tt><br></p>
+</div><p>Provides a new ID.</p>
+
+<h3 class="function"><a name="getNewID-1">getNewID/1</a></h3>
+<div class="spec">
+<p><tt>getNewID(Key::atom()) -&gt; Id::integer()</tt><br></p>
+</div><p>Provides a new ID for the specified key.</p>
+
+<h3 class="function"><a name="getReplicationLayerPid-1">getReplicationLayerPid/1</a></h3>
+<div class="spec">
+<p><tt>getReplicationLayerPid(Key::atom()) -&gt; Pid::pid()</tt><br></p>
+</div><p>Provides the local Replication Layer process ID for the specified data.</p>
+
+<h3 class="function"><a name="read-1">read/1</a></h3>
+<div class="spec">
+<p><tt>read(Key::atom()) -&gt; Result::tuple()</tt><br></p>
+</div><p>Reads the value of the specified data. The results is of the format {ok, Value}
+       or {error, ErrorCode}.</p>
 
 <h3 class="function"><a name="send-2">send/2</a></h3>
 <div class="spec">
 <p><tt>send(Key::atom(), Msg) -&gt; Response::tuple()</tt><br></p>
-</div><p>Sends the specified message for the specified data and wait for the replay, synchronous. The
- 		results is of the format {ok, Value} or {error, ErrorCode}.</p>
+</div><p>Sends the specified message for the specified data and wait for the replay,
+       synchronous. The results is of the format {ok, Value} or {error, ErrorCode}.</p>
 
 <h3 class="function"><a name="send-3">send/3</a></h3>
 <div class="spec">
 <p><tt>send(Key::atom(), Msg, WaitReply::boolean()) -&gt; Response::tuple()</tt><br></p>
-</div><p>Sends the specified message for the specified data and wait for the replay if WaitReply is
- 		true. The results is of the format {ok, Value}, {ok, without_replay},
- 		{error, invalid_msg_format} or {error, timeout}.</p>
-
-<h3 class="function"><a name="sendIt-5">sendIt/5 *</a></h3>
-<div class="spec">
-<p><tt>sendIt(Key::atom(), Type, Id, Msg::Msg1, WaitReply::boolean()) -&gt; Response::tuple()</tt><br></p>
-</div><p>Sends the specified message of the specified type (Type) and identifier (Id) and waits for
- 		reply if WaitReply is true. The results is of the format {ok, Value}, {ok, without_replay}
- 		or {error, timeout}.</p>
-
-<h3 class="function"><a name="startProcess-3">startProcess/3 *</a></h3>
-<div class="spec">
-<p><tt>startProcess(Key::atom(), Strategy::atom(), Args::tuple()) -&gt; Result::atom()</tt><br></p>
-</div><p>Sends the specified message for the specified data. The result may be already_exist, ok or
- 		created.</p>
+</div><p>Sends the specified message for the specified data and wait for the replay if
+       WaitReply is true. The results is of the format {ok, Value},
+       {ok, without_replay}, {error, invalid_msg_format} or {error, timeout}.</p>
 
 <h3 class="function"><a name="stop-1">stop/1</a></h3>
 <div class="spec">
 <p><tt>stop(Key::atom()) -&gt; Result::tuple()</tt><br></p>
 </div><p>Requests to stop the process for the specified data. The results is of the format {ok} or
- 		{error, ErrorCode}.</p>
+       {error, ErrorCode}.</p>
 
-<h3 class="function"><a name="write-3">write/3</a></h3>
+<h3 class="function"><a name="update-2">update/2</a></h3>
 <div class="spec">
-<p><tt>write(Key::atom(), Id::integer(), Value) -&gt; Result::tuple()</tt><br></p>
+<p><tt>update(Key::atom(), Value::term()) -&gt; Result::tuple()</tt><br></p>
 </div><p>Writes the new value of the specified data. The results is of the format {ok} or
- 		{error, ErrorCode}.</p>
+       {error, ErrorCode}.</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Dec 5 2014, 10:52:55.</i></p>
+<p><i>Generated by EDoc, Dec 14 2014, 21:38:04.</i></p>
 </body>
 </html>

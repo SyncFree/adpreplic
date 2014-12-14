@@ -20,26 +20,26 @@
 <h2><a name="description">Description</a></h2>Provides operations required in a database.
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td>Does nothing.</td></tr>
-<tr><td valign="top"><a href="#create-4">create/4*</a></td><td>Ceates a record for the specified data, adds it to the passed map and return all		 
-new information.</td></tr>
-<tr><td valign="top"><a href="#createOtherReplicas-4">createOtherReplicas/4*</a></td><td>Gets a list of DC where replicas should be created, updates the record with the		  
-new list of DCs with replicas and request the creation of the new replicas in each		 
-of those DCs.</td></tr>
-<tr><td valign="top"><a href="#createOtherReplicas_-6">createOtherReplicas_/6*</a></td><td></td></tr>
-<tr><td valign="top"><a href="#createReplicasPotentialDcs-6">createReplicasPotentialDcs/6*</a></td><td>Tries to create the replica to a DC from within the list of other potential DCs.</td></tr>
-<tr><td valign="top"><a href="#flush-1">flush/1*</a></td><td>Removes all the messages that match the specified one from the mailbox.</td></tr>
-<tr><td valign="top"><a href="#getAllDCsWithReplicas-2">getAllDCsWithReplicas/2*</a></td><td>Gets all the DCs with a replica.</td></tr>
+<tr><td valign="top"><a href="#create-1">create/1</a></td><td>Creates the local replica only.</td></tr>
+<tr><td valign="top"><a href="#create-2">create/2</a></td><td>Creates the local replica only.</td></tr>
+<tr><td valign="top"><a href="#create-4">create/4</a></td><td>Creates the replica locally and creates other replicas if the startegy requires.</td></tr>
+<tr><td valign="top"><a href="#delete-1">delete/1</a></td><td>Deletes an entry from within all the DCs with replica.</td></tr>
+<tr><td valign="top"><a href="#getNumReplicas-1">getNumReplicas/1</a></td><td>Gets the number of replicas.</td></tr>
 <tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td>Does nothing.</td></tr>
-<tr><td valign="top"><a href="#init-1">init/1</a></td><td>Initialises the process and start the process with the specified arguments.</td></tr>
-<tr><td valign="top"><a href="#read-3">read/3*</a></td><td>Reads the data locally if exist, i.e.</td></tr>
-<tr><td valign="top"><a href="#sendOne-6">sendOne/6*</a></td><td>Sends synchronously the specified message to the first of the specified DC for its		 
-process registered with the key and on failure will try with the other DCs.</td></tr>
+<tr><td valign="top"><a href="#hasReplica-1">hasReplica/1</a></td><td>Checks if there is a local replica.</td></tr>
+<tr><td valign="top"><a href="#init-1">init/1</a></td><td>Initialises the process and start the process.</td></tr>
+<tr><td valign="top"><a href="#read-1">read/1</a></td><td>Reads specified entry.</td></tr>
+<tr><td valign="top"><a href="#remove-1">remove/1</a></td><td>Removes the local entry.</td></tr>
+<tr><td valign="top"><a href="#remove-3">remove/3</a></td><td>Removes the local entry if the conditios are apropiated, which is check by calling
+         function VerifyRemove with the record associated to the passed key and the passed
+         arguments.</td></tr>
+<tr><td valign="top"><a href="#start-0">start/0</a></td><td>Start the server.</td></tr>
+<tr><td valign="top"><a href="#stop-0">stop/0</a></td><td>Stops the server asynchronously.</td></tr>
 <tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td>Does nothing.</td></tr>
-<tr><td valign="top"><a href="#write-4">write/4*</a></td><td>Saves locally the new value and sets to send updates to all DCs with replicas if
- 		the data exists locally, otherwise requested from DCs with replicas and if the
- 		data does not esists an error is returned.</td></tr>
+<tr><td valign="top"><a href="#update-2">update/2</a></td><td>Updates the specified value into the local data and forward update messages to the
+         other DCs with replicas.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
@@ -49,46 +49,40 @@ process registered with the key and on failure will try with the other DCs.</td>
 <p><tt>code_change(PreviousVersion, State, Extra) -&gt; Result::tuple()</tt><br></p>
 </div><p>Does nothing. No change planned yet.</p>
 
-<h3 class="function"><a name="create-4">create/4 *</a></h3>
+<h3 class="function"><a name="create-1">create/1</a></h3>
 <div class="spec">
-<p><tt>create(Key::atom(), Value, Map::map(), OwnId::integer()) -&gt; Result::tuple()</tt><br></p>
-</div><p><p>Ceates a record for the specified data, adds it to the passed map and return all		 
-new information.</p>
+<p><tt>create(Key::atom()) -&gt; Result::tuple()</tt><br></p>
+</div><p>Creates the local replica only. The value for the specified key must already
+         exists in another DC. The result may have the values {ok} or {error, ErrorCode}.</p>
+
+<h3 class="function"><a name="create-2">create/2</a></h3>
+<div class="spec">
+<p><tt>create(Key::atom(), Value) -&gt; Result::tuple()</tt><br></p>
+</div><p>Creates the local replica only. The result may have the values {ok} or
+         {error, ErrorCode}.</p>
+
+<h3 class="function"><a name="create-4">create/4</a></h3>
+<div class="spec">
+<p><tt>create(Key::atom(), Value, NextDCFunc::function(), Args) -&gt; Result::tuple()</tt><br></p>
+</div><p><p>Creates the replica locally and creates other replicas if the startegy requires.        
+The result may have the values {ok} or {error, ErrorCode}.</p>
  
- 		Returns {{ok}, Id::integer(), Record, NewMap}.</p>
+         NextDCFunc is a function which must take three arguments; the current DC, a list
+         of DCs and its own Args. Such function must return a tuple composed of the list
+         of DCs to replicate and another list of potential DCs to replicate. If any
+         replication to a DC from the list of DCs to replicate in failes a DC from the
+         potential list will be used instead.</p>
 
-<h3 class="function"><a name="createOtherReplicas-4">createOtherReplicas/4 *</a></h3>
+<h3 class="function"><a name="delete-1">delete/1</a></h3>
 <div class="spec">
-<p><tt>createOtherReplicas(Record, OwnId::integer(), NextDCsFunc::function(), Args) -&gt; Result::tuple()</tt><br></p>
-</div><p><p>Gets a list of DC where replicas should be created, updates the record with the		  
-new list of DCs with replicas and request the creation of the new replicas in each		 
-of those DCs.</p>
- 
- 		NextDCsFunc is a function that takes the current DC, the list of all DCs and the
- 		provided arguments, Args and return a tuple with a list of DC to replicat in and a
- 		list of potential DCs to replicate in if any of others fail.</p>
+<p><tt>delete(Key::atom()) -&gt; Result::tuple()</tt><br></p>
+</div><p>Deletes an entry from within all the DCs with replica. The result is {ok} on
+         success or {error, ErrorCode} otherwise.</p>
 
-<h3 class="function"><a name="createOtherReplicas_-6">createOtherReplicas_/6 *</a></h3>
+<h3 class="function"><a name="getNumReplicas-1">getNumReplicas/1</a></h3>
 <div class="spec">
-<p><tt>createOtherReplicas_(RegName, Record, OwnId, AllReplicatedDCs, DCs, PotentialDCs) -&gt; any()</tt></p>
-</div>
-
-<h3 class="function"><a name="createReplicasPotentialDcs-6">createReplicasPotentialDcs/6 *</a></h3>
-<div class="spec">
-<p><tt>createReplicasPotentialDcs(RegName::atom(), Record, OwnId::integer(), AllReplicatedDCs::List, PotentialDCs::List, NextPotentialDCs::List) -&gt; NewPotentialDCs::List</tt><br></p>
-</div><p>Tries to create the replica to a DC from within the list of other potential DCs.</p>
-
-<h3 class="function"><a name="flush-1">flush/1 *</a></h3>
-<div class="spec">
-<p><tt>flush(Msg) -&gt; {ok}</tt><br></p>
-</div><p>Removes all the messages that match the specified one from the mailbox.</p>
-
-<h3 class="function"><a name="getAllDCsWithReplicas-2">getAllDCsWithReplicas/2 *</a></h3>
-<div class="spec">
-<p><tt>getAllDCsWithReplicas(Key::atom(), OwnId::integer()) -&gt; Result::tuple()</tt><br></p>
-</div><p><p>Gets all the DCs with a replica.</p>
- 
- 		Returs a tuple that can be {ok, DCS} on success or {error, timeout} otherwise.</p>
+<p><tt>getNumReplicas(Key::atom()) -&gt; Result::integer()</tt><br></p>
+</div><p>Gets the number of replicas.</p>
 
 <h3 class="function"><a name="handle_call-3">handle_call/3</a></h3>
 <div class="spec">
@@ -105,42 +99,64 @@ of those DCs.</p>
 <p><tt>handle_info(Msg, LoopData) -&gt; {noreply, LoopData}</tt><br></p>
 </div><p>Does nothing.</p>
 
+<h3 class="function"><a name="hasReplica-1">hasReplica/1</a></h3>
+<div class="spec">
+<p><tt>hasReplica(Key::atom()) -&gt; Result::boolean()</tt><br></p>
+</div><p>Checks if there is a local replica. The result may have the values {yes} or
+         {no}.</p>
+
 <h3 class="function"><a name="init-1">init/1</a></h3>
 <div class="spec">
-<p><tt>init(Args) -&gt; {ok, LoopData::tuple()}</tt><br></p>
-</div><p>Initialises the process and start the process with the specified arguments.</p>
+<p><tt>init(X1::[]) -&gt; {ok, LoopData::tuple()}</tt><br></p>
+</div><p>Initialises the process and start the process.</p>
 
-<h3 class="function"><a name="read-3">read/3 *</a></h3>
+<h3 class="function"><a name="read-1">read/1</a></h3>
 <div class="spec">
-<p><tt>read(Key::atom(), OwnId::integer(), Map::map()) -&gt; Result::tuple()</tt><br></p>
-</div><p><p>Reads the data locally if exist, i.e. replicated, or alternativelly get the data		 
-from any of the other DCs with replicas.</p>
- 
- 		The returned value is a tuple with the response of the form
- 		{{ok, Value}, NewOwnId} or {{error, ErrorCode}, NewOwnId}.</p>
+<p><tt>read(Key::atom()) -&gt; Result::tuple()</tt><br></p>
+</div><p>Reads specified entry. The result may have the values {ok, Value} or
+         {error, ErrorCode}.</p>
 
-<h3 class="function"><a name="sendOne-6">sendOne/6 *</a></h3>
+<h3 class="function"><a name="remove-1">remove/1</a></h3>
 <div class="spec">
-<p><tt>sendOne(Type::atom(), OwnId::integer(), Key::atom(), Msg, RegName::atom(), DCs::List) -&gt; Result::tuple()</tt><br></p>
-</div><p><p>Sends synchronously the specified message to the first of the specified DC for its		 
-process registered with the key and on failure will try with the other DCs.</p>
+<p><tt>remove(Key::atom()) -&gt; Result::tuple()</tt><br></p>
+</div><p>Removes the local entry. The result may have the values {ok} or
+         {error, ErrorCode}.</p>
+
+<h3 class="function"><a name="remove-3">remove/3</a></h3>
+<div class="spec">
+<p><tt>remove(Key::atom(), VerifyRemove::function(), Args) -&gt; Result::tuple()</tt><br></p>
+</div><p>Removes the local entry if the conditios are apropiated, which is check by calling
+         function VerifyRemove with the record associated to the passed key and the passed
+         arguments. The result may have the values {ok}, {ok, failed_verification} or
+         {error, ErrorCode}.</p>
+
+<h3 class="function"><a name="start-0">start/0</a></h3>
+<div class="spec">
+<p><tt>start() -&gt; Result</tt><br></p>
+</div><p><p>Start the server.</p>
  
- 		Returned result is a tuple with the result and the new own internal ID.</p>
+       Result = {ok, Pid::pid()} | ignore | {error, Error} with
+         Error = {already_started, Pid} | term()</p>
+
+<h3 class="function"><a name="stop-0">stop/0</a></h3>
+<div class="spec">
+<p><tt>stop() -&gt; {ok}</tt><br></p>
+</div><p>Stops the server asynchronously.</p>
 
 <h3 class="function"><a name="terminate-2">terminate/2</a></h3>
 <div class="spec">
 <p><tt>terminate(Reason, LoopData) -&gt; ok</tt><br></p>
 </div><p>Does nothing.</p>
 
-<h3 class="function"><a name="write-4">write/4 *</a></h3>
+<h3 class="function"><a name="update-2">update/2</a></h3>
 <div class="spec">
-<p><tt>write(Key::atom(), OwnId::integer(), Value, Map::map()) -&gt; Result::tuple()</tt><br></p>
-</div><p>Saves locally the new value and sets to send updates to all DCs with replicas if
- 		the data exists locally, otherwise requested from DCs with replicas and if the
- 		data does not esists an error is returned.</p>
+<p><tt>update(Key::atom(), Value) -&gt; Result::<a href="#type-typle">typle()</a></tt><br></p>
+</div><p>Updates the specified value into the local data and forward update messages to the
+         other DCs with replicas. The result may have the values {ok} or
+         {error, ErrorCode}.</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Dec 5 2014, 16:26:45.</i></p>
+<p><i>Generated by EDoc, Dec 14 2014, 21:38:04.</i></p>
 </body>
 </html>

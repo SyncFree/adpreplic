@@ -10,17 +10,18 @@
 %% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
 %% @end
 %% =============================================================================
-
 %%
-%% @doc Provides operations required in a database.
+%% @doc Provides operations required to control the location of the data replicas within 
+%%      the overall system.
 -module(strategy_adprep).
 -author('aas@trifork.co.uk').
 
 -ifdef(EUNIT).
+% Unit-test
 -compile(export_all).
 -else.
 -compile(report).
-% StrateInterface for decay
+% Strate interface for decay
 -export([decay/2]).
 % gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
@@ -43,6 +44,7 @@ decay(Key, Id) ->
 %% =============================================================================
 %% Propossed Adaptive Replication Strategy process
 %% =============================================================================
+
 %% @spec init({Key::atom(), Args::tuple()}) -> {ok, LoopData::tuple()}
 %%
 %% @doc Initialises the process and start the process with the specified arguments.
@@ -93,6 +95,9 @@ code_change(_PreviousVersion, State, _Extra) ->
 %% Messages handler
 %% =============================================================================
 
+%% @spec handle_cast(Msg, Args::tuple()) -> Result::tuple()
+%%
+%% @doc Handles the passed message.
 handle_cast(shutdown, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
                        ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay,
                        RStrength, WStrength}) ->
@@ -228,6 +233,10 @@ processStrength(Key, Replicated, Strength, MinNumReplicas, RmvThreshold) ->
     end,
     {Replicated1, Strength1}.
 
+%% @spec verifyRemove(Record::record(), MinNumReplicas::integer()) ->Result::boolean()
+%% 
+%% @doc Checks if the current state of the system allows the current DC to delete its 
+%%      replica of the data.
 verifyRemove(Record, MinNumReplicas) ->
     #replica{num_replicas=NumReplicas}=Record,
     NumReplicas > MinNumReplicas.
@@ -305,6 +314,10 @@ incStrength(Strength, Inc, MaxStrength) ->
 nextDCsFunc(Dc, AllDCs, MinNumReplicas) -> 
     nextDCsFunc_(Dc, AllDCs, MinNumReplicas - 1, []).
 
+%% @spec nextDCsFunc_(Dc::node(), AllDCs::list(), MinNumExtrReplicas::integer(), ListDCs::list()) -> {ListDCs::list(), AllDCs::list()}
+%% 
+%% @doc Builds a list of the specified min. number of DCs and an alternative in case of 
+%%      errors when contacting any of them. 
 nextDCsFunc_(Dc, [D | AllDCs], MinNumExtrReplicas, ListDCs) -> 
     if
         MinNumExtrReplicas > 0 ->

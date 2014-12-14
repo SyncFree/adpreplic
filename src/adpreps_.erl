@@ -18,12 +18,15 @@
 -include("adprep.hrl").
 
 -ifdef(EUNIT).
+% Unit-test
 -compile(export_all).
 -else.
 -compile(report).
--export([buildReply/2, buildReply/3, create/4, delete/1, read/1, update/2, send/2, 
-         send/3, stop/1]).
--export([getNewID/0, getNewID/1,getReplicationLayerPid/1]).
+% Interface to the Startegy Layer
+-export([create/4, delete/1, read/1, update/2, send/2, send/3, stop/1, buildReply/2, 
+         buildReply/3]).
+% Extra support
+-export([getNewID/0, getNewID/1]).
 -endif.
 
 
@@ -58,13 +61,7 @@ update(Key, Value) ->
 %% @doc Deletes the data in all DCs where there is a replica. The results may have any of 
 %%      the values ok or {error, ErrorCode::term()}.
 delete(Key) ->
-    try send(Key, {delete}) of 
-        Result ->
-            Result
-    catch
-        error:badarg ->
-            {error, does_not_exist}
-    end.
+    send(Key, {delete}).
 
 %% @spec stop(Key::atom()) -> Result::tuple()
 %% 
@@ -87,15 +84,12 @@ getAllDCs() ->
 %% @doc Provides a new ID for the specified key.
 -spec getNewID(key()) -> integer().
 getNewID(Key) ->
-    Pid = getReplicationLayerPid(Key),
-    {reply, new_id, 0, Results} = gen_server:call(Pid, {new_id, 0, Key}, 1000),
-    Results.
+    adprep:newId(Key).
 
 %% @doc Provides a new ID.
 -spec getNewID() -> integer().
 getNewID() ->
-    Key = process_info(self(), registered_name),
-    getNewID(Key).
+    adprep:newId().
 
 %% @doc Provides the local Replication Layer process ID for the specified data.
 %% @spec getReplicationLayerPid(Key::atom()) -> Pid::pid()
@@ -104,6 +98,7 @@ getReplicationLayerPid(_Key) ->
 getReplicationLayerPid() ->
 %    list_to_atom(string:concat(Key, "_rl")).
     'rl'.
+
 
 %% @doc Sends the specified message to all the DCs.
 -spec sendToAllDCs(key(), {'has_replica', pid(), integer(), atom()}) -> ok.
@@ -228,12 +223,7 @@ startProcess(Key, StrategyName, Args) ->
             created;
         {error, {already_started, _Pid}} ->
             % The process already exist
-            already_started;
-        Result ->
-            % Probablly the process already exist, so the data already exists locally or 
-            % somewhere else
-            %% TODO: verify this is the case in all circunstatnces
-            Result
+            already_started
     end.
 
 %% @spec buildPid(Key::list()) -> Pid::atom()
