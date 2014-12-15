@@ -30,8 +30,13 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    adpreplic_sup:start_link(),
-    adprep:start().
+    case adpreplic_sup:start_link() of
+    	{ok, Pid} -> 
+		    {ok, _datastorePid} = datastore:start(),
+		    {ok, Pid};
+		{error, Reason} ->
+			{error, Reason}
+	end.
     
 stop(_State) ->
 	ok.

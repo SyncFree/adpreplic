@@ -13,3 +13,7 @@
                     value, % the data stored in the replica/record
                     num_replicas = 1 :: integer(), % the number of replicas of this data
                     list_dcs_with_replicas}). % the set of DCs with replicas. There should be num_replicas - 1 of DCs in the set
+
+-type key() :: term().
+
+-export_type([key/0]).

@@ -33,6 +33,14 @@
 -include("strategy_adprep.hrl").
 
 
+
+
+%% @doc Sends a decay message. Not to be used directly but from decay.erl.
+-spec decay(key(), integer()) -> ok.
+decay(Key, Id) ->
+    gen_server:cast(Key, {decay, Id}).
+
+
 %% =============================================================================
 %% Propossed Adaptive Replication Strategy process
 %% =============================================================================
@@ -52,10 +60,10 @@ init({Key, #adpargs{decay_time=DecayTime,
     Result = adprep:hasReplica(Key),
     % Calculate strength of the replica
     {Replicated, Strength} = case Result of
-        {yes} ->
+        true ->
             % With Replica
             {true, ReplicationThreshold + WStrength};
-        {no} ->
+        false ->
             % No replica
             {false, 0}
     end,
@@ -82,11 +90,6 @@ code_change(_PreviousVersion, State, _Extra) ->
     % next
     {ok, State}.
 
-%% @spec decay(Key::atom(), Id::integer()) -> {ok}
-%%
-%% @doc Sends a decay message. Not to be used directly but from decay.erl.
-decay(Key, Id) ->
-    gen_server:cast(Key, {decay, Id}).
 
 %% =============================================================================
 %% Messages handler
@@ -100,7 +103,7 @@ handle_cast(shutdown, {Key, Replicated, Strength, DecayTime, MinNumReplicas,
                        RStrength, WStrength}) ->
 %    lager:info("Shutting down the replication layer"),
     % Stop the decay process
-    decay:stopDecay(Key),
+    ok = decay:stopDecay(Key),
     {stop, normal, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
                     ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay,
                     RStrength, WStrength}};
@@ -121,7 +124,7 @@ handle_call({create, Value}, _From, {Key, Replicated, Strength, DecayTime,
     NextDCsFunc = fun nextDCsFunc/3,
     Result = adprep:create(Key, Value, NextDCsFunc, MinNumReplicas),
     {Replicated1, Strength1} = case Result of
-        {ok} ->
+        ok ->
             % Successful creation implies the data has been replicated
             {true, ReplicationThreshold + WStrength};
         _ ->
@@ -151,10 +154,11 @@ handle_call({update, Value}, _From, {Key, Replicated, Strength, DecayTime, MinNu
                                      ReplicationThreshold, RmvThreshold, MaxStrength, 
                                      Decay, WDecay, RStrength, WStrength}) ->
     % Should only come from another DC. Maybe it should be cheked before it is processed
-    adprep:update(Key, Value),
+    % TODO: What to do in case of error?
+    ok = adprep:update(Key, Value),
     Strength1 = Strength - WDecay,
     Replicated1 = processStrength(Key, Replicated, Strength1, MinNumReplicas, RmvThreshold),
-    {reply, adpreps_:buildReply(update, {ok}), 
+    {reply, adpreps_:buildReply(update, ok), 
      {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, 
       RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
 
@@ -162,9 +166,9 @@ handle_call({delete}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplic
                               ReplicationThreshold, RmvThreshold, MaxStrength, Decay, 
                               WDecay, RStrength, WStrength}) ->
     case adprep:delete(Key) of
-        {ok} -> 
+        ok -> 
             gen_server:cast(self(), shutdown),
-            {reply, adpreps_:buildReply(delete, {ok}), 
+            {reply, adpreps_:buildReply(delete, ok), 
              {Key, false, 0, DecayTime, MinNumReplicas, ReplicationThreshold, 
               RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
         Result ->
@@ -196,22 +200,21 @@ processStrength(Key, Replicated, Strength, MinNumReplicas, RmvThreshold) ->
                 Strength =< 0 ->
                     % Remove the current replica and stop this process
                     VerifyRemove = fun verifyRemove/2,
-                    Response = adprep:remove(Key, VerifyRemove, MinNumReplicas),
-                    if
-                        Response == {ok} ->
-                            adpreps_:stop(Key),
+                    case adprep:remove(Key, VerifyRemove, MinNumReplicas) of
+                        ok ->
+                        % TODO Fix the error case here!
+                            _ = adpreps_:stop(Key),
                             false;
-                        true ->
+                        _ ->
                             Replicated
                     end;
                 Strength =< RmvThreshold ->
                     % Remove the current replica, but don't stop
                     VerifyRemove = fun verifyRemove/2,
-                    Response = adprep:remove(Key, VerifyRemove, MinNumReplicas),
-                    if
-                        Response == {ok} ->
+                    case adprep:remove(Key, VerifyRemove, MinNumReplicas) of
+                        ok ->
                             false;
-                        true ->
+                        _ ->
                             Replicated
                     end;
                 true ->
@@ -220,7 +223,8 @@ processStrength(Key, Replicated, Strength, MinNumReplicas, RmvThreshold) ->
             end;
         Strength1 =< 0 ->
             % Stop this process
-            adpreps_:stop(Key),
+            % TODO Fix the error case here!
+            _ = adpreps_:stop(Key),
             erlang:yield(), % give a chance to shutdown
             false;
         true ->

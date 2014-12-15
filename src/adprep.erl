@@ -1,12 +1,31 @@
+%% -------------------------------------------------------------------
+%%
+%% Copyright (c) 2014 SyncFree Consortium.  All Rights Reserved.
+%%
+%% This file is provided to you under the Apache License,
+%% Version 2.0 (the "License"); you may not use this file
+%% except in compliance with the License.  You may obtain
+%% a copy of the License at
+%%
+%%   http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing,
+%% software distributed under the License is distributed on an
+%% "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+%% KIND, either express or implied.  See the License for the
+%% specific language governing permissions and limitations
+%% under the License.
+%%
+%% -------------------------------------------------------------------
+
 %% =============================================================================
-%% Adapive Replications DC - SyncFree
+%% Adaptive Replications DC - SyncFree
 %%
 %% The Replication Layer. Support function to access the current DC and other DCs.
 %% 
 %% @author Amadeo Asco
 %% @version 1.0.0
 %% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
-%% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
 %% @end
 %% =============================================================================
 %% 
@@ -19,7 +38,8 @@
 -compile(export_all).
 -else.
 -compile(report).
-% Interface calls
+
+%% Interface calls
 -export([start/0, stop/0, create/1, create/2, create/4, delete/1, hasReplica/1, read/1, 
          update/2, remove/1, remove/3, getNumReplicas/1, newId/0, newId/1]).
 % gen_server callbacks
@@ -28,31 +48,25 @@
 -endif.
 -behaviour(gen_server).
 
-
 -include("adprep.hrl").
 
 
 %% =============================================================================
 %% Server interface
 %% =============================================================================
-%% @spec start() -> Result
-%% 
-%% @doc Start the server.
 %%
-%%      Result = {ok, Pid::pid()} | ignore | {error, Error} with
-%%        Error = {already_started, Pid} | term()
+%% @doc Start the server.
+-spec start() -> {ok, pid()} | ignore | {error, {already_started, pid()} | term()}.
 start() -> 
-%    lager:info("Starting~n"),
+    io:format("Starting adprep server ~n"),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
-%% @spec stop() -> {ok}
-%% 
 %% @doc Stops the server asynchronously.
+-spec stop() -> ok.
 stop() ->
-%    lager:info("Stopping~n"),
+    io:format("Stopping adprep server ~n"),
     gen_server:cast(?MODULE, shutdown).
 
-%% @spec create(Key::atom(), Value, NextDCFunc::function(), Args) -> Result::tuple()
 %% 
 %% @doc Creates the replica locally and creates other replicas if the startegy requires. 
 %        The result may have the values {ok} or {error, ErrorCode}.
@@ -62,79 +76,69 @@ stop() ->
 %%        of DCs to replicate and another list of potential DCs to replicate. If any 
 %%        replication to a DC from the list of DCs to replicate in failes a DC from the 
 %%        potential list will be used instead.
+-spec create(key(), term(), function(), term()) -> ok | {error, does_not_exist | already_exists_replica}.
 create(Key, Value, NextDCFunc, Args) ->
-%    lager:info("Creating entry for ~p",[Key]),
+    io:format("Creating entry for ~p",[Key]),
     gen_server:call(?MODULE, {create, Key, {Value, NextDCFunc, Args}}).
-%% @spec create(Key::atom(), Value) -> Result::tuple()
-%% 
-%% @doc Creates the local replica only. The result may have the values {ok} or 
-%%        {error, ErrorCode}.
+
+
+%% @doc Creates the local replica only. 
+-spec create(key(), term()) -> ok | {error, does_not_exist | already_exists_replica}.
 create(Key, Value) ->
-%    lager:info("Creating entry for ~p",[Key]),
+    io:format("Creating entry for ~p",[Key]),
     gen_server:call(?MODULE, {create, Key, {Value, Key}}).
-%% @spec create(Key::atom()) -> Result::tuple()
-%% 
+
+
 %% @doc Creates the local replica only. The value for the specified key must already 
-%%        exists in another DC. The result may have the values {ok} or {error, ErrorCode}. 
+%%        exists in another DC. 
+-spec create(key()) -> ok | {error, does_not_exist | already_exists_replica}.
 create(Key) ->
-%    lager:info("Creating entry for ~p",[Key]),
+    io:format("Creating entry for ~p",[Key]),
     gen_server:call(?MODULE, {create, Key}).
 
-%% @spec delete(Key::atom()) -> Result::tuple()
-%% 
-%% @doc Deletes an entry from within all the DCs with replica. The result is {ok} on 
-%%        success or {error, ErrorCode} otherwise.
+%% @doc Deletes an entry from within all the DCs with replica. 
+-spec delete(key()) -> ok | {error, does_not_exist | already_exists_replica}. 
 delete(Key) ->
-%    lager:info("Removing entry for ~p",[Key]),
+    io:format("Removing entry for ~p",[Key]),
     gen_server:call(?MODULE, {delete, Key}).
 
-%% @spec getNumReplicas(Key::atom()) -> Result::integer()
-%% 
 %% @doc Gets the number of replicas.
+-spec getNumReplicas(key()) -> integer().
 getNumReplicas(Key) ->
-%    lager:info("Getting number of replicas of entry for ~p",[Key]),
+    io:format("Getting number of replicas of entry for ~p",[Key]),
     gen_server:call(?MODULE, {num_replicas, Key}).
 
-%% @spec hasReplica(Key::atom()) -> Result::boolean()
-%% 
-%% @doc Checks if there is a local replica. The result may have the values {yes} or 
-%%        {no}.
+%% @doc Checks if there is a local replica. 
+-spec hasReplica(key()) -> boolean().
 hasReplica(Key) ->
     gen_server:call(?MODULE, {has_a_replica, Key}).
 
-%% @spec read(Key::atom()) -> Result::tuple()
-%% 
-%% @doc Reads specified entry. The result may have the values {ok, Value} or 
-%%        {error, ErrorCode}.
+%% @doc Reads specified entry. 
+-spec read(key()) -> {ok, term()} | {error}.
 read(Key) ->
-%    lager:info("Reading entry for ~p",[Key]),
+    io:format("Reading entry for ~p",[Key]),
     gen_server:call(?MODULE, {read, Key}).
 
-%% @spec remove(Key::atom()) -> Result::tuple()
-%% 
-%% @doc Removes the local entry. The result may have the values {ok} or 
-%%        {error, ErrorCode}.
+%% @doc Removes the local entry. 
+-spec remove(key()) -> ok | {error}.
 remove(Key) ->
-%    lager:info("Removing entry for ~p",[Key]),
+    io:format("Removing entry for ~p",[Key]),
     gen_server:call(?MODULE, {remove, Key}).
 
-%% @spec remove(Key::atom(), VerifyRemove::function(), Args) -> Result::tuple()
-%% 
+
 %% @doc Removes the local entry if the conditios are apropiated, which is check by calling 
 %%        function VerifyRemove with the record associated to the passed key and the passed 
-%%        arguments. The result may have the values {ok}, {ok, failed_verification} or 
-%%        {error, ErrorCode}.
+%%        arguments. 
+-spec remove(key(), function(), term()) -> ok | {ok, failed_verification} | {error}.
 remove(Key, VerifyRemove, Args) ->
-%    lager:info("Removing entry for ~p",[Key]),
+    io:format("Removing entry for ~p",[Key]),
     gen_server:call(?MODULE, {remove, Key, VerifyRemove, Args}).
 
-%% @spec update(Key::atom(), Value) -> Result::typle()
-%% 
 %% @doc Updates the specified value into the local data and forward update messages to the 
-%%        other DCs with replicas. The result may have the values {ok} or 
-%%        {error, ErrorCode}.
+%%        other DCs with replicas. 
+-spec update(key(), term()) -> ok | {error}.
 update(Key, Value) ->
-%    lager:info("Updating entry for ~p",[Key]),
+    io:format("Updating entry for ~p",[Key]),
     gen_server:call(?MODULE, {write, Key, Value}).
 
 %% @spec newId(Key::atom()) -> Id::integer()
@@ -279,7 +283,7 @@ handle_call({rmv_replica, Dc, Key}, _From, {OwnId, Map}) ->
             List1 = sets:del_element(Dc, List),
             Record1 = Record#replica{num_replicas=Num-1,list_dcs_with_replicas=List1},
             Map2 = maps:put(Key, Record1, Map),
-            {{ok}, {OwnId, Map2}}
+            {ok, {OwnId, Map2}}
     end,
     {reply, Reply, Args};
 
@@ -303,7 +307,7 @@ handle_call({new_replica, Dc, Key, Value}, _From, {OwnId, Map}) ->
                                              num_replicas = NumReplicas+1, 
                                                  list_dcs_with_replicas=List1},
                     Map1 = maps:put(Key, Record1, Map),
-                    {{ok}, {OwnId, Map1}}
+                    {ok, {OwnId, Map1}}
             end
     end,
     {reply, Reply, Args};
@@ -327,7 +331,7 @@ handle_call({new_replica, Dc, Key}, _From, {OwnId, Map}) ->
                     Record1 = Record#replica{num_replicas = NumReplicas+1, 
                                                  list_dcs_with_replicas=List1},
                     Map1 = maps:put(Key, Record1, Map),
-                    {{ok}, {OwnId, Map1}}
+                    {ok, {OwnId, Map1}}
             end
     end,
     {reply, Reply, Args};
@@ -349,7 +353,7 @@ handle_call({forward_delete, Key}, _From, {OwnId, Map}) ->
     gen_server:cast({node(), Key}, shutdown),
     % Remove replica
     Map1 = maps:remove(Key, Map),
-    {reply, {ok}, {OwnId, Map1}};
+    {reply, ok, {OwnId, Map1}};
 
 handle_call({remove, Key}, _From, {OwnId, Map}) ->
     {Response, OwnId1, Map1} = rmvDel(Key, OwnId, Map, rmv_replica),
@@ -363,14 +367,14 @@ handle_call({remove, Key, VerifyRemove, Args}, _From, {OwnId, Map}) ->
                     % Proceed
                     #replica{list_dcs_with_replicas=DCs}=Record,
                     case forward({rmv_replica, node(), Key}, DCs) of
-                        {ok} ->
+                        ok ->
                             % Success - Remove local replica
                             Map1 = maps:remove(Key, Map),
-                            {reply, {ok}, {reply, Map1}};
+                            {reply, ok, {reply, Map1}};
                         {error, no_replica} ->
                             % Success- Remove local replica
                             Map1 = maps:remove(Key, Map),
-                            {reply, {ok}, {OwnId, Map1}};
+                            {reply, ok, {OwnId, Map1}};
                         R ->
                             % Failure - should alreday have rolled back
                             {reply, R, {OwnId, Map}}
@@ -380,15 +384,16 @@ handle_call({remove, Key, VerifyRemove, Args}, _From, {OwnId, Map}) ->
             end
     catch
         _:_ ->
-            {reply, {ok}, {OwnId, Map}}
+            % TODO Shouldn't something be fixed here?
+            {reply, ok, {OwnId, Map}}
     end;
 
 handle_call({has_a_replica, Key}, _From, {OwnId, Map}) ->
     case getRecord(Key, Map) of
         none ->
-            {reply, {no},  {OwnId, Map}};
+            {reply, false,  {OwnId, Map}};
         _Record ->
-            {reply, {yes}, {OwnId, Map}}
+            {reply, true, {OwnId, Map}}
     end.
 
 handle_cast({update, Id, Key, Value}, {OwnId, Map}) ->
@@ -424,7 +429,7 @@ handle_cast({create_new, Id, Key, Value, DCs}, {OwnId, Map}) ->
             List = sets:del_element(self(), DCs),
             Record=#replica{key=Key,value=Value,num_replicas=sets:size(DCs),list_dcs_with_replicas=List},
             Map1 = maps:put(Key, Record, Map),
-            {adpreps_:buildReply(create_new, Id, {ok}), {OwnId, Map1}};
+            {adpreps_:buildReply(create_new, Id, ok), {OwnId, Map1}};
         _ ->
             % Ignore as there is a replica
             {adpreps_:buildReply(create_new, Id, {error, no_replica}), {OwnId, Map}}
@@ -516,7 +521,7 @@ create_(Key, Value, Map, OwnId) ->
     List = sets:new(),
     Record=#replica{key=Key,value=Value,num_replicas=1,list_dcs_with_replicas=List},
     Map1 = maps:put(Key, Record, Map),
-    {{ok}, OwnId, Record, Map1}.
+    {ok, OwnId, Record, Map1}.
 
 %% @spec createOtherReplicas(Record, OwnId::integer(), NextDCsFunc::function(), Args) -> Result::tuple()
 %%
@@ -573,13 +578,12 @@ createReplicasPotentialDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDC
 createReplicasPotentialDcs(_RegName, _Record, _OwnId, _AllReplicatedDCs, PotentialDCs, []) ->
     PotentialDCs.
 
-%% @spec read(Key::atom(), OwnId::integer(), Map::map()) -> Result::tuple()
-%%
 %% @doc Reads the data locally if exist, i.e. replicated, or alternativelly get the data 
 %%        from any of the other DCs with replicas.
 %%
 %%        The returned value is a tuple with the response of the form 
 %%        {{ok, Value}, NewOwnId} or {{error, ErrorCode}, NewOwnId}.
+-spec read(key(), integer(), map()) -> {{ok, term()}, integer()} | {{error, _ }, integer()}.
 read(Key, OwnId, Map) ->
     try maps:get(Key, Map) of
         Record ->
@@ -614,7 +618,7 @@ write(Key, OwnId, Value, Map) ->
             % Send updates to other DCs
             #replica{list_dcs_with_replicas=DCs}=Record1,
             gen_server:abcast(DCs, Key, {update, OwnId, Key, Value}),
-            {{ok}, OwnId+1, Map1}
+            {ok, OwnId+1, Map1}
     catch
         _:_ ->
             % Find DCs with replica
@@ -622,7 +626,7 @@ write(Key, OwnId, Value, Map) ->
                 {ok, DCs} ->
                     % Send updates to each of the replicated sites
                     gen_server:abcast(DCs, Key, {update, OwnId, Key, Value}),
-                    {{ok}, OwnId+1, Map};
+                    {ok, OwnId+1, Map};
                 {error, ErrorCode} ->
                     % An error
                     {{error, ErrorCode}, OwnId+1, Map}
@@ -637,7 +641,7 @@ write(Key, OwnId, Value, Map) ->
 getAllDCsWithReplicas(Key, OwnId) ->
     % Discover the DCs with replicas
     AllDCs = getAllDCs(),
-    flush(OwnId),
+    ok = flush(OwnId),
     gen_server:abcast(AllDCs, Key, {has_replica, self(), OwnId, Key}),
     % Only take response from the first one
     receive
@@ -666,16 +670,15 @@ sendOne(Type, OwnId, Key, Msg, RegName, [Dc | DCs]) ->
 sendOne(_Type, OwnId, _Key, _Msg, _RegName, []) ->
     {{error, no_dcs}, OwnId+1}.
 
-%% @spec flush(Id::integer()) -> {ok}
-%%
 %% @doc Removes all the messages that match the specified one from the mailbox.
+-spec flush(integer()) -> ok.
 flush(Id) ->
     receive
         {reply, has_replica, Id, {exists, _DCs}} ->
             flush(Id)
     after
         0 ->
-            {ok}
+            ok
     end.
 
 %% @spec rmvDel(Key::atom(), OwnId::integer(), Map::amp(), Type::atom()) -> {Result, OwnId1::integer(), Map1::map()}
@@ -688,14 +691,14 @@ rmvDel(Key, OwnId, Map, Type) ->
             % DCs with replica
             #replica{list_dcs_with_replicas=DCs}=Record,
             {Response, Map1} = case forward({Type, node(), Key}, DCs) of
-                {ok} ->
+                ok ->
                     % Success - Remove local replica
                     Map2 = maps:remove(Key, Map),
-                    {{ok}, Map2};
+                    {ok, Map2};
                 {error, no_replica} ->
                     % Success- Remove local replica
                     Map2 = maps:remove(Key, Map),
-                    {{ok}, Map2};
+                    {ok, Map2};
                 R ->
                     % Failure - should alreday have rolled back
                     {R, Map}
@@ -717,7 +720,7 @@ rmvDel(Key, OwnId, Map, Type) ->
                     end,
                     {Result, OwnId+1, Map};
                 _ ->
-                    {{ok}, OwnId, Map}
+                    {ok, OwnId, Map}
             end
     end.
 
@@ -726,7 +729,7 @@ rmvDel(Key, OwnId, Map, Type) ->
 %% @doc Removes the local replica and depending of the Type passed also forward apropiate 
 %%      messages to other DCs with replicas to remove them.
 forward(_Msg, []) ->
-    {ok};
+    ok;
 forward(Msg, [Dc | DCs]) ->
     Result = gen_server:call({adpref, Dc}, Msg),
     case Result of

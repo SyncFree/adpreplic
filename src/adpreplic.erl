@@ -1,5 +1,5 @@
 %% =============================================================================
-%% Adapive Replication User Interface - SyncFree
+%% Adaptive Replication User Interface - SyncFree
 %%
 %% Public API, can be called by clients using RPC.
 %%
