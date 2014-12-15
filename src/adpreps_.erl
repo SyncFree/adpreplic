@@ -73,7 +73,7 @@ stop(Key) ->
 %% 
 %% =============================================================================
 
-%% @spec getAllDCs() -> DCs::List
+%% @spec getAllDCs() -> DCs::list()
 %% 
 %% @doc The list of all the DCs.
 getAllDCs() ->

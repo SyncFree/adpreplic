@@ -255,11 +255,13 @@ newId__test() ->
 handle_info_test() ->
     % Initialise
     adprep:start(),
+    % Test
     Result = adprep ! {unsuported},
     ?assertEqual({unsuported}, Result),
     % Clean-up
     adprep:stop(),
     erlang:yield().
+
 
 %% ============================================================================
 create(Key, Value) ->

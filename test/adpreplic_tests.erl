@@ -38,7 +38,7 @@ create_test() ->
                     max_strength = 10.0,
                     decay = 0.5,
                     wdecay = 0.5,
-                    rstrength = 1,
+                    rstrength = 1.0,
                     wstrength = 1.5},
     adprep:start(),
     erlang:yield(),
@@ -97,7 +97,7 @@ create(Key, Value) ->
                     max_strength = 10.0,
                     decay = 0.5,
                     wdecay = 0.5,
-                    rstrength = 1,
+                    rstrength = 1.0,
                     wstrength = 1.5},
     adpreplic:create(Key, Value, adprep, Args).
 

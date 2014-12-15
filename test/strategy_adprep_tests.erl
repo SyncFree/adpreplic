@@ -41,7 +41,7 @@ removeByDecay_test() ->
                     max_strength = 1.5,
                     decay = 2.0,
                     wdecay = 0.5,
-                    rstrength = 1,
+                    rstrength = 1.0,
                     wstrength = 1.5},
     adpreplic:create(Key, Value, adprep, Args), % start Strategy
     timer:sleep(50),
@@ -76,7 +76,7 @@ createAlreadyReplica_test() ->
                     max_strength = 1.5,
                     decay = 2.0,
                     wdecay = 0.5,
-                    rstrength = 1,
+                    rstrength = 1.0,
                     wstrength = 1.5},
     % Test - already replica but strategy not running yet
     Reg = registered(),
@@ -108,7 +108,7 @@ create(Key, Value) ->
                     max_strength = 10.0,
                     decay = 0.5,
                     wdecay = 0.5,
-                    rstrength = 1,
+                    rstrength = 1.0,
                     wstrength = 1.5},
     adpreplic:create(Key, Value, adprep, Args).
 

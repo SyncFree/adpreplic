@@ -31,7 +31,7 @@
 
 start(_StartType, _StartArgs) ->
     adpreplic_sup:start_link(),
-    datastore:start().
+    adprep:start().
     
 stop(_State) ->
 	ok.
