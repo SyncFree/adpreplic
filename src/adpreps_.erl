@@ -91,15 +91,6 @@ getNewID(Key) ->
 getNewID() ->
     adprep:newId().
 
-%% @doc Provides the local Replication Layer process ID for the specified data.
-%% @spec getReplicationLayerPid(Key::atom()) -> Pid::pid()
-getReplicationLayerPid(_Key) ->
-    getReplicationLayerPid().
-getReplicationLayerPid() ->
-%    list_to_atom(string:concat(Key, "_rl")).
-    'rl'.
-
-
 %% @doc Sends the specified message to all the DCs.
 -spec sendToAllDCs(key(), {'has_replica', pid(), integer(), atom()}) -> ok.
 sendToAllDCs(Key, Msg) ->
@@ -133,9 +124,7 @@ send(Key, Msg, WaitReply) ->
                 created ->
                     {create, {create, Value}};
                 already_started ->
-                    {error, {error, already_exists}};
-                {error, Reason} ->
-                    {error, {error, Reason}}
+                    {error, {error, already_exists}}
             end;
 
         {Type, _Value} ->
