@@ -33,8 +33,6 @@
 -include("strategy_adprep.hrl").
 
 
-
-
 %% @doc Sends a decay message. Not to be used directly but from decay.erl.
 -spec decay(key(), integer()) -> ok.
 decay(Key, Id) ->
@@ -116,7 +114,10 @@ handle_cast({decay, _Id}, {Key, Replicated, Strength, DecayTime, MinNumReplicas,
     Replicated1 = processStrength(Key, Replicated, Strength1, MinNumReplicas, RmvThreshold),
     {noreply, {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, 
                ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, 
-               WStrength}}.
+               WStrength}};
+
+handle_cast(_Msg, State) ->
+    {noreply, State}.
 
 handle_call({create, Value}, _From, {Key, Replicated, Strength, DecayTime, 
                                      MinNumReplicas, ReplicationThreshold, RmvThreshold, 
@@ -175,7 +176,10 @@ handle_call({delete}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplic
             {reply, adpreps_:buildReply(delete, {error, Result}), 
              {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, 
               RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}}
-    end.
+    end;
+
+handle_call(_Msg, _From, State) ->
+    {noreply, State}.
 
 
 %% =============================================================================

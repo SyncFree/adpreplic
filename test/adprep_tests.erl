@@ -186,6 +186,22 @@ removeVerify_test() ->
     adprep:stop(),
     erlang:yield().
 
+unsuportedMsg_test() ->
+    % Initialise
+    adprep:start(),
+    % Test
+    gen_server:cast(adprep, {unsuported}),
+    try gen_server:call(adprep, {unsuported}, 500) of
+        Result ->
+            ?assertEqual(nothing, Result)
+    catch
+        exit:{Result,_} ->
+            ?assertEqual(timeout, Result)
+    end,
+    % Clean-up
+    adprep:stop(),
+    erlang:yield().
+
 %% ============================================================================
 getDCs_test() ->
     % Initialise

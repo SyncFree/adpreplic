@@ -85,6 +85,23 @@ delete_test() ->
     ?assertEqual({error, does_not_exist}, Result1),
     stop(Key).
 
+unsuportedMsg_test() ->
+    % Initialise
+    Key = 'unsuportedMsg_test',
+    Value = "VALUE",
+    initialise(Key, Value),
+    % Test
+    gen_server:cast(strategy_adprep, {unsuported}),
+    try gen_server:call(strategy_adprep, {unsuported}, 500) of
+        Result ->
+            ?assertEqual(nothing, Result)
+    catch
+        exit:{Result,_} ->
+            ?assertEqual(noproc, Result)
+    end,
+    stop(Key).
+
+
 %% =============================================================================
 %% Internal functions
 %% =============================================================================

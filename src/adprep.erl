@@ -394,7 +394,10 @@ handle_call({has_a_replica, Key}, _From, {OwnId, Map}) ->
             {reply, false,  {OwnId, Map}};
         _Record ->
             {reply, true, {OwnId, Map}}
-    end.
+    end;
+
+handle_call(_Msg, _From, State) ->
+    {noreply, State}.
 
 handle_cast({update, Id, Key, Value}, {OwnId, Map}) ->
     case getRecord(Key, Map) of
@@ -472,7 +475,10 @@ handle_cast({reply, update, _Id, Key, Result}, {OwnId, Map}) ->
             % data
             Map
     end,
-    {noreply, {OwnId, Map1}}.
+    {noreply, {OwnId, Map1}};
+
+handle_cast(_Msg, State) ->
+    {noreply, State}.
 
 
 %% =============================================================================
