@@ -15,7 +15,7 @@
 %% API functions
 %% =============================================================================
 -compile(export_all).
--export([]).
+-export([initialise/0,stop/0]).
 
 
 -include_lib("eunit/include/eunit.hrl").
@@ -26,18 +26,17 @@
 %% =============================================================================
 getNumReplicas_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'getNumReplicas_test',
     % Test - already running process
     NumReplicas = adprep:getNumReplicas(Key),
     ?assertEqual(0, NumReplicas),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 create_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'create_test',
     Value = "value",
     % Test - does not exist
@@ -47,12 +46,11 @@ create_test() ->
     Response1 = create(Key, Value),
     ?assertEqual({error, already_exists_replica}, Response1),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 create1_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'create1_test',
     Value = "value",
     % Test - does not exist
@@ -62,24 +60,22 @@ create1_test() ->
     Response1 = create(Key, Value),
     ?assertEqual({error, already_exists_replica}, Response1),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 createNone_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'createNone_test',
     % Test - does not exist and cannot be created; missing value an no replica anywhere 
     %         else
     Response = adprep:create(Key),
     ?assertEqual({error, does_not_exist}, Response),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 read_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'read_test',
     Value = "value1",
     % Test - does not exist
@@ -90,12 +86,11 @@ read_test() ->
     Response1 = adprep:read(Key),
     ?assertEqual({ok, Value}, Response1),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 write_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'write_test',
     Value = "value1",
     NewValue = "new_value",
@@ -109,12 +104,11 @@ write_test() ->
     Response2 = adprep:read(Key),
     ?assertEqual({ok, NewValue}, Response2),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 delete_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'delete_test',
     Value = "value",
     % Test - already exist
@@ -126,12 +120,11 @@ delete_test() ->
     Respose2 = create(Key, Value), % should be able to create it again
     ?assertEqual(ok, Respose2),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 hasAReplica_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'hasAReplica_test',
     Value = "value",
     % Test - no replica
@@ -142,12 +135,11 @@ hasAReplica_test() ->
     Response1 = adprep:hasReplica(Key),
     ?assertEqual(true, Response1),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 remove_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'remove_test',
     Value = "value",
     % Test - already exist
@@ -159,20 +151,21 @@ remove_test() ->
     Respose2 = create(Key, Value), % should be able to create it again
     ?assertEqual(ok, Respose2),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 removeUnexisting_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'remove_test',
     % Test - does not exist
     Response = adprep:remove(Key),
-    ?assertEqual(ok, Response).
+    ?assertEqual(ok, Response),
+    % Clean-up
+    stop().
 
 removeVerify_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'removeVerify_test',
     Value = "value",
     % Test - already exist
@@ -183,12 +176,11 @@ removeVerify_test() ->
     Response1 = adprep:read(Key),  % should not exists
     ?assertEqual({ok, Value}, Response1),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 unsuportedMsg_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     % Test
     gen_server:cast(adprep, {unsuported}),
     try gen_server:call(adprep, {unsuported}, 500) of
@@ -199,23 +191,21 @@ unsuportedMsg_test() ->
             ?assertEqual(timeout, Result)
     end,
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 %% ============================================================================
 getDCs_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'getDCs_test',
     % Test
     ?assertEqual({exists, []}, gen_server:call(adprep, {get_dcs, Key})),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 hasReplica_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'hasReplica_test',
     Id = 1,
     Value = "value",
@@ -241,45 +231,52 @@ hasReplica_test() ->
     end,
     ?assertEqual({exists, [node()]}, Result1),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 newId_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'newId_test',
     Id = adprep:newId(Key),
     ?assertEqual(0, Id),
     Id1 = adprep:newId(),
     ?assertEqual(1, Id1),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 newId__test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     Key = 'newId__test',
     Id = adpreps_:getNewID(Key),
     ?assertEqual(0, Id),
     Id1 = adpreps_:getNewID(),
     ?assertEqual(1, Id1),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 handle_info_test() ->
     % Initialise
-    adprep:start(),
+    initialise(),
     % Test
     Result = adprep ! {unsuported},
     ?assertEqual({unsuported}, Result),
     % Clean-up
-    adprep:stop(),
-    erlang:yield().
+    stop().
 
 
 %% ============================================================================
+initialise() ->
+    io:format("(adprep_tests): Initialising servers~n", []),
+    {ok, _datastorePid} = datastore:start(),
+    {ok, _replicationLayerPid} = adprep:start().
+
+stop() ->
+    io:format("(adprep_tests): Stopping servers~n", []),
+    adprep:stop(),
+    datastore:stop(),
+    erlang:yield().
+
 create(Key, Value) ->
     NextDCFunc = fun(_Rl, _AllDCs, _Args) -> {[], []} end,
     adprep:create(Key, Value, NextDCFunc, []).

@@ -40,8 +40,7 @@ create_test() ->
                     wdecay = 0.5,
                     rstrength = 1.0,
                     wstrength = 1.5},
-    adprep:start(),
-    erlang:yield(),
+    initialise(),
     % Test
     Result = userar:create(Key, Value, Strategy, Args),
     ?assertEqual(ok, Result),
@@ -112,14 +111,16 @@ checkValue(Key, Value) ->
             ?assertEqual(Value, Result)
     end.
 
-
+initialise() ->
+    adprep_tests:initialise(),
+    erlang:yield().
 initialise(Key, Value) ->
-    adprep:start(),
-    erlang:yield(),
+    initialise(),
     create(Key, Value),
     erlang:yield().
 
 stop(Key) ->
+    io:format("(users_tests): Stopping strategy~n", []),
     adpreps_:stop(Key),
     erlang:yield(),
-    adprep:stop().
+    adprep_tests:stop().

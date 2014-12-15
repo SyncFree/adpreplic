@@ -138,8 +138,8 @@ handle_call({create, Value}, _From, {Key, Replicated, Strength, DecayTime,
 handle_call({read}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
                             ReplicationThreshold, RmvThreshold, MaxStrength, Decay, 
                             WDecay, RStrength, WStrength}) ->
-    {Replicated1, Strength1, ReplyMsg} = read(Key, Replicated, Strength, ReplicationThreshold, RStrength, MaxStrength),
-    {reply, ReplyMsg, 
+    {Replicated1, Strength1, Result} = read(Key, Replicated, Strength, ReplicationThreshold, RStrength, MaxStrength),
+    {reply, Result, 
      {Key, Replicated1, Strength1, DecayTime, MinNumReplicas, ReplicationThreshold, 
       RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}};
 
@@ -245,31 +245,31 @@ verifyRemove(Record, MinNumReplicas) ->
     #replica{num_replicas=NumReplicas}=Record,
     NumReplicas > MinNumReplicas.
 
-%% @spec read(Key::atom(), Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), RStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float()}
+%% @spec read(Key::atom(), Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), RStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float(), Reply}
 %% 
 %% @doc Reads the specified data, irrespective of where it is located.
 read(Key, Replicated, Strength, ReplicationThreshold, RStrength, MaxStrength) ->
     % Calculate new strength
     Strength1 = incStrength(Strength, RStrength, MaxStrength),
-    Replicated1 = if
-        Replicated == true ->
+    {Replicated1, Result1} = case Replicated of
+        true ->
             % Already replicated
             Result = adprep:read(Key),
-            Replicated;
-        true ->
+            {Replicated, Result};
+        _ ->
             % Continue processing based on new strength
             if 
                 Strength1 > ReplicationThreshold -> 
                     % Create replica
                     Result = adprep:create(Key),
-                    true;
+                    {true, Result};
                 true ->
                     % Not replicated
                     Result = adprep:read(Key),
-                    Replicated
+                    {Replicated, Result}
             end
     end,
-    {Replicated1, Strength1, adpreps_:buildReply(read, Result)}.
+    {Replicated1, Strength1, Result1}.
 
 %% @spec write(Key::atom(), Value, Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), WStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float()}
 %% 
@@ -296,7 +296,7 @@ write(Key, Value, Replicated, Strength, ReplicationThreshold, WStrength, MaxStre
                     Replicated
             end
     end,
-    {Replicated1, Strength1, adpreps_:buildReply(write, Result)}.
+    {Replicated1, Strength1, Result}.
 
 %% @spec incStrength(Strength::float(), Inc::float(), MaxStrength::float()) -> Strength1::float()
 %% 

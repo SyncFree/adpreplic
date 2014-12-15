@@ -109,7 +109,7 @@ sendToDCs([Dc | DCs], Key, Msg) ->
 
 %% @doc Sends the specified message for the specified data and wait for the replay, 
 %%      synchronous.
- -spec send(key(), _ ) -> {create, {create, _ }} | {error, {error, _ }}.
+-spec send(key(), _ ) -> {create, {create, _ }} | {error, {error, _ }}.
 send(Key, Msg) ->
     send(Key, Msg, true).
 
@@ -126,19 +126,15 @@ send(Key, Msg, WaitReply) ->
                 already_started ->
                     {error, {error, already_exists}}
             end;
-
         {Type, _Value} ->
             % Message to send to the strategy process
             {Type, Msg};
-
         {Type} ->
             % Message to send to the strategy process
             {Type, Msg};
-
         shutdown ->
             % Message to send to the strategy process
             {Msg, Msg};
-            
         _ ->
             {error, {error, invalid_msg_format}}
     end,
@@ -187,7 +183,7 @@ send(Key, Msg, WaitReply) ->
 sendIt(Key, Type, Msg, WaitReply) ->
     case WaitReply of
          true ->
-            case gen_server:call(Key, Msg, 5000) of
+            case gen_server:call(Key, Msg) of
                 {reply, Type, Key, Response} ->
                     Response;
                 {reply, Type, Response} ->

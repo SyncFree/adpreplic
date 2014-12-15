@@ -32,8 +32,7 @@ removeByDecay_test() ->
     DelayName = decay:buildPid(Key),
     Value = "VALUE",
     DecayTime = 100,
-    adprep:start(), % start Replication Layer
-    erlang:yield(),
+    initialise(),
     Args = #adpargs{decay_time = DecayTime,
                     min_num_replicas = 1,
                     replication_threshold = 1.0,
@@ -62,8 +61,7 @@ createAlreadyReplica_test() ->
     DelayName = decay:buildPid(Key),
     Value = "VALUE",
     DecayTime = 100,
-    adprep:start(), % start Replication Layer
-    erlang:yield(),
+    initialise(),
     NextDCFunc = fun(_Rl, _AllDCs, _Args) -> {[], []} end,
     Result = adprep:create(Key, Value, NextDCFunc, []),
     ?assertEqual(ok, Result),
@@ -93,7 +91,12 @@ createAlreadyReplica_test() ->
 %% =============================================================================
 %% Internal functions
 %% =============================================================================
+initialise() ->
+    adprep_tests:initialise(),
+    erlang:yield().
+
 stop(Key) ->
+    io:format("(startegy_adprep_tests): Stopping strategy~n", []),
     adpreps_:stop(Key),
     erlang:yield(),
-    adprep:stop().
+    adprep_tests:stop().
