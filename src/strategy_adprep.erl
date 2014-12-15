@@ -116,8 +116,8 @@ handle_cast({decay, _Id}, {Key, Replicated, Strength, DecayTime, MinNumReplicas,
                ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, 
                WStrength}};
 
-handle_cast(_Msg, State) ->
-    {noreply, State}.
+handle_cast(_Msg, LoopData) ->
+    {noreply, LoopData}.
 
 handle_call({create, Value}, _From, {Key, Replicated, Strength, DecayTime, 
                                      MinNumReplicas, ReplicationThreshold, RmvThreshold, 
@@ -178,8 +178,8 @@ handle_call({delete}, _From, {Key, Replicated, Strength, DecayTime, MinNumReplic
               RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}}
     end;
 
-handle_call(_Msg, _From, State) ->
-    {noreply, State}.
+handle_call(_Msg, _From, LoopData) ->
+    {noreply, LoopData}.
 
 
 %% =============================================================================
