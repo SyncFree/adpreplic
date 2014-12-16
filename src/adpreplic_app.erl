@@ -28,7 +28,6 @@
 %% ===================================================================
 %% Application callbacks
 %% ===================================================================
-
 start(_StartType, _StartArgs) ->
     case adpreplic_sup:start_link() of
     	{ok, Pid} -> 

@@ -1,5 +1,5 @@
 %% =============================================================================
-%% EUnits for supervisour - SyncFree
+%% EUnits for application - SyncFree
 %% 
 %% @author Amadeo Asco
 %% @version 1.0.0
@@ -9,7 +9,7 @@
 %% =============================================================================
 
 
--module(adpreplic_sup_tests).
+-module(adpreplic_app_tests).
 
 
 %% ====================================================================
@@ -26,22 +26,32 @@
 %% ====================================================================
 initialise_test() ->
     spawn(fun() ->
-         {ok, Pid} = adpreplic_sup:start_link(),
+         {ok, Pid} = adpreplic_app:start(type, args),
          exit(Pid, shutdown)
          end),
     wait_for_death_or_get_event(),
-    ?assert(whatever()).
+    stop(). % I would expect this was not necessary
+
+stop_test() ->
+    Result = adpreplic_app:stop(fine),
+    ?assertEqual(ok, Result).
 
 
 %% ====================================================================
 %% Support functions
 %% ====================================================================
+stop() ->
+    io:format("(adprep_tests): Stopping servers~n", []),
+    adprep:stop(),
+    datastore:stop(),
+    erlang:yield().
+
 wait_for_death_or_get_event() ->
     receive
         Response ->
             ?assertEqual(wrong, Response)
     after
-        500 ->
+        1000 ->
             ?assert(whatever())
     end.
 
