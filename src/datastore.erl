@@ -61,7 +61,7 @@ read(Id) ->
 %% @doc Updates an entry by merging the states.
 -spec update(key(), term()) -> ok | {error, not_found}.
 update(Id, Obj) ->
-    io:format ("(datastore): Updateing entry for ~p ~n",[Id]),
+    io:format ("(datastore): Updating entry for ~p ~n",[Id]),
     gen_server:call(?MODULE, {update, Id, Obj}).
 
 %% @doc Removes an entry.
@@ -77,21 +77,20 @@ init([]) ->
    ?MODULE = ets:new(?MODULE, [set, named_table, protected]),
    {ok, ?MODULE}.
 
-
 handle_call({create, Id, Obj}, _From, Tid) ->
-	case ets:lookup(Tid, Id) of
-		[{_Id,Obj}] -> 
+    case ets:lookup(Tid, Id) of
+        [{_Id,Obj}] ->
 			{reply, {error, already_created}, Tid};
-		[] ->		
+		[] ->
 			ets:insert(Tid, {Id, Obj}),
 			{reply, ok, Tid}
 	end;
 
 handle_call({read, Id}, _From, Tid) ->
 	case ets:lookup(Tid, Id) of
-		[{_Id,Obj}] -> 
+		[{_Id,Obj}] ->
 			{reply, {ok, Obj}, Tid};
-		[] ->		
+		[] ->
 			{reply, {error, not_found}, Tid}
 	end;
 
@@ -134,4 +133,4 @@ terminate(_Reason, _State) ->
 
 %% Code change
 code_change(_OldVersion, State, _Extra) -> 
-    {ok, State}.    
+    {ok, State}.
