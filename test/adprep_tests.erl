@@ -19,6 +19,7 @@
 
 
 -include_lib("eunit/include/eunit.hrl").
+-include("strategy_adprep.hrl").
 
 
 %% =============================================================================
@@ -305,7 +306,7 @@ newReplica_test() ->
     ?assertEqual({error, does_not_exist}, Response3),
     Response4 = gen_server:call(adprep, {new_replica, any, Key, Value}),
     ?assertEqual({error, does_not_exist}, Response4),
-    % Test - exist
+    % Test - exists
     create(Key, Value),
     Response5 = gen_server:call(adprep, {new_replica, node(), Key}),
     ?assertEqual({error, self}, Response5),
@@ -314,6 +315,41 @@ newReplica_test() ->
     % Clean-up
     stop().
 
+update_test() ->
+    % Initialise
+    initialise(),
+    Key = 'update_test',
+    Value = "value",
+    % Test - does not exist
+    Response = gen_server:call(adprep, {update, Key, Value}),
+    ?assertEqual({error, no_replica}, Response),
+    % Test - exists
+    create(Key, Value),
+    Response1 = gen_server:call(adprep, {update, Key, Value}),
+    ?assertEqual({ok, updated}, Response1),
+    % Clean-up
+    stop().
+
+forwardDelete_test() ->
+    % Initialise
+    initialise(),
+    Key = 'update_test',
+    Value = "value",
+    Args = #adpargs{decay_time = 5 * 1000,
+                    min_num_replicas = 1,
+                    replication_threshold = 2.0,
+                    rmv_threshold = 0.0,
+                    max_strength = 10.0,
+                    decay = 0.5,
+                    wdecay = 0.5,
+                    rstrength = 1.0,
+                    wstrength = 1.5},
+    adpreplic:create(Key, Value, adprep, Args),
+    % Test
+    Response = gen_server:call(adprep, {forward_delete, Key}),
+    ?assertEqual(ok, Response),
+    % Clean-up
+    stop().
 
 %% ============================================================================
 initialise() ->

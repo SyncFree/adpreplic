@@ -408,19 +408,19 @@ handle_call({has_a_replica, Key}, _From, {OwnId}) ->
             {reply, true, {OwnId}}
     end;
 
-handle_call(_Msg, _From, LoopData) ->
-    {noreply, LoopData}.
-
-handle_cast({update, Id, Key, Value}, {OwnId}) ->
+handle_call({update, Key, Value}, _From, {OwnId}) ->
     case getRecord(Key) of
         none ->
             % Ignore as there is no replica
-            {reply, adpreps_:buildReply(update, Id, {error, no_replica}), {OwnId}};
+            {reply, {error, no_replica}, {OwnId}};
         Record ->
             Record1 = Record#replica{value=Value},
             datastore:update(Key, Record1),
-            {reply, adpreps_:buildReply(update, Id, {ok, updated}), {OwnId}}
+            {reply, {ok, updated}, {OwnId}}
     end;
+
+handle_call(_Msg, _From, LoopData) ->
+    {noreply, LoopData}.
 
 handle_cast(shutdown, {OwnId}) ->
     {stop, normal, {OwnId}};
