@@ -92,12 +92,12 @@ getNewID() ->
     adprep:newId().
 
 %% @doc Sends the specified message to all the DCs.
--spec sendToAllDCs(key(), {'has_replica', pid(), integer(), atom()}) -> ok.
+-spec sendToAllDCs(key(), term()) -> ok.
 sendToAllDCs(Key, Msg) ->
     sendToDCs(getAllDCs(), Key, Msg).
 
 %% @doc Sends the specified message to each of the provided list of DCs.
--spec sendToDCs([atom()], key(), {'has_replica', pid(), integer(), atom()}) -> ok.
+-spec sendToDCs(list(), key(), term()) -> ok.
 sendToDCs([], _Key, _Msg) ->
     ok;
 sendToDCs([Dc | DCs], Key, Msg) ->
@@ -231,3 +231,29 @@ buildReply(Type, Id, Results) ->
 %% @doc Builds the reply from the passed parameters. Id could be an integer or the result.
 buildReply(Type, Id) ->
     {reply, Type, Id}.
+
+
+%% =============================================================================
+%% Internal functions unit tests.
+%% =============================================================================
+-ifdef(EUNIT).
+% Unable to use this in the own unit-test file, must be here
+-include_lib("eunit/include/eunit.hrl").
+
+
+getAllDCs_test() ->
+    Own = test,
+    List = [Own],
+    register(test, self()),
+    DCs = adpreps_:getAllDCs(),
+    ?assertEqual(List, DCs).
+
+sendToDCs_test() ->
+    % Initialise
+    List = [], % must be empty for this test
+    Key = 'sendToDCs_test', 
+    Msg = "nothing",
+    % Test
+    Result = adpreps_:sendToDCs(List, Key, Msg),
+    ?assertEqual(ok, Result).
+-endif.

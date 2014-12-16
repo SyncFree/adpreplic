@@ -205,8 +205,13 @@ getDCs_test() ->
     % Initialise
     initialise(),
     Key = 'getDCs_test',
-    % Test
+    Value = "ValUe",
+    % Test - does not exist
     ?assertEqual({exists, []}, gen_server:call(adprep, {get_dcs, Key})),
+    % Test - already exists
+    create(Key, Value),
+    Result1 = gen_server:call(adprep, {get_dcs, Key}),
+    ?assertEqual({ok, []}, Result1),
     % Clean-up
     stop().
 
