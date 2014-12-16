@@ -302,7 +302,7 @@ handle_call({rmv_replica, Dc, Key}, _From, {OwnId}) ->
 
 handle_call({new_replica, Dc, Key, Value}, _From, {OwnId}) ->
     {Reply, Args} = if 
-        Dc == self() ->
+        Dc == node() ->
             % Unable to update record of itself
             {{error, self}, {OwnId}};
         true ->
@@ -327,7 +327,7 @@ handle_call({new_replica, Dc, Key, Value}, _From, {OwnId}) ->
 
 handle_call({new_replica, Dc, Key}, _From, {OwnId}) ->
     {Reply, Args} = if 
-        Dc == self() ->
+        Dc == node() ->
             % Unable to update record of itself
             {{error, self}, {OwnId}};
         true ->
