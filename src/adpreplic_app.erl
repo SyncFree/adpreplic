@@ -30,13 +30,13 @@
 %% ===================================================================
 start(_StartType, _StartArgs) ->
     case adpreplic_sup:start_link() of
-    	{ok, Pid} -> 
+        {ok, Pid} -> 
             {ok, _datastorePid} = datastore:start(),
-		    {ok, _replicationLayerPid} = adprep:start(),
-		    {ok, Pid};
-		{error, Reason} ->
-			{error, Reason}
-	end.
+            {ok, _replicationLayerPid} = adprep:start(),
+            {ok, Pid};
+        {error, Reason} ->
+            {error, Reason}
+    end.
     
 stop(_State) ->
-	ok.
+    ok.

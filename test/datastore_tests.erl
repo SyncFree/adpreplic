@@ -68,12 +68,12 @@ invalidMsg_test() ->
     % Clean-up
     stop().
 
-createExisting_test() ->
+tryCreateExisting_test() ->
     % Initialise
     initialise(),
-    Key = 'createExisting_test',
+    Key = 'tryCreateExisting_test',
     Value = "value",
-%    NewValue = "NewData",
+%    NewValue = "new_value",
     Result = datastore:create(Key, Value),
     ?assertEqual(ok, Result),
     % Test
@@ -81,6 +81,13 @@ createExisting_test() ->
 %    ?assertEqual({error, already_created}, Result1),
     % Clean-up
     stop().
+
+code_change_test() ->
+    PreviousVersion = "0.00",
+    State = none,
+    Extra = [],
+    Result = datastore:code_change(PreviousVersion, State, Extra),
+    ?assertEqual({ok, State}, Result).
 
 
 %% ============================================================================

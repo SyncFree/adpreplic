@@ -26,15 +26,25 @@
 %% ====================================================================
 initialise_test() ->
     spawn(fun() ->
-         {ok, Pid} = adpreplic_app:start(type, args),
-         exit(Pid, shutdown)
-         end),
+        {ok, Pid} = adpreplic_app:start(type, args),
+        exit(Pid, shutdown)
+        end),
     wait_for_death_or_get_event(),
     stop(). % I would expect this was not necessary
 
 stop_test() ->
     Result = adpreplic_app:stop(fine),
     ?assertEqual(ok, Result).
+
+bad_test() ->
+    spawn(fun() ->
+        {ok, Pid} = adpreplic_app:start(type, args),
+        Result = adpreplic_app:start(type_, args_),
+        ?assertEqual({error, {already_started, Pid}}, Result),
+        exit(Pid, shutdown)
+        end),
+    wait_for_death_or_get_event(),
+    stop(). % I would expect this was not necessary
 
 
 %% ====================================================================
@@ -51,6 +61,6 @@ wait_for_death_or_get_event() ->
         Response ->
             ?assertEqual(wrong, Response)
     after
-        500 ->
+        1000 ->
             ?assertEqual(true, true)
     end.
