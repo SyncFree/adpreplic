@@ -340,3 +340,27 @@ nextDCsFunc_(Dc, [D | AllDCs], MinNumExtrReplicas, ListDCs) ->
 nextDCsFunc_(_Dc, [], _MinNumExtrReplicas, List) -> 
     % No sufficient DCs, full replication
     {List, []}.
+
+
+
+%% =============================================================================
+%% Internal functions unit tests.
+%% =============================================================================
+-ifdef(EUNIT).
+% Unable to use this in the own unit-test file, must be here
+-include_lib("eunit/include/eunit.hrl").
+
+
+verifyRemove_test() ->
+    % Initialise
+    Key = 'verifyRemove_test',
+    Value = "Something",
+    NumReplicas = 1,
+    List = [],
+    Record = #replica{key=Key,value=Value,num_replicas=NumReplicas,list_dcs_with_replicas=List},
+    MinNumReplicas = 1,
+    % Test
+    Result = strategy_adprep:verifyRemove(Record, MinNumReplicas),
+    ?assertEqual(false, Result).
+-endif.
+

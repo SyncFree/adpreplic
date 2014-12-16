@@ -122,9 +122,7 @@ checkValue(Key, Value) ->
         {ok, Value1} ->
             ?assertEqual(Value, Value1);
         {error, ErrorCode} ->
-            ?assertEqual(Value, ErrorCode);
-        Result ->
-            ?assertEqual(Value, Result)
+            ?assertEqual(Value, ErrorCode)
     end.
 
 initialise() ->

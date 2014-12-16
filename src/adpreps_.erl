@@ -109,14 +109,14 @@ sendToDCs([Dc | DCs], Key, Msg) ->
 
 %% @doc Sends the specified message for the specified data and wait for the replay, 
 %%      synchronous.
--spec send(key(), _ ) -> {create, {create, _ }} | {error, {error, _ }}.
+-spec send(key(), _ ) -> ok | {ok, without_replay} | {ok, term()} | {error, timeout} | {error, _ }.
 send(Key, Msg) ->
     send(Key, Msg, true).
 
 %% @doc Sends the specified message for the specified data and wait for the replay if 
 %%      WaitReply is true. The results is of the format {ok, Value}, 
 %%      {ok, without_replay}, {error, invalid_msg_format} or {error, timeout}.
--spec send(key(), _ , boolean()) -> {create, {create, term()}} | {error, {error, _ }}.
+-spec send(key(), _ , boolean()) -> ok | {ok, without_replay} | {ok, term()} | {error, timeout} | {error, _ }.
 send(Key, Msg, WaitReply) ->
     {Type1, Msg1} = case Msg of
         {create, {Value, Strategy, Args}} ->
@@ -179,7 +179,7 @@ send(Key, Msg, WaitReply) ->
 
 %% @doc Sends the specified message of the specified type (Type) and waits for reply if 
 %%      WaitReply is true. 
--spec sendIt(key(), _, _, boolean()) -> ok | {ok, term()} | {ok, without_replay} | {error, timeout}.
+-spec sendIt(key(), _, _, boolean()) -> ok | {ok, without_replay} | {ok, term()} | {error, timeout}.
 sendIt(Key, Type, Msg, WaitReply) ->
     case WaitReply of
          true ->

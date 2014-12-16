@@ -19,6 +19,7 @@
 
 
 -include_lib("eunit/include/eunit.hrl").
+-include("adprep.hrl").
 -include("strategy_adprep.hrl").
 
 
@@ -81,7 +82,7 @@ createAlreadyReplica_test() ->
     ?assertEqual(false, lists:member(Key, Reg)),
     ?assertEqual(false, lists:member(DelayName, Reg)),
     Result2 = adpreplic:create(Key, Value, adprep, Args), % start Strategy
-    ?assertEqual({error,already_exists_replica}, Result2),
+    ?assertEqual({error, already_exists_replica}, Result2),
     Reg1 = registered(),
     ?assertEqual(true, lists:member(Key, Reg1)),
     ?assertEqual(true, lists:member(DelayName, Reg1)),
@@ -121,15 +122,23 @@ invalidMsg_test() ->
             Result = ok,
             ?assertEqual(ok, Result)
     end,
-    try Key ! Key of
-        Reply ->
-            ?assertEqual(ok, Reply)
-    catch
-        error:Type1 ->
-            ?assertEqual(badarg, Type1)
-    end,
     % Clean-up
     stop(Key).
+
+code_change_test() ->
+    PreviousVersion = "0.00",
+    State = none,
+    Extra = [],
+    Result = strategy_adprep:code_change(PreviousVersion, State, Extra),
+    ?assertEqual({ok, State}, Result).
+
+handleDirect_test() ->
+    Msg = "0.00",
+    LoopData = [],
+    Result = strategy_adprep:handle_info(Msg, LoopData),
+    ?assertEqual({noreply, LoopData}, Result),
+    Result1 = strategy_adprep:handle_cast(Msg, LoopData),
+    ?assertEqual({noreply, LoopData}, Result1).
 
 
 %% =============================================================================

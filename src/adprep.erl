@@ -113,13 +113,13 @@ hasReplica(Key) ->
     gen_server:call(?MODULE, {has_a_replica, Key}).
 
 %% @doc Reads specified entry. 
--spec read(key()) -> {ok, term()} | {error}.
+-spec read(key()) -> {ok, term()} | {error, term()}.
 read(Key) ->
     io:format("(adprep): Reading entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {read, Key}).
 
 %% @doc Removes the local entry. 
--spec remove(key()) -> ok | {error}.
+-spec remove(key()) -> ok | {error, term()}.
 remove(Key) ->
     io:format("(adprep): Removing entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {remove, Key}).
@@ -128,14 +128,14 @@ remove(Key) ->
 %% @doc Removes the local entry if the conditios are apropiated, which is check by calling 
 %%        function VerifyRemove with the record associated to the passed key and the passed 
 %%        arguments. 
--spec remove(key(), function(), term()) -> ok | {ok, failed_verification} | {error}.
+-spec remove(key(), function(), term()) -> ok | {ok, failed_verification} | {error, term()}.
 remove(Key, VerifyRemove, Args) ->
     io:format("(adprep): Removing entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {remove, Key, VerifyRemove, Args}).
 
 %% @doc Updates the specified value into the local data and forward update messages to the 
 %%        other DCs with replicas. 
--spec update(key(), term()) -> ok | {error}.
+-spec update(key(), term()) -> ok | {error, term()}.
 update(Key, Value) ->
     io:format("(adprep): Updating entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {write, Key, Value}).

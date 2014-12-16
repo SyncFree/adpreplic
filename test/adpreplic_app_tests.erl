@@ -51,9 +51,6 @@ wait_for_death_or_get_event() ->
         Response ->
             ?assertEqual(wrong, Response)
     after
-        1000 ->
-            ?assert(whatever())
+        500 ->
+            ?assertEqual(true, true)
     end.
-
-whatever() ->
-    true.

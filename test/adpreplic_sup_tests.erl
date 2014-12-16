@@ -29,8 +29,7 @@ initialise_test() ->
          {ok, Pid} = adpreplic_sup:start_link(),
          exit(Pid, shutdown)
          end),
-    wait_for_death_or_get_event(),
-    ?assert(whatever()).
+    wait_for_death_or_get_event().
 
 
 %% ====================================================================
@@ -42,8 +41,5 @@ wait_for_death_or_get_event() ->
             ?assertEqual(wrong, Response)
     after
         500 ->
-            ?assert(whatever())
+            ?assertEqual(true, true)
     end.
-
-whatever() ->
-    true.

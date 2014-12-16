@@ -193,6 +193,13 @@ unsuportedMsg_test() ->
     % Clean-up
     stop().
 
+code_change_test() ->
+    PreviousVersion = "0.00",
+    State = none,
+    Extra = [],
+    Result = adprep:code_change(PreviousVersion, State, Extra),
+    ?assertEqual({ok, State}, Result).
+
 %% ============================================================================
 getDCs_test() ->
     % Initialise
