@@ -10,6 +10,7 @@
 %% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
 %% @end
 %% =============================================================================
+
 %%
 %% @doc Provides operations required to control the location of the data replicas within 
 %%      the overall system.

@@ -22,7 +22,6 @@
 %% ====================================================================
 %% Internal test functions
 %% ====================================================================
-
 updateNoExisting_test() ->
     % Initialise
     initialise(),
@@ -47,7 +46,7 @@ removeNoExisting_test() ->
 invalidMsg_test() ->
     % Initialise
     initialise(),
-    Key = 'removeNoExisting_test',
+    Key = 'invalidMsg_test',
     % Test
     try gen_server:call(datastore, Key, 500) of
         R ->

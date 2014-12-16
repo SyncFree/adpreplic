@@ -87,6 +87,50 @@ createAlreadyReplica_test() ->
     ?assertEqual(true, lists:member(DelayName, Reg1)),
     stop(Key).
 
+invalidMsg_test() ->
+    % Initialise
+    initialise(),
+    Value = "VALUE",
+    Key = 'invalidMsg_test',
+    DecayTime = 100,
+    Args = #adpargs{decay_time = DecayTime,
+                    min_num_replicas = 1,
+                    replication_threshold = 1.0,
+                    rmv_threshold = 0.0,
+                    max_strength = 1.5,
+                    decay = 2.0,
+                    wdecay = 0.5,
+                    rstrength = 1.0,
+                    wstrength = 1.5},
+    adpreplic:create(Key, Value, adprep, Args), % start Strategy
+    timer:sleep(50),
+    % Test
+    try gen_server:call(Key, Key, 500) of
+        R ->
+            ?assertEqual(ok, R)
+    catch
+        exit:{Type,_} ->    
+            ?assertEqual(normal, Type)
+    end,
+    gen_server:cast(Key, Key),
+    receive
+        Response ->
+            ?assertEqual([], Response)
+    after
+        500 ->
+            Result = ok,
+            ?assertEqual(ok, Result)
+    end,
+    try Key ! Key of
+        Reply ->
+            ?assertEqual(ok, Reply)
+    catch
+        error:Type1 ->
+            ?assertEqual(badarg, Type1)
+    end,
+    % Clean-up
+    stop(Key).
+
 
 %% =============================================================================
 %% Internal functions
