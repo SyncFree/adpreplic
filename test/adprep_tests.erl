@@ -43,9 +43,6 @@ create_test() ->
     % Test - does not exist
     Response = create(Key, Value),
     ?assertEqual(ok, Response),
-    % Test - altready exists
-    Response1 = create(Key, Value),
-    ?assertEqual({error, already_exists_replica}, Response1),
     % Clean-up
     stop().
 
@@ -54,8 +51,8 @@ createExist_test() ->
     initialise(),
     Key = 'create1_test',
     Value = "value",
-    adprep:create(Key, Value),
-    % Test - altready exists
+    create(Key, Value),
+    % Test - already exists
     Response1 = create(Key, Value),
     ?assertEqual({error, already_exists_replica}, Response1),
     Response2 = adprep:create(Key),
@@ -69,10 +66,13 @@ createNone_test() ->
     % Initialise
     initialise(),
     Key = 'createNone_test',
+    Value = "VVVV",
     % Test - does not exist and cannot be created; missing value an no replica anywhere 
     %         else
     Response = adprep:create(Key),
     ?assertEqual({error, does_not_exist}, Response),
+    Response1 = adprep:create(Key, Value),
+    ?assertEqual(ok, Response1),
     % Clean-up
     stop().
 
@@ -83,7 +83,7 @@ read_test() ->
     Value = "value1",
     % Test - does not exist
     Response = adprep:read(Key),
-    ?assertEqual({error, timeout}, Response),
+    ?assertEqual({error, no_replicas}, Response),
     % Test - already exists
     create(Key, Value),
     Response1 = adprep:read(Key),
@@ -99,7 +99,7 @@ write_test() ->
     NewValue = "new_value",
     % Test - does not exist
     Response = adprep:update(Key, Value),
-    ?assertEqual({error, timeout}, Response),
+    ?assertEqual({error, no_replicas}, Response),
     % Test - already exist
     create(Key, Value),
     Response1 = adprep:update(Key, NewValue),
@@ -119,7 +119,7 @@ delete_test() ->
     Response = adprep:delete(Key),
     ?assertEqual(ok, Response),
     Response1 = adprep:read(Key),  % should not exists
-    ?assertEqual({error, timeout}, Response1),
+    ?assertEqual({error, no_replicas}, Response1),
     Respose2 = create(Key, Value), % should be able to create it again
     ?assertEqual(ok, Respose2),
     % Clean-up
@@ -150,9 +150,15 @@ remove_test() ->
     Response = adprep:remove(Key),
     ?assertEqual(ok, Response),
     Response1 = adprep:read(Key),  % should not exists
-    ?assertEqual({error, timeout}, Response1),
+    ?assertEqual({error, no_replicas}, Response1),
     Respose2 = create(Key, Value), % should be able to create it again
     ?assertEqual(ok, Respose2),
+    VerifyRemove = fun(_Record, _Args) -> false end,
+    Response3 = adprep:remove(Key, VerifyRemove, []),
+    ?assertEqual({ok, failed_verification}, Response3),
+    VerifyRemove1 = fun(_Record, _Args) -> true end,
+    Response4 = adprep:remove(Key, VerifyRemove1, []),
+    ?assertEqual(ok, Response4),
     % Clean-up
     stop().
 
@@ -207,17 +213,33 @@ code_change_test() ->
     ?assertEqual({ok, State}, Result).
 
 %% ============================================================================
+createNew_test() ->
+    % Initialise
+    initialise(),
+    Key = 'createNew_test',
+    Value = "value",
+    DCs = sets:new(),
+    % Test - does not exist
+    Response = gen_server:call(adprep, {create_new, Key, Value, DCs}),
+    ?assertEqual(ok, Response),
+    % Test - already exists
+%    create(Key, Value),
+    Response1 = gen_server:call(adprep, {create_new, Key, Value, DCs}),
+    ?assertEqual({error, already_has_replica}, Response1),
+    % Clean-up
+    stop().
+
 getDCs_test() ->
     % Initialise
     initialise(),
     Key = 'getDCs_test',
     Value = "ValUe",
     % Test - does not exist
-    ?assertEqual({exists, []}, gen_server:call(adprep, {get_dcs, Key})),
+    ?assertEqual({ok, []}, gen_server:call(adprep, {get_dcs, Key})),
     % Test - already exists
     create(Key, Value),
     Result1 = gen_server:call(adprep, {get_dcs, Key}),
-    ?assertEqual({ok, []}, Result1),
+    ?assertEqual({ok, [node()]}, Result1),
     % Clean-up
     stop().
 
@@ -225,29 +247,14 @@ hasReplica_test() ->
     % Initialise
     initialise(),
     Key = 'hasReplica_test',
-    Id = 1,
     Value = "value",
     % Test - data does not exist
-    gen_server:cast(adprep, {has_replica, self(), Id, Key}),
-    Result = receive
-        R ->
-            R
-    after
-        1000 ->
-            time_out
-    end,
-    ?assertEqual(time_out, Result),
+    Response = gen_server:call(adprep, {has_replica, Key}),
+    ?assertEqual(no, Response),
     % Test - data exist
     create(Key, Value),
-    gen_server:cast(adprep, {has_replica, self(), Id, Key}),
-    Result1 = receive
-        {reply, has_replica, Id, Response1} ->
-            Response1
-    after
-        1000 ->
-            false
-    end,
-    ?assertEqual({exists, [node()]}, Result1),
+    Response1 = gen_server:call(adprep, {has_replica, Key}),
+    ?assertEqual({yes, [node()]}, Response1),
     % Clean-up
     stop().
 
@@ -286,7 +293,7 @@ rmvReplicat_test() ->
     % Initialise
     initialise(),
     Key = 'rmvReplicat_test',
-    % Test
+    % Test - does not exist
     Response = gen_server:call(adprep, {rmv_replica, node(), Key}),
     ?assertEqual({error, no_replica}, Response),
     % Clean-up
@@ -351,14 +358,15 @@ forwardDelete_test() ->
     % Clean-up
     stop().
 
+
 %% ============================================================================
 initialise() ->
-    io:format("(adprep_tests): Initialising servers~n", []),
+    io:format("~n    (adprep_tests): Initialising servers~n", []),
     {ok, _datastorePid} = datastore:start(),
     {ok, _replicationLayerPid} = adprep:start().
 
 stop() ->
-    io:format("(adprep_tests): Stopping servers~n", []),
+    io:format("    (adprep_tests): Stopping servers~n", []),
     adprep:stop(),
     datastore:stop(),
     erlang:yield().

@@ -37,37 +37,37 @@
 %% @doc Starts server.
 -spec start() -> {ok, pid()} | ignore | {error, _ }.
 start() -> 
-    io:format("Starting datastore ~n"),
+    io:format("    (datastore): Starting datastore ~n"),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %% @doc Stops server asynchronously.
 -spec stop() -> ok.
 stop() ->
-    io:format ("Stopping datastore ~n"),
+    io:format ("    (datastore): Stopping datastore ~n"),
     gen_server:cast(?MODULE, shutdown).
 
 %% @doc Creates a new entry.
 -spec create(key(), term()) -> ok | {error, already_created}.
 create(Id, Obj) ->
-    io:format ("(datastore): Creating entry for ~p ~n",[Id]),
+    io:format ("    (datastore): Creating entry for ~p ~n",[Id]),
     gen_server:call(?MODULE, {create, Id, Obj}).
 
 %% @doc Reads an entry.
 -spec read(key()) -> {ok, term()} | {error, not_found}.
 read(Id) ->
-    io:format ("(datastore): Reading entry for ~p ~n",[Id]),
+    io:format ("    (datastore): Reading entry for ~p ~n",[Id]),
     gen_server:call(?MODULE, {read, Id}).
 
 %% @doc Updates an entry by merging the states.
 -spec update(key(), term()) -> ok | {error, not_found}.
 update(Id, Obj) ->
-    io:format ("(datastore): Updating entry for ~p ~n",[Id]),
+    io:format ("    (datastore): Updating entry for ~p ~n",[Id]),
     gen_server:call(?MODULE, {update, Id, Obj}).
 
 %% @doc Removes an entry.
 -spec remove(key()) -> ok.
 remove(Id) ->
-    io:format ("(datastore): Removing entry for ~p ~n",[Id]),
+    io:format ("    (datastore): Removing entry for ~p ~n",[Id]),
     gen_server:call(?MODULE, {remove, Id}).
 
 %%====================================================================

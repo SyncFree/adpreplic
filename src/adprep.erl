@@ -58,13 +58,13 @@
 %% @doc Start the server.
 -spec start() -> {ok, pid()} | ignore | {error, {already_started, pid()} | term()}.
 start() -> 
-    io:format("Starting adprep server ~n"),
+    io:format("    (adprep): Starting adprep server ~n"),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %% @doc Stops the server asynchronously.
 -spec stop() -> ok.
 stop() ->
-    io:format("Stopping adprep server ~n"),
+    io:format("    (adprep): Stopping adprep server ~n"),
     gen_server:cast(?MODULE, shutdown).
 
 %% 
@@ -78,73 +78,72 @@ stop() ->
 %%        potential list will be used instead.
 -spec create(key(), term(), function(), term()) -> ok | {error, does_not_exist | already_exists_replica}.
 create(Key, Value, NextDCFunc, Args) ->
-    io:format("(adprep, NextDCFunc, Args): Creating entry for ~p~n",[{Key, Value}]),
+    io:format("    (adprep): Creating entry for ~p~n",[{Key, Value, NextDCFunc, Args}]),
     gen_server:call(?MODULE, {create, Key, {Value, NextDCFunc, Args}}).
 
 %% @doc Creates the local replica only. 
 -spec create(key(), term()) -> ok | {error, does_not_exist | already_exists_replica}.
 create(Key, Value) ->
-    io:format("(adprep): Creating entry for ~p~n",[{Key, Value}]),
+    io:format("    (adprep): Creating entry for ~p~n",[{Key, Value}]),
     gen_server:call(?MODULE, {create, Key, {Value, Key}}).
 
 %% @doc Creates the local replica only. The value for the specified key must already 
 %%        exists in another DC. 
 -spec create(key()) -> ok | {error, does_not_exist | already_exists_replica}.
 create(Key) ->
-    io:format("(adprep): Creating entry for ~p~n",[Key]),
+    io:format("    (adprep): Creating entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {create, Key}).
 
 %% @doc Deletes an entry from within all the DCs with replica. 
 -spec delete(key()) -> ok | {error, does_not_exist | already_exists_replica}. 
 delete(Key) ->
-    io:format("(adprep): Removing entry for ~p~n",[Key]),
+    io:format("    (adprep): Removing entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {delete, Key}).
 
 %% @doc Gets the number of replicas.
 -spec getNumReplicas(key()) -> integer().
 getNumReplicas(Key) ->
-    io:format("(adprep): Getting number of replicas of entry for ~p~n",[Key]),
+    io:format("    (adprep): Getting number of replicas of entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {num_replicas, Key}).
 
 %% @doc Checks if there is a local replica. 
 -spec hasReplica(key()) -> boolean().
 hasReplica(Key) ->
-    io:format("(adprep): Checking existance of entry for ~p~n",[Key]),
+    io:format("    (adprep): Checking existance of entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {has_a_replica, Key}).
 
 %% @doc Reads specified entry. 
 -spec read(key()) -> {ok, term()} | {error, term()}.
 read(Key) ->
-    io:format("(adprep): Reading entry for ~p~n",[Key]),
+    io:format("    (adprep): Reading entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {read, Key}).
 
 %% @doc Removes the local entry. 
 -spec remove(key()) -> ok | {error, term()}.
 remove(Key) ->
-    io:format("(adprep): Removing entry for ~p~n",[Key]),
+    io:format("    (adprep): Removing entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {remove, Key}).
-
 
 %% @doc Removes the local entry if the conditios are apropiated, which is check by calling 
 %%        function VerifyRemove with the record associated to the passed key and the passed 
 %%        arguments. 
 -spec remove(key(), function(), term()) -> ok | {ok, failed_verification} | {error, term()}.
 remove(Key, VerifyRemove, Args) ->
-    io:format("(adprep): Removing entry for ~p~n",[Key]),
+    io:format("    (adprep): Removing entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {remove, Key, VerifyRemove, Args}).
 
 %% @doc Updates the specified value into the local data and forward update messages to the 
 %%        other DCs with replicas. 
 -spec update(key(), term()) -> ok | {error, term()}.
 update(Key, Value) ->
-    io:format("(adprep): Updating entry for ~p~n",[Key]),
+    io:format("    (adprep): Updating entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {write, Key, Value}).
 
 %% @spec newId(Key::atom()) -> Id::integer()
 %% 
 %% @doc Provides a new ID.
 newId(_Key) ->
-    io:format("(adprep): Creating new ID~n",[]),
+    io:format("    (adprep): Creating new ID~n",[]),
     gen_server:call(?MODULE, {new_id}).
 %% @spec newId() -> Id::integer()
 %% 
@@ -196,17 +195,15 @@ handle_call({num_replicas, Key}, _From, {OwnId}) ->
 handle_call({get_dcs, Key}, _From, {OwnId}) ->
     {Response, OwnId1} = case getRecord(Key) of
         none ->
-            Response1 = getAllDCsWithReplicas(Key, OwnId),
-            Response2 = case Response1 of
-                {error, _} ->
-                    {exists, []};
-                R ->
-                    R
-            end,
-            {Response2, OwnId+1};
+            case getAllDCsWithReplicas(Key) of
+                {ok, no_replicas} ->
+                    {{ok, []}, OwnId};
+                {ok, DCs} ->
+                    {{ok, DCs}, OwnId}
+            end;
         Record ->
-            #replica{list_dcs_with_replicas=List}=Record,
-            {{ok, List}, OwnId}
+            #replica{list_dcs_with_replicas=DCs}=Record,
+            {{ok, [node() | DCs]}, OwnId}
     end,
     {reply, Response, {OwnId1}};
 
@@ -218,7 +215,7 @@ handle_call({create, Key}, _From, {OwnId}) ->
             case read(Key, OwnId) of
                 {{ok, Value}, OwnId1} ->
                     handle_call({create, Key, {Value, ?MODULE}}, _From, {OwnId1}); % could be made more efficient
-                {{error, timeout}, OwnId1} ->
+                {{error, no_replicas}, OwnId1} ->
                     {reply, {error, does_not_exist}, {OwnId1}}
             end;
         _ ->
@@ -235,24 +232,24 @@ handle_call({create, Key, {Value, RegName}}, _From, {OwnId}) ->
             case create_(Key, Value) of
                 ok ->
                     % Success: extis locally now
-                    case getAllDCsWithReplicas(Key, OwnId) of
+                    case getAllDCsWithReplicas(Key) of
+                        {ok, no_replicas} ->
+                            % No DC to notify
+                            {reply, ok, {OwnId}};
                         {ok, DCs} ->
                             Record = getRecord(Key), % must exist as we have just created
-                            Record1 = Record#replica{num_replicas=sets:size(DCs)+1, 
-                                                         list_dcs_with_replicas=DCs},
+                            Record1 = Record#replica{num_replicas=list:size(DCs)+1, 
+                                                                 list_dcs_with_replicas=DCs},
                             case datastore:update(Key, Record1) of
                                 ok ->
                                     % Notify other DCs with replica
                                     % TODO: should be asynchronous
-                                    gen_server:multi_call(sets:to_list(DCs), RegName, {new_replica, node(), Key, Value}),
+                                    gen_server:multi_call(DCs, RegName, {new_replica, node(), Key, Value}),
                                     {reply, ok, {OwnId+1}};
                                 Response -> 
                                     % Should not happen {error, not_found}
                                     {reply, Response, {OwnId}}
-                            end;
-                        {error, timeout} -> 
-                            % TODO: what happen in this case for now continue
-                            {reply, ok, {OwnId}}
+                            end
                     end;
                 Response ->
                     % Failure
@@ -386,7 +383,7 @@ handle_call({remove, Key, VerifyRemove, Args}, _From, {OwnId}) ->
                         ok ->
                             % Success - Remove local replica
                             datastore:remove(Key),
-                            {reply, ok, {reply}};
+                            {reply, ok, {OwnId}};
                         {error, no_replica} ->
                             % Failed remote - Remove local replica
                             datastore:remove(Key),
@@ -419,73 +416,38 @@ handle_call({update, Key, Value}, _From, {OwnId}) ->
             {reply, {ok, updated}, {OwnId}}
     end;
 
+handle_call({create_new, Key, Value, DCs}, _From, {OwnId}) ->
+io:format("    (adprep): Creating new local replica of entry for ~p~n", [{Key, Value}]),
+    % Create replica but do not notify anyone
+    % The data should not already exist
+    case getRecord(Key) of
+        none ->
+            % Create the record for the specified key and save it
+            List = sets:del_element(self(), DCs),
+            Record=#replica{key=Key,value=Value,num_replicas=sets:size(DCs),list_dcs_with_replicas=List},
+            datastore:create(Key, Record),
+            {reply, ok, {OwnId}};
+        _Record ->
+io:format ("    (adprep): Already exist entry for ~p ~n",[Key]),
+            % Ignore as there is a replica
+            {reply, {error, already_has_replica}, {OwnId}}
+    end;
+
+handle_call({has_replica, Key}, _From, {OwnId}) ->
+    case getRecord(Key) of
+        none ->
+            {reply, no, {OwnId}};
+        Record ->
+            #replica{list_dcs_with_replicas=DCs}=Record,
+%            gen_server:cast(Origin, adpreps_:buildReply(has_replica, Id, {exists, [node() | DCs]})),
+            {reply, {yes, [node() | DCs]}, {OwnId}}
+    end;
+
 handle_call(_Msg, _From, LoopData) ->
     {noreply, LoopData}.
 
 handle_cast(shutdown, {OwnId}) ->
     {stop, normal, {OwnId}};
-
-handle_cast({has_replica, Origin, Id, Key}, {OwnId}) ->
-    case getRecord(Key) of
-        none ->
-            {noreply, {OwnId}};
-        Record ->
-            #replica{list_dcs_with_replicas=DCs}=Record,
-            Origin ! adpreps_:buildReply(has_replica, Id, {exists, [node() | DCs]}),
-            {noreply, {OwnId}}
-    end;
-
-handle_cast({create_new, Id, Key, Value, DCs}, {OwnId}) ->
-    % Create replica but do not notify anyone
-    % The data should not already exist
-    {Reply, Args} = case getRecord(Key) of
-        0 ->
-            % Create the record for the specified key and save it
-            List = sets:del_element(self(), DCs),
-            Record=#replica{key=Key,value=Value,num_replicas=sets:size(DCs),list_dcs_with_replicas=List},
-            datastore:create(Key, Record),
-            {adpreps_:buildReply(create_new, Id, ok), {OwnId}};
-        _ ->
-            % Ignore as there is a replica
-            {adpreps_:buildReply(create_new, Id, {error, no_replica}), {OwnId}}
-    end,
-    {reply, Reply, Args};
-
-% 
-handle_cast({new_replica, Id, Key}, {OwnId}) ->
-    {Response, OwnId1} = read(Key, OwnId),
-    case Response of
-        {ok, Value} ->
-            Result = handle_call({new_replica, ?MODULE, Key, Value}, ?MODULE, {OwnId1}),
-            {reply, adpreps_:buildReply(new_replica, Id, Result), {OwnId1}};
-        _ ->
-            {reply, adpreps_:buildReply(new_replica, Id, Response), {OwnId1}}
-    end;
-
-handle_cast({reply, has_replica, _Id, _Result}, {OwnId}) ->
-    % Ignore
-    {noreply, {OwnId}};
-handle_cast({reply, update, _Id, Key, Result}, {OwnId}) ->
-    case Result of
-        {error, no_replica, Dc} ->
-            % The DC does not have a replica
-            case getRecord(Key) of
-                none ->
-                    % Ignore as there is no replica anymore
-                    {noreply, {OwnId}};
-                Record ->
-                    % Remove it
-                    #replica{list_dcs_with_replicas=List}=Record,
-                    List1 = sets:del_element(Dc, List),
-                    Record1 = Record#replica{list_dcs_with_replicas=List1},
-                    datastore:update(Key, Record1),
-                    {noreply, {OwnId}}
-            end;
-        _ ->
-            % Ignore as previous responses has been already processed getting oll needed 
-            % data
-            {noreply, {OwnId}}
-    end;
 
 handle_cast(_Msg, LoopData) ->
     {noreply, LoopData}.
@@ -495,12 +457,12 @@ handle_cast(_Msg, LoopData) ->
 %% Support functions
 %% =============================================================================
 
-%% @spec getAllDCs() -> DCs::List
+%% @spec getAllDCs() -> list()
 %% 
-%% @doc The list of all the DCs.
+%% @doc The list of all the DCs except this one.
 getAllDCs() ->
     % TODO: complete it
-    [node() | []].
+    nodes().
 
 %% @spec getNumReplicas_(Key::atom()) -> Result::integer()
 %%
@@ -526,7 +488,7 @@ getRecord(Key) ->
             none
     end.
 
-%% @spec create_(Key::atom(), Value::item()) -> Result::tuple()
+%% @spec create_(Key::atom(), Value::item()) -> ok | {error, already_created}
 %%
 %% @doc Ceates a record for the specified data, adds it to the passed map and return all 
 %%        the new information.
@@ -537,7 +499,6 @@ create_(Key, Value) ->
     DCs = sets:new(),
     create_(Key, Value, DCs).
 create_(Key, Value, DCs) ->
-io:format("(adprep): Creating local ~p~n",[{Key, Value, DCs}]),
     % Create the record for the specified key and save it
     Record=#replica{key=Key,value=Value,num_replicas=1,list_dcs_with_replicas=DCs},
     datastore:create(Key, Record).
@@ -574,7 +535,7 @@ createOtherReplicas_(_RegName, _Record, OwnId, _AllReplicatedDCs, [], _Potential
     {ok, OwnId+1};
 createOtherReplicas_(RegName, Record, OwnId, AllReplicatedDCs, [Dc | DCs], PotentialDCs) ->
     #replica{key=Key,value=Value}=Record,
-    {reply, create_new, OwnId, Result} = gen_server:call({RegName, Dc}, {create_new, OwnId, Key, Value, AllReplicatedDCs}),
+    Result = gen_server:call({RegName, Dc}, {create_new, Key, Value, AllReplicatedDCs}),
     case Result of
         {error, _ErrorCode} ->
             % Failed: abort
@@ -587,45 +548,27 @@ createOtherReplicas_(RegName, Record, OwnId, AllReplicatedDCs, [Dc | DCs], Poten
             createOtherReplicas_(RegName, Record, OwnId, AllReplicatedDCs, DCs, PotentialDCs)
     end.
 
-%% @spec createReplicasPotentialDcs(RegName::atom(), Record, OwnId::integer(), AllReplicatedDCs::List, PotentialDCs::List, NextPotentialDCs::List) -> NewPotentialDCs::List
-%%
-%% @doc Tries to create the replica to a DC from within the list of other potential DCs.
-%createReplicasPotentialDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, [Dc | NextPotentialDCs]) ->
-%    #replica{key=Key,value=Value}=Record,
-%    {reply, create_new, OwnId, Result} = gen_server:call({RegName, Dc}, {create_new, OwnId, Key, Value, AllReplicatedDCs}),
-%    case Result of
-%        {error, _ErrorCode} ->
-%            % Failed
-%            createReplicasPotentialDcs(RegName, Record, OwnId, AllReplicatedDCs, PotentialDCs, NextPotentialDCs);
-%        _ ->
-%            sets:del_element(Dc, PotentialDCs)
-%    end;
-%createReplicasPotentialDcs(_RegName, _Record, _OwnId, _AllReplicatedDCs, PotentialDCs, []) ->
-%    PotentialDCs.
-
 %% @doc Reads the data locally if exist, i.e. replicated, or alternativelly get the data 
 %%        from any of the other DCs with replicas.
 %%
 %%        The returned value is a tuple with the response of the form 
 %%        {{ok, Value}, NewOwnId} or {{error, ErrorCode}, NewOwnId}.
--spec read(key(), integer()) -> {{ok, term()}, integer()} | {{error, _ }, integer()}.
+-spec read(key(), integer()) -> {{ok, term()}, integer()} | {{error, no_replicas}, integer()}.
 read(Key, OwnId) ->
     case getRecord(Key) of
         none ->
             % Find DCs with replica
-            case getAllDCsWithReplicas(Key, OwnId) of
+            case getAllDCsWithReplicas(Key) of
+                {ok, no_replicas} ->
+                    % An error
+                    {{error, no_replicas}, OwnId};
                 {ok, DCs} ->
                     %% Get the data from one of the DCs with replica
                     {registered_name, RegName} = process_info(self(), registered_name),
-                    {Result, OwnId1} = sendOne(read, OwnId+1, Key, {read, OwnId, Key}, RegName, DCs),
-                    {Result, OwnId1};
-                {error, ErrorCode} ->
-                    % An error
-                    {{error, ErrorCode}, OwnId+1}
+                    sendOne(read, OwnId, Key, {read, Key}, RegName, DCs)
             end;
         Record ->
             #replica{value=Value}=Record,
-io:format("(adprep): Read entry ~p~n",[{Key, Value}]),
             {{ok, Value}, OwnId}
     end.
 
@@ -638,14 +581,14 @@ write(Key, OwnId, Value) ->
     case getRecord(Key) of
         none ->
             % Find DCs with replica
-            case getAllDCsWithReplicas(Key, OwnId) of
+            case getAllDCsWithReplicas(Key) of
+                {ok, no_replicas} ->
+                    % An error
+                    {{error, no_replicas}, OwnId};
                 {ok, DCs} ->
                     % Send updates to each of the replicated sites
-                    gen_server:abcast(DCs, Key, {update, OwnId, Key, Value}),
-                    {ok, OwnId+1};
-                {error, ErrorCode} ->
-                    % An error
-                    {{error, ErrorCode}, OwnId+1}
+                    forward({update, Key, Value}, DCs),
+                    {ok, OwnId}
             end;
         Record ->
             % Update local data
@@ -657,52 +600,62 @@ write(Key, OwnId, Value) ->
             {ok, OwnId+1}
     end.
 
-%% @spec getAllDCsWithReplicas(Key::atom(), OwnId::integer()) -> Result::tuple()
+%% @spec getAllDCsWithReplicas(Key::atom()) -> {ok, list()} | {ok, []}
 %%
 %% @doc Gets all the DCs with a replica.
 %%
-%%        Returs a tuple that can be {ok, DCS} on success or {error, timeout} otherwise.
-getAllDCsWithReplicas(Key, OwnId) ->
-    % Discover the DCs with replicas
+%%      Returs a tuple that can be {ok, DCS} or {ok, no_replicas}.
+getAllDCsWithReplicas(Key) ->
     AllDCs = getAllDCs(),
-    ok = flush(OwnId),
-    gen_server:abcast(AllDCs, Key, {has_replica, self(), OwnId, Key}),
-    % Only take response from the first one
-    receive
-        {reply, has_replica, OwnId, {exists, DCs}} ->
-            {ok, DCs}
-    after
-        1000 ->
-            {error, timeout}
+    getAllDCsWithReplicas_(Key, AllDCs).
+
+%% @spec getAllDCsWithReplicas_(Key::atom(), AllDCs::list()) -> {ok, list()} | {ok, no_replicas}
+%%
+%% @doc Gets all the DCs with a replica.
+%%
+%%      Sends a message to each DCs to check to identify the first DC with a replica, in 
+%%      which case stops sending the messages to the other DCs and return the list of DCs
+%%      with replicas, or and empty list if none of the DCs have replicas.
+%%
+%%      Returs a tuple that can be {ok, DCs} or {ok, no_replicas}.
+getAllDCsWithReplicas_(_, []) ->
+    {ok, no_replicas};
+getAllDCsWithReplicas_(Key, [Dc | AllDCs]) ->
+    if
+        Dc == node() ->
+            case getRecord(Key) of
+                none ->
+                    getAllDCsWithReplicas_(Key, AllDCs);
+                Record ->
+                    #replica{list_dcs_with_replicas=DCs}=Record,
+                    {ok, [node() | DCs]}
+            end;
+        true ->
+            case gen_server:call({?MODULE, Dc}, {has_replica, Key}) of
+                {yes, DCs} ->
+                    % Only take response from the first one with a replica
+                    {ok, DCs};
+                _ ->
+                    getAllDCsWithReplicas_(Key, AllDCs)
+            end
     end.
 
-%% @spec sendOne(Type::atom(), OwnId::integer(), Key::atom(), Msg, RegName::atom(), DCs::List) -> Result::tuple()
+%% @spec sendOne(Type::atom(), OwnId::integer(), Key::atom(), Msg, RegName::atom(), DCs::List) -> {tuple(), integer()}
 %%
 %% @doc Sends synchronously the specified message to the first of the specified DC for 
 %%      its process registered with the key and on failure will try with the other DCs.
 %%
 %%      Returned result is a tuple with the result and the new own internal ID.
+sendOne(_Type, OwnId, _Key, _Msg, _RegName, []) ->
+    {{error, no_dcs}, OwnId+1};
 sendOne(Type, OwnId, Key, Msg, RegName, [Dc | DCs]) ->
-    {reply, Type, OwnId, {ResultType, Result}} = gen_server:call({RegName, Dc}, Msg, 1000),
+    {ResultType, Result} = gen_server:call({RegName, Dc}, Msg),
     case ResultType of
         error ->
             % Should be a timeout, so try with the next DC
             sendOne(Type, OwnId, Key, Msg, RegName, DCs);
         _ ->
             {{ResultType, Result}, OwnId+1}
-    end;
-sendOne(_Type, OwnId, _Key, _Msg, _RegName, []) ->
-    {{error, no_dcs}, OwnId+1}.
-
-%% @doc Removes all the messages that match the specified one from the mailbox.
--spec flush(integer()) -> ok.
-flush(Id) ->
-    receive
-        {reply, has_replica, Id, {exists, _DCs}} ->
-            flush(Id)
-    after
-        0 ->
-            ok
     end.
 
 %% @spec rmvDel(Key::atom(), OwnId::integer(), Type::atom()) -> {ok | {error, ErrorCode::atom()}, Id::integer()}
@@ -716,13 +669,12 @@ rmvDel(Key, OwnId, Type) ->
             case Type of
                 forward_delete ->
                     % Forward the delettion
-                    Value = getAllDCsWithReplicas(Key, OwnId),
-                    Result = case Value of
-                        {error, ErrorCode} ->
-                            {error, ErrorCode};
-                        {ok, DCs} ->
+                    Result = case getAllDCsWithReplicas(Key) of
+                        {ok, no_replicas} ->
+                            {error, no_replica};
+                        {ok, AllDCs} ->
                             % Forward
-                            forward({Type, Key}, DCs)
+                            forward({Type, Key}, AllDCs)
                     end,
                     {Result, OwnId+1};
                 _ ->
@@ -754,13 +706,19 @@ rmvDel(Key, OwnId, Type) ->
 forward(_Msg, []) ->
     ok;
 forward(Msg, [Dc | DCs]) ->
-    Result = gen_server:call({adpref, Dc}, Msg),
-    case Result of
-        {error, no_replica} ->
+    if
+        Dc == node() ->
+            % Ignore
             forward(Msg, DCs);
-        {error, _} ->
-            % TODO: roll back
-            Result;
-        _ ->
-            forward(Msg, DCs)
+        true ->
+            Result = gen_server:call({adpref, Dc}, Msg),
+            case Result of
+                {error, no_replica} ->
+                    forward(Msg, DCs);
+                {error, _} ->
+                    % TODO: roll back
+                    Result;
+                _ ->
+                    forward(Msg, DCs)
+            end
     end.
