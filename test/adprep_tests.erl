@@ -145,7 +145,7 @@ remove_test() ->
     initialise(),
     Key = 'remove_test',
     Value = "value",
-    % Test - already exist
+    % Test - already exists
     create(Key, Value),
     Response = adprep:remove(Key),
     ?assertEqual(ok, Response),
@@ -156,8 +156,14 @@ remove_test() ->
     VerifyRemove = fun(_Record, _Args) -> false end,
     Response3 = adprep:remove(Key, VerifyRemove, []),
     ?assertEqual({ok, failed_verification}, Response3),
+    Respose4 = create(Key, Value), % should be able to create it again
+    ?assertEqual({error,already_exists_replica}, Respose4),
     VerifyRemove1 = fun(_Record, _Args) -> true end,
-    Response4 = adprep:remove(Key, VerifyRemove1, []),
+    Response5 = adprep:remove(Key, VerifyRemove1, []),
+    ?assertEqual(ok, Response5),
+    % Test - does not exist
+    VerifyRemove2 = fun(_Record, _Args) -> true end,
+    Response4 = adprep:remove(Key, VerifyRemove2, []),
     ?assertEqual(ok, Response4),
     % Clean-up
     stop().

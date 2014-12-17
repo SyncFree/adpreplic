@@ -379,7 +379,7 @@ handle_call({remove, Key, VerifyRemove, Args}, _From, {OwnId}) ->
                 true ->
                     % Proceed
                     #replica{list_dcs_with_replicas=DCs}=Record,
-                    case forward({rmv_replica, node(), Key}, DCs) of
+                    case forward({rmv_replica, node(), Key}, Key, DCs) of
                         ok ->
                             % Success - Remove local replica
                             datastore:remove(Key),
@@ -587,7 +587,7 @@ write(Key, OwnId, Value) ->
                     {{error, no_replicas}, OwnId};
                 {ok, DCs} ->
                     % Send updates to each of the replicated sites
-                    forward({update, Key, Value}, DCs),
+                    forward({update, Key, Value}, Key, DCs),
                     {ok, OwnId}
             end;
         Record ->
@@ -668,13 +668,13 @@ rmvDel(Key, OwnId, Type) ->
             % No local record
             case Type of
                 forward_delete ->
-                    % Forward the delettion
+                    % Forward the deletion
                     Result = case getAllDCsWithReplicas(Key) of
                         {ok, no_replicas} ->
                             {error, no_replica};
                         {ok, AllDCs} ->
                             % Forward
-                            forward({Type, Key}, AllDCs)
+                            forward({Type, Key}, Key, AllDCs)
                     end,
                     {Result, OwnId+1};
                 _ ->
@@ -683,7 +683,7 @@ rmvDel(Key, OwnId, Type) ->
         Record ->
             % DCs with replica
             #replica{list_dcs_with_replicas=DCs}=Record,
-            Response = case forward({Type, node(), Key}, DCs) of
+            Response = case forward({Type, node(), Key}, Key, DCs) of
                 ok ->
                     % Success - Remove local replica
                     datastore:remove(Key),
@@ -699,26 +699,27 @@ rmvDel(Key, OwnId, Type) ->
             {Response, OwnId+1}
     end.
 
-%% @spec forward(Msg::map(), DCs::list()) -> Result
+%% @spec forward(Msg::map(), Key::atom(), DCs::list()) -> ok | {error, atom()}
 %%
-%% @doc Removes the local replica and depending of the Type passed also forward apropiate 
-%%      messages to other DCs with replicas to remove them.
-forward(_Msg, []) ->
+%% @doc Forwards the message to the specified DCs.
+forward(_Msg, _Key, []) ->
     ok;
-forward(Msg, [Dc | DCs]) ->
+forward(Msg, Key, [Dc | DCs]) ->
     if
         Dc == node() ->
             % Ignore
-            forward(Msg, DCs);
+            forward(Msg, Key, DCs);
         true ->
-            Result = gen_server:call({adpref, Dc}, Msg),
+            % Send message to process associated with the specified Key in the specified 
+            % DC
+            Result = gen_server:call({Key, Dc}, Msg),
             case Result of
                 {error, no_replica} ->
-                    forward(Msg, DCs);
+                    forward(Msg, Key, DCs);
                 {error, _} ->
                     % TODO: roll back
                     Result;
                 _ ->
-                    forward(Msg, DCs)
+                    forward(Msg, Key, DCs)
             end
     end.
