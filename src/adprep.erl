@@ -20,8 +20,6 @@
 
 %% =============================================================================
 %% Adaptive Replications DC - SyncFree
-%%
-%% The Replication Layer. Support function to access the current DC and other DCs.
 %% 
 %% @author Amadeo Asco
 %% @version 1.0.0
@@ -29,7 +27,7 @@
 %% @end
 %% =============================================================================
 %% 
-%% @doc The Replication Layer.
+%% @doc The Replication Layer. Support function to access the current DC and other DCs.
 -module(adprep).
 -author('aas@trifork.co.uk').
 
@@ -67,28 +65,27 @@ stop() ->
     io:format("    (adprep): Stopping adprep server ~n"),
     gen_server:cast(?MODULE, shutdown).
 
-%% 
 %% @doc Creates the replica locally and creates other replicas if the startegy requires. 
-%        The result may have the values ok or {error, ErrorCode}.
+%       The result may have the values ok or {error, ErrorCode}.
 %%
-%%        NextDCFunc is a function which must take three arguments; the current DC, a list 
-%%        of DCs and its own Args. Such function must return a tuple composed of the list 
-%%        of DCs to replicate and another list of potential DCs to replicate. If any 
-%%        replication to a DC from the list of DCs to replicate in failes a DC from the 
-%%        potential list will be used instead.
+%%      NextDCFunc is a function which must take three arguments; the current DC, a list 
+%%      of DCs and its own Args. Such function must return a tuple composed of the list 
+%%      of DCs to replicate and another list of potential DCs to replicate. If any 
+%%      replication to a DC from the list of DCs to replicate in failes a DC from the 
+%%      potential list will be used instead.
 -spec create(key(), term(), function(), term()) -> ok | {error, does_not_exist | already_exists_replica}.
 create(Key, Value, NextDCFunc, Args) ->
     io:format("    (adprep): Creating entry for ~p~n",[{Key, Value, NextDCFunc, Args}]),
     gen_server:call(?MODULE, {create, Key, {Value, NextDCFunc, Args}}).
 
-%% @doc Creates the local replica only. 
+%% @doc Only creates the local replica. 
 -spec create(key(), term()) -> ok | {error, does_not_exist | already_exists_replica}.
 create(Key, Value) ->
     io:format("    (adprep): Creating entry for ~p~n",[{Key, Value}]),
     gen_server:call(?MODULE, {create, Key, {Value, Key}}).
 
 %% @doc Creates the local replica only. The value for the specified key must already 
-%%        exists in another DC. 
+%%      exists in another DC. 
 -spec create(key()) -> ok | {error, does_not_exist | already_exists_replica}.
 create(Key) ->
     io:format("    (adprep): Creating entry for ~p~n",[Key]),
@@ -139,13 +136,13 @@ update(Key, Value) ->
     io:format("    (adprep): Updating entry for ~p~n",[Key]),
     gen_server:call(?MODULE, {write, Key, Value}).
 
-%% @spec newId(Key::atom()) -> Id::integer()
+%% @spec newId(Key::atom()) -> integer()
 %% 
 %% @doc Provides a new ID.
 newId(_Key) ->
     io:format("    (adprep): Creating new ID~n",[]),
     gen_server:call(?MODULE, {new_id}).
-%% @spec newId() -> Id::integer()
+%% @spec newId() -> integer()
 %% 
 %% @doc Provides a new ID.
 newId() ->
@@ -174,7 +171,7 @@ handle_info(_Msg, LoopData) ->
 terminate(_Reason, _LoopData) ->
     ok.
 
-%% @spec code_change(PreviousVersion, State, Extra) -> Result::tuple()
+%% @spec code_change(PreviousVersion, State, Extra) -> {opk, term()}
 %%
 %% @doc Does nothing. No change planned yet.
 code_change(_PreviousVersion, State, _Extra) ->
@@ -278,7 +275,7 @@ handle_call({create, Key, {Value, NextDCFunc, Args}}, _From, {OwnId}) ->
             {reply, {error, already_exists_replica}, {OwnId}}
     end;
 
-%% @spec handle_call({rmv_replica, Dc, Key}, From, Args) -> Result::tuple()
+%% @spec handle_call({rmv_replica, Dc, Key}, From, Args) -> tuple()
 %%
 %% @doc Removes the specified DC from the list of DCs with replica.
 handle_call({rmv_replica, Dc, Key}, _From, {OwnId}) ->
@@ -464,7 +461,7 @@ getAllDCs() ->
     % TODO: complete it
     nodes().
 
-%% @spec getNumReplicas_(Key::atom()) -> Result::integer()
+%% @spec getNumReplicas_(Key::atom()) -> integer()
 %%
 %% @doc Gets the number of replicas, if any, or zero otherwise.
 getNumReplicas_(Key) ->
@@ -476,7 +473,7 @@ getNumReplicas_(Key) ->
             Num
     end.
 
-%% @spec getRecord(Key::atom()) -> Record::record()
+%% @spec getRecord(Key::atom()) -> record()
 %%
 %% @doc Gets the record for the specified Key and returns it, if exists, otherwise 
 %%      returns none.
@@ -491,9 +488,7 @@ getRecord(Key) ->
 %% @spec create_(Key::atom(), Value::item()) -> ok | {error, already_created}
 %%
 %% @doc Ceates a record for the specified data, adds it to the passed map and return all 
-%%        the new information.
-%%
-%%      Returns {ok, Record::record()} | {error, already_created}.
+%%      the new information.
 create_(Key, Value) ->
     % Create the record for the specified key and save it
     DCs = sets:new(),
@@ -503,7 +498,7 @@ create_(Key, Value, DCs) ->
     Record=#replica{key=Key,value=Value,num_replicas=1,list_dcs_with_replicas=DCs},
     datastore:create(Key, Record).
 
-%% @spec createOtherReplicas(Key::key(), Value::term(), OwnId::integer(), NextDCsFunc::function(), Args) -> {ok | {error, {creating_replica, Dc}}, Id::integer()}
+%% @spec createOtherReplicas(Key::key(), Value::term(), OwnId::integer(), NextDCsFunc::function(), Args) -> {ok | {error, {creating_replica, Dc}}, integer()}
 %%
 %% @doc Gets a list of DC where replicas should be created, updates the record with the 
 %%         new list of DCs with replicas and request the creation of the new replicas in each 
@@ -528,7 +523,7 @@ createOtherReplicas(Key, Value, OwnId, NextDCsFunc, Args) ->
             {Result, OwnId}
     end.
 
-%% @spec createOtherReplicas_(RegName::atom(), Record::record(), OwnId::integer(), AllReplicatedDCs::list(), DCs::list(), PotentialDCs::list()) -> {ok | {error, {creating_replica, Dc}}, Id::integer()}
+%% @spec createOtherReplicas_(RegName::atom(), Record::record(), OwnId::integer(), AllReplicatedDCs::list(), DCs::list(), PotentialDCs::list()) -> {ok | {error, {creating_replica, Dc}}, integer()}
 %%
 %% @doc Creates the other necessary replicas without need for each to notify the others.
 createOtherReplicas_(_RegName, _Record, OwnId, _AllReplicatedDCs, [], _PotentialDCs) ->
@@ -572,7 +567,7 @@ read(Key, OwnId) ->
             {{ok, Value}, OwnId}
     end.
 
-%% @spec write(Key::atom(), OwnId::integer(), Value::term()) -> Result::tuple()
+%% @spec write(Key::atom(), OwnId::integer(), Value::term()) -> tuple()
 %%
 %% @doc Saves locally the new value and sets to send updates to all DCs with replicas if 
 %%        the data exists locally, otherwise requested from DCs with replicas and if the 
@@ -617,7 +612,7 @@ getAllDCsWithReplicas(Key) ->
 %%      which case stops sending the messages to the other DCs and return the list of DCs
 %%      with replicas, or and empty list if none of the DCs have replicas.
 %%
-%%      Returs a tuple that can be {ok, DCs} or {ok, no_replicas}.
+%%      Returs a tuple that can be {ok, DCs::list()} or {ok, no_replicas}.
 getAllDCsWithReplicas_(_, []) ->
     {ok, no_replicas};
 getAllDCsWithReplicas_(Key, [Dc | AllDCs]) ->
@@ -658,7 +653,7 @@ sendOne(Type, OwnId, Key, Msg, RegName, [Dc | DCs]) ->
             {{ResultType, Result}, OwnId+1}
     end.
 
-%% @spec rmvDel(Key::atom(), OwnId::integer(), Type::atom()) -> {ok | {error, ErrorCode::atom()}, Id::integer()}
+%% @spec rmvDel(Key::atom(), OwnId::integer(), Type::atom()) -> {ok | {error, atom()}, integer()}
 %%
 %% @doc Removes the local replica and depending of the Type passed also forward apropiate 
 %%      messages to other DCs with replicas to remove them.

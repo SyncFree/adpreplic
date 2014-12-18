@@ -18,23 +18,36 @@
 
 <h2><a name="description">Description</a></h2>Provides operations required in a database.
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#buildReply-2">buildReply/2</a></td><td>Builds the reply from the passed parameters.</td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#buildPid-1">buildPid/1*</a></td><td>Builds the decay process ID for the specified key.</td></tr>
+<tr><td valign="top"><a href="#buildReply-2">buildReply/2</a></td><td>Builds the reply from the passed parameters.</td></tr>
 <tr><td valign="top"><a href="#buildReply-3">buildReply/3</a></td><td>Builds the reply from the passed parameters.</td></tr>
 <tr><td valign="top"><a href="#create-4">create/4</a></td><td>Creates the first instance of the specified data in this DC.</td></tr>
 <tr><td valign="top"><a href="#delete-1">delete/1</a></td><td>Deletes the data in all DCs where there is a replica.</td></tr>
+<tr><td valign="top"><a href="#getAllDCs-0">getAllDCs/0*</a></td><td>Provides the list of all the DCs.</td></tr>
+<tr><td valign="top"><a href="#getAllDCs_test-0">getAllDCs_test/0*</a></td><td></td></tr>
 <tr><td valign="top"><a href="#getNewID-0">getNewID/0</a></td><td>Provides a new ID.</td></tr>
 <tr><td valign="top"><a href="#getNewID-1">getNewID/1</a></td><td>Provides a new ID for the specified key.</td></tr>
-<tr><td valign="top"><a href="#getReplicationLayerPid-1">getReplicationLayerPid/1</a></td><td>Provides the local Replication Layer process ID for the specified data.</td></tr>
 <tr><td valign="top"><a href="#read-1">read/1</a></td><td>Reads the value of the specified data.</td></tr>
 <tr><td valign="top"><a href="#send-2">send/2</a></td><td>Sends the specified message for the specified data and wait for the replay,
        synchronous.</td></tr>
 <tr><td valign="top"><a href="#send-3">send/3</a></td><td>Sends the specified message for the specified data and wait for the replay if
        WaitReply is true.</td></tr>
+<tr><td valign="top"><a href="#sendIt-4">sendIt/4*</a></td><td>Sends the specified message of the specified type (Type) and waits for reply if
+       WaitReply is true.</td></tr>
+<tr><td valign="top"><a href="#sendToAllDCs-2">sendToAllDCs/2*</a></td><td>Sends the specified message to all the DCs.</td></tr>
+<tr><td valign="top"><a href="#sendToDCs-3">sendToDCs/3*</a></td><td>Sends the specified message to each of the provided list of DCs.</td></tr>
+<tr><td valign="top"><a href="#sendToDCs_test-0">sendToDCs_test/0*</a></td><td></td></tr>
+<tr><td valign="top"><a href="#startProcess-3">startProcess/3*</a></td><td>Sends the specified message for the specified data.</td></tr>
 <tr><td valign="top"><a href="#stop-1">stop/1</a></td><td>Requests to stop the process for the specified data.</td></tr>
 <tr><td valign="top"><a href="#update-2">update/2</a></td><td>Writes the new value of the specified data.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="buildPid-1">buildPid/1 *</a></h3>
+<div class="spec">
+<p><tt>buildPid(Key::list()) -&gt; Pid::atom()</tt><br></p>
+</div><p>Builds the decay process ID for the specified key.</p>
 
 <h3 class="function"><a name="buildReply-2">buildReply/2</a></h3>
 <div class="spec">
@@ -48,66 +61,98 @@
 
 <h3 class="function"><a name="create-4">create/4</a></h3>
 <div class="spec">
-<p><tt>create(Key::atom(), Value, Strategy::float(), Args::tuple()) -&gt; Result::tuple()</tt><br></p>
+<p><tt>create(Key::atom(), Value, Strategy::float(), Args::tuple()) -&gt; tuple()</tt><br></p>
 </div><p><p>Creates the first instance of the specified data in this DC. The results is of       
-the format {ok} or {error, ErrorCode}.</p>
+the format ok or {error, ErrorCode}.</p>
  
-       Returns: {reply,create,{ok}} | {reply,create,{error, already_exists_replica}}.</p>
+       Returns: {reply,create,ok} | {reply,create,{error, already_exists_replica}}.</p>
 
 <h3 class="function"><a name="delete-1">delete/1</a></h3>
 <div class="spec">
-<p><tt>delete(Key::atom()) -&gt; Result::tuple()</tt><br></p>
+<p><tt>delete(Key::atom()) -&gt; tuple()</tt><br></p>
 </div><p>Deletes the data in all DCs where there is a replica. The results may have any of
-       the values {ok} or {error, ErrorCode::term()}.</p>
+       the values ok or {error, ErrorCode::term()}.</p>
+
+<h3 class="function"><a name="getAllDCs-0">getAllDCs/0 *</a></h3>
+<div class="spec">
+<p><tt>getAllDCs() -&gt; list()</tt><br></p>
+</div><p>Provides the list of all the DCs.</p>
+
+<h3 class="function"><a name="getAllDCs_test-0">getAllDCs_test/0 *</a></h3>
+<div class="spec">
+<p><tt>getAllDCs_test() -&gt; any()</tt></p>
+</div>
 
 <h3 class="function"><a name="getNewID-0">getNewID/0</a></h3>
 <div class="spec">
-<p><tt>getNewID() -&gt; Id::integer()</tt><br></p>
+<p><tt>getNewID() -&gt; integer()</tt><br></p>
 </div><p>Provides a new ID.</p>
 
 <h3 class="function"><a name="getNewID-1">getNewID/1</a></h3>
 <div class="spec">
-<p><tt>getNewID(Key::atom()) -&gt; Id::integer()</tt><br></p>
+<p><tt>getNewID(Key::<a href="#type-key">key()</a>) -&gt; integer()</tt><br></p>
 </div><p>Provides a new ID for the specified key.</p>
-
-<h3 class="function"><a name="getReplicationLayerPid-1">getReplicationLayerPid/1</a></h3>
-<div class="spec">
-<p><tt>getReplicationLayerPid(Key::atom()) -&gt; Pid::pid()</tt><br></p>
-</div><p>Provides the local Replication Layer process ID for the specified data.</p>
 
 <h3 class="function"><a name="read-1">read/1</a></h3>
 <div class="spec">
-<p><tt>read(Key::atom()) -&gt; Result::tuple()</tt><br></p>
+<p><tt>read(Key::atom()) -&gt; tuple()</tt><br></p>
 </div><p>Reads the value of the specified data. The results is of the format {ok, Value}
        or {error, ErrorCode}.</p>
 
 <h3 class="function"><a name="send-2">send/2</a></h3>
 <div class="spec">
-<p><tt>send(Key::atom(), Msg) -&gt; Response::tuple()</tt><br></p>
+<p><tt>send(Key::<a href="#type-key">key()</a>, Msg::term()) -&gt; ok | {ok, without_replay} | {ok, term()} | {error, timeout} | {error, term()}</tt><br></p>
 </div><p>Sends the specified message for the specified data and wait for the replay,
-       synchronous. The results is of the format {ok, Value} or {error, ErrorCode}.</p>
+       synchronous.</p>
 
 <h3 class="function"><a name="send-3">send/3</a></h3>
 <div class="spec">
-<p><tt>send(Key::atom(), Msg, WaitReply::boolean()) -&gt; Response::tuple()</tt><br></p>
+<p><tt>send(Key::<a href="#type-key">key()</a>, Msg::term(), WaitReply::boolean()) -&gt; ok | {ok, without_replay} | {ok, term()} | {error, timeout} | {error, term()}</tt><br></p>
 </div><p>Sends the specified message for the specified data and wait for the replay if
        WaitReply is true. The results is of the format {ok, Value},
        {ok, without_replay}, {error, invalid_msg_format} or {error, timeout}.</p>
 
+<h3 class="function"><a name="sendIt-4">sendIt/4 *</a></h3>
+<div class="spec">
+<p><tt>sendIt(Key::<a href="#type-key">key()</a>, Type::term(), Msg::term(), WaitReply::boolean()) -&gt; ok | {ok, without_replay} | {ok, term()} | {error, timeout}</tt><br></p>
+</div><p>Sends the specified message of the specified type (Type) and waits for reply if
+       WaitReply is true.</p>
+
+<h3 class="function"><a name="sendToAllDCs-2">sendToAllDCs/2 *</a></h3>
+<div class="spec">
+<p><tt>sendToAllDCs(Key::<a href="#type-key">key()</a>, Msg::term()) -&gt; ok</tt><br></p>
+</div><p>Sends the specified message to all the DCs.</p>
+
+<h3 class="function"><a name="sendToDCs-3">sendToDCs/3 *</a></h3>
+<div class="spec">
+<p><tt>sendToDCs(DCs::list(), Key::<a href="#type-key">key()</a>, Msg::term()) -&gt; ok</tt><br></p>
+</div><p>Sends the specified message to each of the provided list of DCs.</p>
+
+<h3 class="function"><a name="sendToDCs_test-0">sendToDCs_test/0 *</a></h3>
+<div class="spec">
+<p><tt>sendToDCs_test() -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="startProcess-3">startProcess/3 *</a></h3>
+<div class="spec">
+<p><tt>startProcess(Key::<a href="#type-key">key()</a>, StrategyName::atom(), Args::tuple()) -&gt; already_started | created | ignore | {error, term()}</tt><br></p>
+</div><p>Sends the specified message for the specified data. The result may be
+       already_exist, ok or created.</p>
+
 <h3 class="function"><a name="stop-1">stop/1</a></h3>
 <div class="spec">
-<p><tt>stop(Key::atom()) -&gt; Result::tuple()</tt><br></p>
-</div><p>Requests to stop the process for the specified data. The results is of the format {ok} or
+<p><tt>stop(Key::atom()) -&gt; tuple()</tt><br></p>
+</div><p>Requests to stop the process for the specified data. The results is of the format ok or
        {error, ErrorCode}.</p>
 
 <h3 class="function"><a name="update-2">update/2</a></h3>
 <div class="spec">
-<p><tt>update(Key::atom(), Value::term()) -&gt; Result::tuple()</tt><br></p>
-</div><p>Writes the new value of the specified data. The results is of the format {ok} or
+<p><tt>update(Key::atom(), Value::term()) -&gt; tuple()</tt><br></p>
+</div><p>Writes the new value of the specified data. The results is of the format ok or
        {error, ErrorCode}.</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Dec 14 2014, 21:38:04.</i></p>
+<p><i>Generated by EDoc, Dec 18 2014, 10:54:17.</i></p>
 </body>
 </html>

@@ -27,28 +27,28 @@
 %% =============================================================================
 %% User Adaptive Replication support
 %% =============================================================================
-%% @spec create(Key::atom(), Value::term(), Strategy::atom(), Args::term()) -> Result::tuple()
+%% @spec create(Key::atom(), Value::term(), Strategy::atom(), Args::term()) -> tuple()
 %% 
 %% @doc Creates a local replica of the data. The results may have any of the values {ok} 
 %%      or {error, ErrorCode}.
 create(Key, Value, Strategy, Args) ->
     adpreps_:create(Key, Value, Strategy, Args).
 
-%% @spec read(Key::atom())-> Result::tuple()
+%% @spec read(Key::atom())-> tuple()
 %% 
 %% @doc Reads the data value for the local replica. The results may have any of the 
 %%      values {ok, Value::term()} or {error, ErrorCode::term()}.
 read(Key) ->
     adpreps_:read(Key).
 
-%% @spec update(Key::atom(), Value::term())-> Result::tuple()
+%% @spec update(Key::atom(), Value::term())-> tuple()
 %% 
 %% @doc Writes the new value for the data. The results may have any of the values {ok} or 
 %%      {error, ErrorCode}.
 update(Key, Value) ->
     adpreps_:update(Key, Value).
 
-%% @spec delete(Key::atom())-> Result::tuple()
+%% @spec delete(Key::atom())-> tuple()
 %% 
 %% @doc Delstes the data from every replica. The results may have any of the values {ok} 
 %%      or {error, ErrorCode::term()}.

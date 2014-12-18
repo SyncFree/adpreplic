@@ -33,7 +33,7 @@
 %% =============================================================================
 %% Adaptive Replication support
 %% =============================================================================
-%% @spec create(Key::atom(), Value, Strategy::float(), Args::tuple()) -> Result::tuple()
+%% @spec create(Key::atom(), Value, Strategy::float(), Args::tuple()) -> tuple()
 %% 
 %% @doc Creates the first instance of the specified data in this DC. The results is of 
 %%      the format ok or {error, ErrorCode}.
@@ -42,28 +42,28 @@
 create(Key, Value, Strategy, Args) ->
     send(Key, {create, {Value, Strategy, Args}}).
 
-%% @spec read(Key::atom()) -> Result::tuple()
+%% @spec read(Key::atom()) -> tuple()
 %% 
 %% @doc Reads the value of the specified data. The results is of the format {ok, Value} 
 %%      or {error, ErrorCode}.
 read(Key) ->
     send(Key, {read}).
 
-%% @spec update(Key::atom(), Value::term()) -> Result::tuple()
+%% @spec update(Key::atom(), Value::term()) -> tuple()
 %% 
 %% @doc Writes the new value of the specified data. The results is of the format ok or 
 %%      {error, ErrorCode}.
 update(Key, Value) ->
     send(Key, {write, Value}).
 
-%% @spec delete(Key::atom())-> Result::tuple()
+%% @spec delete(Key::atom())-> tuple()
 %% 
 %% @doc Deletes the data in all DCs where there is a replica. The results may have any of 
 %%      the values ok or {error, ErrorCode::term()}.
 delete(Key) ->
     send(Key, {delete}).
 
-%% @spec stop(Key::atom()) -> Result::tuple()
+%% @spec stop(Key::atom()) -> tuple()
 %% 
 %% @doc Requests to stop the process for the specified data. The results is of the format ok or 
 %%      {error, ErrorCode}.
@@ -75,9 +75,9 @@ stop(Key) ->
 %% 
 %% =============================================================================
 
-%% @spec getAllDCs() -> DCs::list()
+%% @spec getAllDCs() -> list()
 %% 
-%% @doc The list of all the DCs.
+%% @doc Provides the list of all the DCs.
 getAllDCs() ->
     nodes().
 

@@ -94,7 +94,7 @@ code_change(_PreviousVersion, State, _Extra) ->
 %% Messages handler
 %% =============================================================================
 
-%% @spec handle_cast(Msg, Args::tuple()) -> Result::tuple()
+%% @spec handle_cast(Msg, Args::tuple()) -> tuple()
 %%
 %% @doc Handles the passed message.
 handle_cast(shutdown, {Key, Replicated, Strength, DecayTime, MinNumReplicas, 
@@ -238,7 +238,7 @@ processStrength(Key, Replicated, Strength, MinNumReplicas, RmvThreshold) ->
     end,
     {Replicated1, Strength1}.
 
-%% @spec verifyRemove(Record::record(), MinNumReplicas::integer()) ->Result::boolean()
+%% @spec verifyRemove(Record::record(), MinNumReplicas::integer()) -> boolean()
 %% 
 %% @doc Checks if the current state of the system allows the current DC to delete its 
 %%      replica of the data.
@@ -246,7 +246,7 @@ verifyRemove(Record, MinNumReplicas) ->
     #replica{num_replicas=NumReplicas}=Record,
     NumReplicas > MinNumReplicas.
 
-%% @spec read(Key::atom(), Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), RStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float(), Reply}
+%% @spec read(Key::atom(), Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), RStrength::float(), MaxStrength::float()) -> {boolean(), float(), term()}
 %% 
 %% @doc Reads the specified data, irrespective of where it is located.
 read(Key, Replicated, Strength, ReplicationThreshold, RStrength, MaxStrength) ->
@@ -272,7 +272,7 @@ read(Key, Replicated, Strength, ReplicationThreshold, RStrength, MaxStrength) ->
     end,
     {Replicated1, Strength1, Result1}.
 
-%% @spec write(Key::atom(), Value, Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), WStrength::float(), MaxStrength::float()) -> {Replicated1::boolean(), Strength1::float()}
+%% @spec write(Key::atom(), Value, Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), WStrength::float(), MaxStrength::float()) -> {boolean(), float()}
 %% 
 %% @doc Writes the new value of the specified data and take appropiate action to update 
 %%        replicated sites (DCs).
@@ -299,7 +299,7 @@ write(Key, Value, Replicated, Strength, ReplicationThreshold, WStrength, MaxStre
     end,
     {Replicated1, Strength1, Result}.
 
-%% @spec incStrength(Strength::float(), Inc::float(), MaxStrength::float()) -> Strength1::float()
+%% @spec incStrength(Strength::float(), Inc::float(), MaxStrength::float()) -> float()
 %% 
 %% @doc Increments the strength by the specified amount and returnst the new strength.
 incStrength(Strength, Inc, MaxStrength) ->
@@ -311,7 +311,7 @@ incStrength(Strength, Inc, MaxStrength) ->
             Strength1
     end.
 
-%% @spec nextDCsFunc(Dc::atom(), AllDCs::List, MinNumReplicas::integer()) -> Result::tuple()
+%% @spec nextDCsFunc(Dc::atom(), AllDCs::List, MinNumReplicas::integer()) -> tuple()
 %% 
 %% @doc Builds the list of DCs where a replica will be created from within those in the 
 %%      provides list of all DCs, except fro specified DC, and another to select from in 
@@ -319,7 +319,7 @@ incStrength(Strength, Inc, MaxStrength) ->
 nextDCsFunc(Dc, AllDCs, MinNumReplicas) -> 
     nextDCsFunc_(Dc, AllDCs, MinNumReplicas - 1, []).
 
-%% @spec nextDCsFunc_(Dc::node(), AllDCs::list(), MinNumExtrReplicas::integer(), ListDCs::list()) -> {ListDCs::list(), AllDCs::list()}
+%% @spec nextDCsFunc_(Dc::node(), AllDCs::list(), MinNumExtrReplicas::integer(), ListDCs::list()) -> {list(), list()}
 %% 
 %% @doc Builds a list of the specified min. number of DCs and an alternative in case of 
 %%      errors when contacting any of them. 

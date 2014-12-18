@@ -26,8 +26,20 @@
 <tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td>Handles the passed message.</td></tr>
 <tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td>Does nothing.</td></tr>
+<tr><td valign="top"><a href="#incStrength-3">incStrength/3*</a></td><td>Increments the strength by the specified amount and returnst the new strength.</td></tr>
 <tr><td valign="top"><a href="#init-1">init/1</a></td><td>Initialises the process and start the process with the specified arguments.</td></tr>
+<tr><td valign="top"><a href="#nextDCsFunc-3">nextDCsFunc/3*</a></td><td>Builds the list of DCs where a replica will be created from within those in the
+       provides list of all DCs, except fro specified DC, and another to select from in
+       case any of the previous fail.</td></tr>
+<tr><td valign="top"><a href="#nextDCsFunc_-4">nextDCsFunc_/4*</a></td><td>Builds a list of the specified min.</td></tr>
+<tr><td valign="top"><a href="#processStrength-5">processStrength/5*</a></td><td>Processes the forwarded message.</td></tr>
+<tr><td valign="top"><a href="#read-6">read/6*</a></td><td>Reads the specified data, irrespective of where it is located.</td></tr>
 <tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td>Does nothing.</td></tr>
+<tr><td valign="top"><a href="#verifyRemove-2">verifyRemove/2*</a></td><td>Checks if the current state of the system allows the current DC to delete its
+       replica of the data.</td></tr>
+<tr><td valign="top"><a href="#verifyRemove_test-0">verifyRemove_test/0*</a></td><td></td></tr>
+<tr><td valign="top"><a href="#write-7">write/7*</a></td><td>Writes the new value of the specified data and take appropiate action to update
+         replicated sites (DCs).</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
@@ -39,17 +51,17 @@
 
 <h3 class="function"><a name="decay-2">decay/2</a></h3>
 <div class="spec">
-<p><tt>decay(Key::atom(), Id::integer()) -&gt; {ok}</tt><br></p>
+<p><tt>decay(Key::<a href="#type-key">key()</a>, Id::integer()) -&gt; ok</tt><br></p>
 </div><p>Sends a decay message. Not to be used directly but from decay.erl.</p>
 
 <h3 class="function"><a name="handle_call-3">handle_call/3</a></h3>
 <div class="spec">
-<p><tt>handle_call(X1, From, X3) -&gt; any()</tt></p>
+<p><tt>handle_call(Msg, From, LoopData) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="handle_cast-2">handle_cast/2</a></h3>
 <div class="spec">
-<p><tt>handle_cast(X1::Msg, Args::tuple()) -&gt; Result::tuple()</tt><br></p>
+<p><tt>handle_cast(Msg, Args::tuple()) -&gt; tuple()</tt><br></p>
 </div><p>Handles the passed message.</p>
 
 <h3 class="function"><a name="handle_info-2">handle_info/2</a></h3>
@@ -57,18 +69,63 @@
 <p><tt>handle_info(Msg, LoopData) -&gt; {noreply, LoopData}</tt><br></p>
 </div><p>Does nothing.</p>
 
+<h3 class="function"><a name="incStrength-3">incStrength/3 *</a></h3>
+<div class="spec">
+<p><tt>incStrength(Strength::float(), Inc::float(), MaxStrength::float()) -&gt; float()</tt><br></p>
+</div><p>Increments the strength by the specified amount and returnst the new strength.</p>
+
 <h3 class="function"><a name="init-1">init/1</a></h3>
 <div class="spec">
 <p><tt>init(X1::{Key::atom(), Args::tuple()}) -&gt; {ok, LoopData::tuple()}</tt><br></p>
 </div><p>Initialises the process and start the process with the specified arguments.</p>
 
+<h3 class="function"><a name="nextDCsFunc-3">nextDCsFunc/3 *</a></h3>
+<div class="spec">
+<p><tt>nextDCsFunc(Dc::atom(), AllDCs::List, MinNumReplicas::integer()) -&gt; tuple()</tt><br></p>
+</div><p>Builds the list of DCs where a replica will be created from within those in the
+       provides list of all DCs, except fro specified DC, and another to select from in
+       case any of the previous fail.</p>
+
+<h3 class="function"><a name="nextDCsFunc_-4">nextDCsFunc_/4 *</a></h3>
+<div class="spec">
+<p><tt>nextDCsFunc_(Dc::node(), AllDCs::list(), MinNumExtrReplicas::integer(), ListDCs::list()) -&gt; {list(), list()}</tt><br></p>
+</div><p>Builds a list of the specified min. number of DCs and an alternative in case of
+       errors when contacting any of them.</p>
+
+<h3 class="function"><a name="processStrength-5">processStrength/5 *</a></h3>
+<div class="spec">
+<p><tt>processStrength(Key::atom(), Replicated::boolean(), Strength::float(), MinNumReplicas::float(), RmvThreshold::float()) -&gt; {Replicated1::boolean(), Strength::float()}</tt><br></p>
+</div><p>Processes the forwarded message.</p>
+
+<h3 class="function"><a name="read-6">read/6 *</a></h3>
+<div class="spec">
+<p><tt>read(Key::atom(), Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), RStrength::float(), MaxStrength::float()) -&gt; {boolean(), float(), term()}</tt><br></p>
+</div><p>Reads the specified data, irrespective of where it is located.</p>
+
 <h3 class="function"><a name="terminate-2">terminate/2</a></h3>
 <div class="spec">
 <p><tt>terminate(Reason, LoopData) -&gt; ok</tt><br></p>
 </div><p>Does nothing.</p>
+
+<h3 class="function"><a name="verifyRemove-2">verifyRemove/2 *</a></h3>
+<div class="spec">
+<p><tt>verifyRemove(Record::<a href="#type-record">record()</a>, MinNumReplicas::integer()) -&gt; boolean()</tt><br></p>
+</div><p>Checks if the current state of the system allows the current DC to delete its
+       replica of the data.</p>
+
+<h3 class="function"><a name="verifyRemove_test-0">verifyRemove_test/0 *</a></h3>
+<div class="spec">
+<p><tt>verifyRemove_test() -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="write-7">write/7 *</a></h3>
+<div class="spec">
+<p><tt>write(Key::atom(), Value, Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), WStrength::float(), MaxStrength::float()) -&gt; {boolean(), float()}</tt><br></p>
+</div><p>Writes the new value of the specified data and take appropiate action to update
+         replicated sites (DCs).</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Dec 14 2014, 21:38:04.</i></p>
+<p><i>Generated by EDoc, Dec 18 2014, 10:54:17.</i></p>
 </body>
 </html>

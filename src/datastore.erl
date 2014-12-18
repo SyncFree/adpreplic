@@ -18,7 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 
-%%% Simple in-memory datastore dummy for test purposes.
+%% @doc Simple in-memory datastore dummy for test purposes.
 -module(datastore).
 -behaviour(gen_server).
 

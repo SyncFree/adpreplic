@@ -10,88 +10,176 @@
 <hr>
 
 <h1>Module adprep</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Provides operations required in a database.
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>The Replication Layer.
 
 <p><b>Version:</b> 1.0.0</p>
 <p><b>Behaviours:</b> <a href="gen_server.html"><tt>gen_server</tt></a>.</p>
 <p><b>Authors:</b> Amadeo Asco.</p>
-<p><b>References</b><ul><li>Project <a href="https://syncfree.lip6.fr/">SyncFree</a></li><li>More courses at <a href="http://www.trifork.com">Trifork Leeds</a></li></ul></p>
+<p><b>References</b><ul><li>Project <a href="https://syncfree.lip6.fr/">SyncFree</a></li></ul></p>
 
-<h2><a name="description">Description</a></h2>Provides operations required in a database.
+<h2><a name="description">Description</a></h2>The Replication Layer. Support function to access the current DC and other DCs.
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td>Does nothing.</td></tr>
 <tr><td valign="top"><a href="#create-1">create/1</a></td><td>Creates the local replica only.</td></tr>
-<tr><td valign="top"><a href="#create-2">create/2</a></td><td>Creates the local replica only.</td></tr>
+<tr><td valign="top"><a href="#create-2">create/2</a></td><td>Only creates the local replica.</td></tr>
 <tr><td valign="top"><a href="#create-4">create/4</a></td><td>Creates the replica locally and creates other replicas if the startegy requires.</td></tr>
+<tr><td valign="top"><a href="#createOtherReplicas-5">createOtherReplicas/5*</a></td><td>Gets a list of DC where replicas should be created, updates the record with the          
+new list of DCs with replicas and request the creation of the new replicas in each         
+of those DCs.</td></tr>
+<tr><td valign="top"><a href="#createOtherReplicas_-6">createOtherReplicas_/6*</a></td><td>Creates the other necessary replicas without need for each to notify the others.</td></tr>
+<tr><td valign="top"><a href="#create_-2">create_/2*</a></td><td>Ceates a record for the specified data, adds it to the passed map and return all
+       the new information.</td></tr>
+<tr><td valign="top"><a href="#create_-3">create_/3*</a></td><td></td></tr>
 <tr><td valign="top"><a href="#delete-1">delete/1</a></td><td>Deletes an entry from within all the DCs with replica.</td></tr>
+<tr><td valign="top"><a href="#forward-3">forward/3*</a></td><td>Forwards the message to the specified DCs.</td></tr>
+<tr><td valign="top"><a href="#getAllDCs-0">getAllDCs/0*</a></td><td>The list of all the DCs except this one.</td></tr>
+<tr><td valign="top"><a href="#getAllDCsWithReplicas-1">getAllDCsWithReplicas/1*</a></td><td>Gets all the DCs with a replica.</td></tr>
+<tr><td valign="top"><a href="#getAllDCsWithReplicas_-2">getAllDCsWithReplicas_/2*</a></td><td>Gets all the DCs with a replica.</td></tr>
 <tr><td valign="top"><a href="#getNumReplicas-1">getNumReplicas/1</a></td><td>Gets the number of replicas.</td></tr>
+<tr><td valign="top"><a href="#getNumReplicas_-1">getNumReplicas_/1*</a></td><td>Gets the number of replicas, if any, or zero otherwise.</td></tr>
+<tr><td valign="top"><a href="#getRecord-1">getRecord/1*</a></td><td>Gets the record for the specified Key and returns it, if exists, otherwise
+       returns none.</td></tr>
 <tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td>Does nothing.</td></tr>
 <tr><td valign="top"><a href="#hasReplica-1">hasReplica/1</a></td><td>Checks if there is a local replica.</td></tr>
 <tr><td valign="top"><a href="#init-1">init/1</a></td><td>Initialises the process and start the process.</td></tr>
+<tr><td valign="top"><a href="#newId-0">newId/0</a></td><td>Provides a new ID.</td></tr>
+<tr><td valign="top"><a href="#newId-1">newId/1</a></td><td>Provides a new ID.</td></tr>
 <tr><td valign="top"><a href="#read-1">read/1</a></td><td>Reads specified entry.</td></tr>
+<tr><td valign="top"><a href="#read-2">read/2*</a></td><td>Reads the data locally if exist, i.e.</td></tr>
 <tr><td valign="top"><a href="#remove-1">remove/1</a></td><td>Removes the local entry.</td></tr>
 <tr><td valign="top"><a href="#remove-3">remove/3</a></td><td>Removes the local entry if the conditios are apropiated, which is check by calling
          function VerifyRemove with the record associated to the passed key and the passed
          arguments.</td></tr>
+<tr><td valign="top"><a href="#rmvDel-3">rmvDel/3*</a></td><td>Removes the local replica and depending of the Type passed also forward apropiate
+       messages to other DCs with replicas to remove them.</td></tr>
+<tr><td valign="top"><a href="#sendOne-6">sendOne/6*</a></td><td>Sends synchronously the specified message to the first of the specified DC for       
+its process registered with the key and on failure will try with the other DCs.</td></tr>
 <tr><td valign="top"><a href="#start-0">start/0</a></td><td>Start the server.</td></tr>
 <tr><td valign="top"><a href="#stop-0">stop/0</a></td><td>Stops the server asynchronously.</td></tr>
 <tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td>Does nothing.</td></tr>
 <tr><td valign="top"><a href="#update-2">update/2</a></td><td>Updates the specified value into the local data and forward update messages to the
          other DCs with replicas.</td></tr>
+<tr><td valign="top"><a href="#write-3">write/3*</a></td><td>Saves locally the new value and sets to send updates to all DCs with replicas if
+         the data exists locally, otherwise requested from DCs with replicas and if the
+         data does not esists an error is returned.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
 
 <h3 class="function"><a name="code_change-3">code_change/3</a></h3>
 <div class="spec">
-<p><tt>code_change(PreviousVersion, State, Extra) -&gt; Result::tuple()</tt><br></p>
+<p><tt>code_change(PreviousVersion, State, Extra) -&gt; {opk, term()}</tt><br></p>
 </div><p>Does nothing. No change planned yet.</p>
 
 <h3 class="function"><a name="create-1">create/1</a></h3>
 <div class="spec">
-<p><tt>create(Key::atom()) -&gt; Result::tuple()</tt><br></p>
+<p><tt>create(Key::<a href="#type-key">key()</a>) -&gt; ok | {error, does_not_exist | already_exists_replica}</tt><br></p>
 </div><p>Creates the local replica only. The value for the specified key must already
-         exists in another DC. The result may have the values {ok} or {error, ErrorCode}.</p>
+       exists in another DC.</p>
 
 <h3 class="function"><a name="create-2">create/2</a></h3>
 <div class="spec">
-<p><tt>create(Key::atom(), Value) -&gt; Result::tuple()</tt><br></p>
-</div><p>Creates the local replica only. The result may have the values {ok} or
-         {error, ErrorCode}.</p>
+<p><tt>create(Key::<a href="#type-key">key()</a>, Value::term()) -&gt; ok | {error, does_not_exist | already_exists_replica}</tt><br></p>
+</div><p>Only creates the local replica.</p>
 
 <h3 class="function"><a name="create-4">create/4</a></h3>
 <div class="spec">
-<p><tt>create(Key::atom(), Value, NextDCFunc::function(), Args) -&gt; Result::tuple()</tt><br></p>
-</div><p><p>Creates the replica locally and creates other replicas if the startegy requires.        
-The result may have the values {ok} or {error, ErrorCode}.</p>
+<p><tt>create(Key::<a href="#type-key">key()</a>, Value::term(), NextDCFunc::function(), Args::term()) -&gt; ok | {error, does_not_exist | already_exists_replica}</tt><br></p>
+</div><p><p>Creates the replica locally and creates other replicas if the startegy requires.       
+The result may have the values ok or {error, ErrorCode}.</p>
  
-         NextDCFunc is a function which must take three arguments; the current DC, a list
-         of DCs and its own Args. Such function must return a tuple composed of the list
-         of DCs to replicate and another list of potential DCs to replicate. If any
-         replication to a DC from the list of DCs to replicate in failes a DC from the
-         potential list will be used instead.</p>
+       NextDCFunc is a function which must take three arguments; the current DC, a list
+       of DCs and its own Args. Such function must return a tuple composed of the list
+       of DCs to replicate and another list of potential DCs to replicate. If any
+       replication to a DC from the list of DCs to replicate in failes a DC from the
+       potential list will be used instead.</p>
+
+<h3 class="function"><a name="createOtherReplicas-5">createOtherReplicas/5 *</a></h3>
+<div class="spec">
+<p><tt>createOtherReplicas(Key::<a href="#type-key">key()</a>, Value::term(), OwnId::integer(), NextDCsFunc::function(), Args) -&gt; {ok | {error, {creating_replica, Dc}}, integer()}</tt><br></p>
+</div><p><p>Gets a list of DC where replicas should be created, updates the record with the          
+new list of DCs with replicas and request the creation of the new replicas in each         
+of those DCs.</p>
+ 
+         NextDCsFunc is a function that takes the current DC, the list of all DCs and the
+         provided arguments, Args and return a tuple with a list of DC to replicat in and a
+         list of potential DCs to replicate in if any of others fail.</p>
+
+<h3 class="function"><a name="createOtherReplicas_-6">createOtherReplicas_/6 *</a></h3>
+<div class="spec">
+<p><tt>createOtherReplicas_(RegName::atom(), Record::<a href="#type-record">record()</a>, OwnId::integer(), AllReplicatedDCs::list(), DCs::list(), PotentialDCs::list()) -&gt; {ok | {error, {creating_replica, Dc}}, integer()}</tt><br></p>
+</div><p>Creates the other necessary replicas without need for each to notify the others.</p>
+
+<h3 class="function"><a name="create_-2">create_/2 *</a></h3>
+<div class="spec">
+<p><tt>create_(Key::atom(), Value::<a href="#type-item">item()</a>) -&gt; ok | {error, already_created}</tt><br></p>
+</div><p>Ceates a record for the specified data, adds it to the passed map and return all
+       the new information.</p>
+
+<h3 class="function"><a name="create_-3">create_/3 *</a></h3>
+<div class="spec">
+<p><tt>create_(Key, Value, DCs) -&gt; any()</tt></p>
+</div>
 
 <h3 class="function"><a name="delete-1">delete/1</a></h3>
 <div class="spec">
-<p><tt>delete(Key::atom()) -&gt; Result::tuple()</tt><br></p>
-</div><p>Deletes an entry from within all the DCs with replica. The result is {ok} on
-         success or {error, ErrorCode} otherwise.</p>
+<p><tt>delete(Key::<a href="#type-key">key()</a>) -&gt; ok | {error, does_not_exist | already_exists_replica}</tt><br></p>
+</div><p>Deletes an entry from within all the DCs with replica.</p>
+
+<h3 class="function"><a name="forward-3">forward/3 *</a></h3>
+<div class="spec">
+<p><tt>forward(Msg::map(), Key::atom(), DCs::list()) -&gt; ok | {error, atom()}</tt><br></p>
+</div><p>Forwards the message to the specified DCs.</p>
+
+<h3 class="function"><a name="getAllDCs-0">getAllDCs/0 *</a></h3>
+<div class="spec">
+<p><tt>getAllDCs() -&gt; list()</tt><br></p>
+</div><p>The list of all the DCs except this one.</p>
+
+<h3 class="function"><a name="getAllDCsWithReplicas-1">getAllDCsWithReplicas/1 *</a></h3>
+<div class="spec">
+<p><tt>getAllDCsWithReplicas(Key::atom()) -&gt; {ok, list()} | {ok, []}</tt><br></p>
+</div><p><p>Gets all the DCs with a replica.</p>
+ 
+       Returs a tuple that can be {ok, DCS} or {ok, no_replicas}.</p>
+
+<h3 class="function"><a name="getAllDCsWithReplicas_-2">getAllDCsWithReplicas_/2 *</a></h3>
+<div class="spec">
+<p><tt>getAllDCsWithReplicas_(Key::atom(), AllDCs::list()) -&gt; {ok, list()} | {ok, no_replicas}</tt><br></p>
+</div><p><p>Gets all the DCs with a replica.</p>
+ 
+       <p>Sends a message to each DCs to check to identify the first DC with a replica, in       
+which case stops sending the messages to the other DCs and return the list of DCs       
+with replicas, or and empty list if none of the DCs have replicas.</p>
+ 
+       Returs a tuple that can be {ok, DCs::list()} or {ok, no_replicas}.</p>
 
 <h3 class="function"><a name="getNumReplicas-1">getNumReplicas/1</a></h3>
 <div class="spec">
-<p><tt>getNumReplicas(Key::atom()) -&gt; Result::integer()</tt><br></p>
+<p><tt>getNumReplicas(Key::<a href="#type-key">key()</a>) -&gt; integer()</tt><br></p>
 </div><p>Gets the number of replicas.</p>
+
+<h3 class="function"><a name="getNumReplicas_-1">getNumReplicas_/1 *</a></h3>
+<div class="spec">
+<p><tt>getNumReplicas_(Key::atom()) -&gt; integer()</tt><br></p>
+</div><p>Gets the number of replicas, if any, or zero otherwise.</p>
+
+<h3 class="function"><a name="getRecord-1">getRecord/1 *</a></h3>
+<div class="spec">
+<p><tt>getRecord(Key::atom()) -&gt; <a href="#type-record">record()</a></tt><br></p>
+</div><p>Gets the record for the specified Key and returns it, if exists, otherwise
+       returns none.</p>
 
 <h3 class="function"><a name="handle_call-3">handle_call/3</a></h3>
 <div class="spec">
-<p><tt>handle_call(X1, From, X3) -&gt; any()</tt></p>
+<p><tt>handle_call(Msg, From, LoopData) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="handle_cast-2">handle_cast/2</a></h3>
 <div class="spec">
-<p><tt>handle_cast(X1, X2) -&gt; any()</tt></p>
+<p><tt>handle_cast(Msg, LoopData) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="handle_info-2">handle_info/2</a></h3>
@@ -101,46 +189,72 @@ The result may have the values {ok} or {error, ErrorCode}.</p>
 
 <h3 class="function"><a name="hasReplica-1">hasReplica/1</a></h3>
 <div class="spec">
-<p><tt>hasReplica(Key::atom()) -&gt; Result::boolean()</tt><br></p>
-</div><p>Checks if there is a local replica. The result may have the values {yes} or
-         {no}.</p>
+<p><tt>hasReplica(Key::<a href="#type-key">key()</a>) -&gt; boolean()</tt><br></p>
+</div><p>Checks if there is a local replica.</p>
 
 <h3 class="function"><a name="init-1">init/1</a></h3>
 <div class="spec">
 <p><tt>init(X1::[]) -&gt; {ok, LoopData::tuple()}</tt><br></p>
 </div><p>Initialises the process and start the process.</p>
 
+<h3 class="function"><a name="newId-0">newId/0</a></h3>
+<div class="spec">
+<p><tt>newId() -&gt; integer()</tt><br></p>
+</div><p>Provides a new ID.</p>
+
+<h3 class="function"><a name="newId-1">newId/1</a></h3>
+<div class="spec">
+<p><tt>newId(Key::atom()) -&gt; integer()</tt><br></p>
+</div><p>Provides a new ID.</p>
+
 <h3 class="function"><a name="read-1">read/1</a></h3>
 <div class="spec">
-<p><tt>read(Key::atom()) -&gt; Result::tuple()</tt><br></p>
-</div><p>Reads specified entry. The result may have the values {ok, Value} or
-         {error, ErrorCode}.</p>
+<p><tt>read(Key::<a href="#type-key">key()</a>) -&gt; {ok, term()} | {error, term()}</tt><br></p>
+</div><p>Reads specified entry.</p>
+
+<h3 class="function"><a name="read-2">read/2 *</a></h3>
+<div class="spec">
+<p><tt>read(Key::<a href="#type-key">key()</a>, OwnId::integer()) -&gt; {{ok, term()}, integer()} | {{error, no_replicas}, integer()}</tt><br></p>
+</div><p><p>Reads the data locally if exist, i.e. replicated, or alternativelly get the data         
+from any of the other DCs with replicas.</p>
+ 
+         The returned value is a tuple with the response of the form
+         {{ok, Value}, NewOwnId} or {{error, ErrorCode}, NewOwnId}.</p>
 
 <h3 class="function"><a name="remove-1">remove/1</a></h3>
 <div class="spec">
-<p><tt>remove(Key::atom()) -&gt; Result::tuple()</tt><br></p>
-</div><p>Removes the local entry. The result may have the values {ok} or
-         {error, ErrorCode}.</p>
+<p><tt>remove(Key::<a href="#type-key">key()</a>) -&gt; ok | {error, term()}</tt><br></p>
+</div><p>Removes the local entry.</p>
 
 <h3 class="function"><a name="remove-3">remove/3</a></h3>
 <div class="spec">
-<p><tt>remove(Key::atom(), VerifyRemove::function(), Args) -&gt; Result::tuple()</tt><br></p>
+<p><tt>remove(Key::<a href="#type-key">key()</a>, VerifyRemove::function(), Args::term()) -&gt; ok | {ok, failed_verification} | {error, term()}</tt><br></p>
 </div><p>Removes the local entry if the conditios are apropiated, which is check by calling
          function VerifyRemove with the record associated to the passed key and the passed
-         arguments. The result may have the values {ok}, {ok, failed_verification} or
-         {error, ErrorCode}.</p>
+         arguments.</p>
+
+<h3 class="function"><a name="rmvDel-3">rmvDel/3 *</a></h3>
+<div class="spec">
+<p><tt>rmvDel(Key::atom(), OwnId::integer(), Type::atom()) -&gt; {ok | {error, atom()}, integer()}</tt><br></p>
+</div><p>Removes the local replica and depending of the Type passed also forward apropiate
+       messages to other DCs with replicas to remove them.</p>
+
+<h3 class="function"><a name="sendOne-6">sendOne/6 *</a></h3>
+<div class="spec">
+<p><tt>sendOne(Type::atom(), OwnId::integer(), Key::atom(), Msg, RegName::atom(), DCs::List) -&gt; {tuple(), integer()}</tt><br></p>
+</div><p><p>Sends synchronously the specified message to the first of the specified DC for       
+its process registered with the key and on failure will try with the other DCs.</p>
+ 
+       Returned result is a tuple with the result and the new own internal ID.</p>
 
 <h3 class="function"><a name="start-0">start/0</a></h3>
 <div class="spec">
-<p><tt>start() -&gt; Result</tt><br></p>
-</div><p><p>Start the server.</p>
- 
-       Result = {ok, Pid::pid()} | ignore | {error, Error} with
-         Error = {already_started, Pid} | term()</p>
+<p><tt>start() -&gt; {ok, pid()} | ignore | {error, {already_started, pid()} | term()}</tt><br></p>
+</div><p>Start the server.</p>
 
 <h3 class="function"><a name="stop-0">stop/0</a></h3>
 <div class="spec">
-<p><tt>stop() -&gt; {ok}</tt><br></p>
+<p><tt>stop() -&gt; ok</tt><br></p>
 </div><p>Stops the server asynchronously.</p>
 
 <h3 class="function"><a name="terminate-2">terminate/2</a></h3>
@@ -150,13 +264,19 @@ The result may have the values {ok} or {error, ErrorCode}.</p>
 
 <h3 class="function"><a name="update-2">update/2</a></h3>
 <div class="spec">
-<p><tt>update(Key::atom(), Value) -&gt; Result::<a href="#type-typle">typle()</a></tt><br></p>
+<p><tt>update(Key::<a href="#type-key">key()</a>, Value::term()) -&gt; ok | {error, term()}</tt><br></p>
 </div><p>Updates the specified value into the local data and forward update messages to the
-         other DCs with replicas. The result may have the values {ok} or
-         {error, ErrorCode}.</p>
+         other DCs with replicas.</p>
+
+<h3 class="function"><a name="write-3">write/3 *</a></h3>
+<div class="spec">
+<p><tt>write(Key::atom(), OwnId::integer(), Value::term()) -&gt; tuple()</tt><br></p>
+</div><p>Saves locally the new value and sets to send updates to all DCs with replicas if
+         the data exists locally, otherwise requested from DCs with replicas and if the
+         data does not esists an error is returned.</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Dec 14 2014, 21:38:04.</i></p>
+<p><i>Generated by EDoc, Dec 18 2014, 10:54:17.</i></p>
 </body>
 </html>

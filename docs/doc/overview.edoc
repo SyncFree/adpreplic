@@ -4,7 +4,44 @@
 @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
 @version 1.0.0
 @title Adaptive Replication Support
-@doc The system is composed of the Strategy layer and the Replication Layer. The Strategy 
+@doc The system is composed of the <a href="#startegy_layer">Strategy Layer</a>, the 
+<a href="#replication_layer">Replication Layer</a> and <a href="#db">Database (DB)</a>. The Strategy 
 Layer is responsible to identify what Data Centre (DC) to replicate the data and for how 
 long, i.e. when to remove a replica and from which DC. The Replication Layer is 
 responsible to the eventual consistency between the different replicas in each DC.
+
+<table border="0" align="center">
+	<tr>
+		<td><img alt="Layer overview" src="adatativeReplicationLayers.png" /></td>
+	</tr>
+</table>
+
+<a name="startegy_layer"></a><h2>Startegy Layer</h2>
+It is responsable to state when data is replicated, for how long and where. Some strategies are:
+<ul>
+	<li><b>No Replication</b> where the data is only kept in one DC, the one it was created on.</li>
+	<li><b>Full Replication</b> where a copy of the data exists in all DCs. DC what implement this 
+	type of strategy are Antidote and Riak Enterprise.</li>
+	<li><b>Adaptive Replication</b> where the data is replicated in certain DCs depending of their 
+	pattern of acces and modification. An exmaple implementation of thi strategy is provided 
+	<a href="strategy_adprep.html">here</a>.</li>
+</ul>
+
+
+<a name="replication_layer"></a><h2>Replication Layer</h2>
+It is responsible to propagate the changes to all the other DCs with replicas.
+
+
+<a name="db"></a><h2>Database (DB)</h2>
+In principal the idea is that the DB can be any of the existing DB, e.g. Riak, Oracle...
+
+
+<h2>Resources</h2>
+The code is avaliable in SyncFree GitHub, <a href="https://github.com/SyncFree/adpreplic/blob/master/src" target="view">here</a>.
+Extra documentation is avalible in:
+<ul>
+	<li>Adaptive Replication algorithm <a href="https://github.com/SyncFree/WP1/blob/master/AdaptiveReplication/docs/adaptiveAntReplication.pdf
+" target="view">here</a></li>
+	<li>Adaptive Replication infrastructure <a href="https://github.com/SyncFree/adpreplic/blob/master/docs/ImplementationAdaptiveReplication/docs/implementationAdaptiveAntReplication.pdf" target="view">here</a></li>
+	<li>Demo tool for Adaptive Replication (in Java) <a href="https://github.com/SyncFree/AdaptiveReplicationTool/blob/master/adapReplicaDemo.zip" target="view">here</a></li>
+</ul>

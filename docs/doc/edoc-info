@@ -1,5 +1,4 @@
 %% encoding: UTF-8
-{application,adpreplic}.
 {packages,[]}.
-{modules,[adprep,adpreplic,adpreplic_app,adpreplic_sup,adpreps_,decay,
-          strategy_adprep,userar]}.
+{modules,[adprep,adpreplic,adpreplic_app,adpreplic_sup,adpreps_,datastore,
+          decay,strategy_adprep]}.
