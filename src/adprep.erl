@@ -65,8 +65,7 @@ stop() ->
     io:format("    (adprep): Stopping adprep server ~n"),
     gen_server:cast(?MODULE, shutdown).
 
-%% @doc Creates the replica locally and creates other replicas if the startegy requires. 
-%       The result may have the values ok or {error, ErrorCode}.
+%% @doc Creates the replica locally and creates other replicas if the strategy requires. 
 %%
 %%      NextDCFunc is a function which must take three arguments; the current DC, a list 
 %%      of DCs and its own Args. Such function must return a tuple composed of the list 
@@ -235,7 +234,7 @@ handle_call({create, Key, {Value, RegName}}, _From, {OwnId}) ->
                             {reply, ok, {OwnId}};
                         {ok, DCs} ->
                             Record = getRecord(Key), % must exist as we have just created
-                            Record1 = Record#replica{num_replicas=list:size(DCs)+1, 
+                            Record1 = Record#replica{num_replicas=length(DCs)+1, 
                                                                  list_dcs_with_replicas=DCs},
                             case datastore:update(Key, Record1) of
                                 ok ->
