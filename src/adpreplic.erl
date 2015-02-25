@@ -35,10 +35,14 @@
 
 -include("adprep.hrl").
 
-%% Public API, can be called by clients using RPC.
--export([create/5, read/2, write/3 ]).
+-ifdef(EUNIT).
+-compile(export_all).
+-else.
+-compile(report).
+-export([create/5, read/2, write/3]).
+-endif.
 
-%% Public API
+%% Public API, can be called by clients using RPC.
 
 %% @doc The create/2 function creates a new entry under some key,
 %%      with an initial value.

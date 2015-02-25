@@ -19,6 +19,7 @@
 %% -------------------------------------------------------------------
 
 %%% Simple in-memory data store dummy for test purposes.
+
 -module(datastore).
 -behaviour(gen_server).
 

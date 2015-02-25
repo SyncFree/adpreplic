@@ -8,12 +8,12 @@
 %% @end
 %% =============================================================================
 
--record(replica,   {key, 
-					value, 
-					num_replicas = 1, 
+-record(replica,   {key :: key(), 
+					value :: value(), 
+					num_replicas = 1 :: integer(), 
 					list_dcs_with_replicas}).
 
--type key() :: term().
+-type key() :: atom().
 -type id() :: integer().
 -type value() :: term().
 -type strategy() :: atom().

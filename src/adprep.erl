@@ -19,18 +19,25 @@
 -compile(export_all).
 -else.
 -compile(report).
-%% ====================================================================
-%% API functions
-%% ====================================================================
+%% Public API
+-export([start_link/0]).
+%% Callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 -endif.
 -behaviour(gen_server).
 
 -include("adprep.hrl").
 
+%% =============================================================================
+%% Public API
+%% =============================================================================
+
+start_link() ->
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+
 
 %% =============================================================================
-%% Propossed Adaptive Replication Strategy process
+%% Adaptive Replication Strategy process
 %% =============================================================================
 %% @spec init(Args) -> {ok, LoopData::tuple()}
 %%
@@ -375,7 +382,7 @@ getAllDCsWithReplicas(Key, OwnId) ->
 	% Discover the DCs with replicas
 	AllDCs = dcs:getAllDCs(),
 	gen_server:abcast(AllDCs, Key, {has_replica, OwnId, Key}),
-	flush({has_replica, OwnId, Key}),
+	ok = flush({has_replica, OwnId, Key}),
 	% Only take the first one
 	receive
 		{reply, has_replica, OwnId, Key, DCs} ->
@@ -403,14 +410,14 @@ sendOne(Type, OwnId, Key, Msg, RegName, [Dc | DCs]) ->
 sendOne(_Type, OwnId, _Key, _Msg, _RegName, []) ->
 	{{error, no_dcs}, OwnId+1}.
 
-%% @spec flush(Msg) -> {ok}
-%%
+
 %% @doc Removes all the messages that match the specified one from the mailbox.
+-spec flush(term()) -> ok.
 flush(Msg) ->
 	receive
 		Msg ->
 			flush(Msg)
 	after
 		0 ->
-			{ok}
+			ok
 	end.
