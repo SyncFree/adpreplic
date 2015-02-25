@@ -30,6 +30,7 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
+    lager:start(),
     adpreplic_sup:start_link().
     
 stop(_State) ->
