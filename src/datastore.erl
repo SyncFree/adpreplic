@@ -18,7 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 
-%%% Simple in-memory datastore dummy for test purposes.
+%%% Simple in-memory data store dummy for test purposes.
 -module(datastore).
 -behaviour(gen_server).
 
@@ -30,7 +30,7 @@
 	     terminate/2, code_change/3]).
 
 %%====================================================================
-%% Server interface
+%% Public API
 %%====================================================================
 %% Starting server
 start() -> 

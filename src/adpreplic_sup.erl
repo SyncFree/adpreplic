@@ -19,8 +19,8 @@ start_link() ->
 %% Supervisor callbacks
 %% ===================================================================
 
-init([]) ->
-	Datastore = {datastore, {datastore, start_link, []}, 
+init(_Args) ->
+	Datastore = {datastore, {datastore, start, []}, 
 	             permanent, 5000, worker, [datastore]},	
 
     {ok, { {one_for_one, 5, 10}, [Datastore]} }.
