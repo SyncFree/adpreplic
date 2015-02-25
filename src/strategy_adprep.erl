@@ -1,5 +1,5 @@
 %% =============================================================================
-%% First Propossed Adaptive Replication Strategy - SyncFree
+%% First Proposed Adaptive Replication Strategy - SyncFree
 %%
 %% Any strategy must implement the function run(Key, DCs, Args) and process the 
 %% received messages.

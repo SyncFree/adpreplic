@@ -17,27 +17,43 @@
 %% under the License.
 %%
 %% -------------------------------------------------------------------
+%%
+%% =============================================================================
+%% Adaptive Replication User Interface
+%%
+%% @author Amadeo Asco, Annette Bieniusa
+%% @version 1.0.0
+%% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
+%% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
+%% @end
+%% =============================================================================
+
+%% @doc Provides the user interface.
+
 -module(adpreplic).
+-author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de']).
+
+-include("adprep.hrl").
 
 %% Public API, can be called by clients using RPC.
-
--export([create/3,
-         read/2,
-         write/3]).
+-export([create/5, read/2, write/3 ]).
 
 %% Public API
 
 %% @doc The create/2 function creates a new entry under some key,
 %%      with an initial value.
-create(Key, _Type, Obj) ->
-    datastore:create(Key,Obj).
+%-spec create(key(), id(), value(), strategy(), args()) -> ok | {error, reason()}.
+create(Key, Id, Value, Strategy, Args) ->
+    adpreps_:create(Key, Id, Value, Strategy, Args).
 
 %% @doc The read/2 function returns the current value for the
 %%      object stored at some key.
-read(Key, _Type) ->
-    datastore:read(Key).
+%-spec read(key(), id()) -> {ok, value()} | {error, reason()}.
+read(Key, Id) ->
+    adpreps_:read(Key, Id).
 
 %% @doc The write/3 function updates the current value for the
-%%      object stored at some key.
-write(Key, _Type, Obj) ->
-    datastore:update(Key,Obj).
+%%      data stored at some key.
+%-spec write(key(), id(), value()) -> ok | {error, reason()}.
+write(Key, Id, Value) ->
+    adpreps_:write(Key, Id, Value).

@@ -34,17 +34,14 @@
 %%====================================================================
 %% Starting server
 start() -> 
-    lager:info("Starting~n"),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %% Stopping server asynchronously
 stop() ->
-    lager:info("Stopping~n"),
     gen_server:cast(?MODULE, shutdown).
 
 %% Create a new entry
 create(Id, Obj) ->
-    lager:info("Creating entry for ~p",[Id]),
     gen_server:call(?MODULE, {create, Id, Obj}).
 
 %% Reads an entry
@@ -63,11 +60,12 @@ remove(Id) ->
 %% gen_server callbacks
 %%====================================================================
 init([]) ->
+   lager:info("Initializing the datastore"),
    ?MODULE = ets:new(?MODULE, [set, named_table, protected]),
    {ok, ?MODULE}.
 
-
 handle_call({create, Id, Obj}, _From, Tid) ->
+    lager:info("Creating entry for ~p",[Id]),
 	case ets:lookup(Tid, Id) of
 		[{_Id,Obj}] -> 
 			{reply, {error, already_created}, Tid};
@@ -78,6 +76,7 @@ handle_call({create, Id, Obj}, _From, Tid) ->
   	
 
 handle_call({read, Id}, _From, Tid) ->
+    lager:info("Reading entry for ~p",[Id]),
 	case ets:lookup(Tid, Id) of
 		[{_Id,Obj}] -> 
 			{reply, {ok, Obj}, Tid};
@@ -86,6 +85,7 @@ handle_call({read, Id}, _From, Tid) ->
 	end;
 
 handle_call({update, Id, Obj}, _From, Tid) ->
+    lager:info("Updating entry for ~p",[Id]),
 	case ets:lookup(Tid, Id) of
 		[{_Id,Obj}] ->
 		    %%TODO: Add CRDT merge here! For now, just take the new version
@@ -96,6 +96,7 @@ handle_call({update, Id, Obj}, _From, Tid) ->
 	end;
 
 handle_call({remove, Id}, _From, Tid) ->
+    lager:info("Removing entry for ~p",[Id]),
     case ets:lookup(Tid, Id) of
     	[{_Id, _Obj}] ->
     		ets:delete(Tid, Id),

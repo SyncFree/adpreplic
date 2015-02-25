@@ -12,3 +12,13 @@
 					value, 
 					num_replicas = 1, 
 					list_dcs_with_replicas}).
+
+-type key() :: term().
+-type id() :: integer().
+-type value() :: term().
+-type strategy() :: atom().
+-type args() :: tuple().
+-type reason() :: atom().
+
+-export_type([key/0, id/0, value/0, strategy/0, args/0, reason/0]).
+
