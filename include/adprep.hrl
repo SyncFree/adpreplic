@@ -13,12 +13,15 @@
 					num_replicas = 1 :: integer(), 
 					list_dcs_with_replicas}).
 
--type key() :: atom().
+-type key() :: string().
 -type id() :: integer().
 -type value() :: term().
 -type strategy() :: atom().
 -type args() :: tuple().
 -type reason() :: atom().
+-type time() :: timer:time().
+-type timer() :: timer:tref().
 
--export_type([key/0, id/0, value/0, strategy/0, args/0, reason/0]).
+-export_type([key/0, id/0, value/0, strategy/0, args/0, 
+    reason/0, time/0, timer/0]).
 

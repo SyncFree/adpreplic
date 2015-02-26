@@ -15,7 +15,7 @@
 -module(dcs).
 -author('aas@trifork.co.uk').
 
--ifdef(EUNIT).
+-ifdef(TEST).
 -compile(export_all).
 -else.
 -compile(report).
@@ -293,7 +293,7 @@ getReplicationLayerPid(_Key) ->
 	getReplicationLayerPid().
 getReplicationLayerPid() ->
 %	list_to_atom(string:concat(Key, "_rl")).
-	'rl'.
+	rl.
 
 
 %% =============================================================================

@@ -15,7 +15,7 @@
 -module(adprep).
 -author('aas@trifork.co.uk').
 
--ifdef(EUNIT).
+-ifdef(TEST).
 -compile(export_all).
 -else.
 -compile(report).
@@ -51,18 +51,12 @@ init(_Args) ->
 handle_info(_Msg, LoopData) ->
 	{noreply, LoopData}.
 
-%% @spec terminate(Reason, LoopData) -> ok
-%%
 %% @doc Does nothing.
 terminate(_Reason, _LoopData) ->
 	ok.
 
-%% @spec code_change(PreviousVersion, State, Extra) -> Result::tuple()
-%%
 %% @doc Does nothing. No change planned yet.
 code_change(_PreviousVersion, State, _Extra) ->
-	% The function is there for the behaviour, but will not be used. Only a version on the
-	% next
 	{ok, State}.
 
 %% =============================================================================

@@ -27,7 +27,7 @@
 
 
 flush_test() ->
-	?assertEqual(adprep:flush(""), {ok}).
+	?assertEqual(adprep:flush(""), ok).
 
 getNewId_test() ->
 	% Initialise

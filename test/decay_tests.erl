@@ -25,49 +25,26 @@
 %% ====================================================================
 startStopDecay_test() ->
 	% Initialise
-	DecayTime = 1000,
-	Key = pid_to_list(self()),
-	StopPrevious = false,
-	Name = decay:buildPid(Key),
-	% Test - Initialy the decays process is not running, test it, then it is started and 
-	%		 should be running, so test it too
-	?assertEqual(whereis(Name), undefined),
-	decay:startDecay(DecayTime, Key, StopPrevious),
-	?assertNotEqual(whereis(Name), undefined),
+	DecayTime = 100,
+	% Send decay messages to us!
+	{ok, Timer} = decay:startDecayTimer(DecayTime, self(), none),
 	% Test that we are receiving decay notifications
-	repeat(DecayTime, Key, 1),
-	% Stop decay test and test it is not running
-	decay:stopDecay(Key),
-	timer:sleep(200),
-	?assertEqual(whereis(Name), undefined).
-
-startStartDecay_test() ->
-	% Initialise
-	DecayTime = 1000,
-	Key = pid_to_list(self()),
-	StopPrevious = true,
-	Name = decay:buildPid(Key),
-	% Test - It does not axist any previous decay process so call to startDecay should 
-	%        failed
-	?assertEqual(whereis(Name), undefined),
-	?assertException(error, function_clause, decay:startDecay(DecayTime, Key, StopPrevious)),
-	?assertNotEqual(whereis(Name), undefined).
-
-buildPid_test() ->
-	?assertEqual(decay:buildPid("test_"), 'test_decay').
+	ok = repeat(DecayTime, Timer, 3),
+	% Stop decay test and check that it is not running
+	ok = decay:stopDecayTimer(Timer).
 
 
 %%%%%%
-repeat(_DelayTime, _Key, 0) ->
-	{ok};
-repeat(DelayTime, Key, Num) when Num > 0 ->
+repeat(_DelayTime, _Timer, 0) ->
+	ok;
+repeat(DelayTime, Timer, Num) when Num > 0 ->
 	Result = receive
 		{decay, _Pid, 0} ->
-			repeat(DelayTime, Key, Num-1);
+			repeat(DelayTime, Timer, Num-1);
 		_ ->
-			{error}
+			error
 	after
-		DelayTime+100 ->
-			{error}
+		DelayTime + 100 ->
+			error
 	end,
-	?assertEqual(Result, {ok}).
+	?assertEqual(ok, Result).

@@ -20,7 +20,7 @@
 %% =============================================================================
 %% Adaptive Replication
 %% 
-%% @author Amadeo Asco
+%% @author Amadeo Asco, Annette Bieniusa
 %% @version 1.0.0
 %% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
 %% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
@@ -33,65 +33,35 @@
 
 -include("adprep.hrl").
 
--ifdef(EUNIT).
+-ifdef(TEST).
 -compile(export_all).
 -else.
 -compile(report).
--export([startDecay/3, stopDecay/1]).
--export([init/1]).
+-export([startDecayTimer/3, stopDecayTimer/1]).
 -endif.
 
-
-%% =============================================================================
-%% Decay process
-%% =============================================================================
-
-%% @doc Applies the decay as time passes.
--spec init({integer(), key()}) -> ok.
-init({Time, Key}) ->
-	loop(Time, Key).
-
-%% @doc Processes the messages hold by the mailbox.
--spec loop(integer(), key()) -> ok.
-loop(Time, Key) ->
-	receive
-		{stop, _Pid, _Id} ->
-			ok
-	after 
-        Time ->
-			Key ! {decay, self(), 0},
-			loop(Time, Key)
-	end.
 
 %% =============================================================================
 %% Decay process interface
 %% =============================================================================
 
+%FIXME: Start Timer service? Documentation says:
+% start() -> ok
+
+% Starts the timer server. Normally, the server does not need to be started explicitly. It is started dynamically if it is needed. This is useful during development, but in a target system the server should be started explicitly. Use configuration parameters for kernel for this.
+
+
 %% @doc Starts the decay process for the specified key and time period.
--spec startDecay(integer(), key(), boolean()) -> boolean().
-startDecay(DecayTime, Key, true) ->
-	_ = stopDecay(Key),	%FIXME
-	startDecay(DecayTime, Key, false);
-startDecay(DecayTime, Key, false) ->
-	DecayKey = buildPid(Key),
-	register(DecayKey, spawn_link(decay, init, [{DecayTime, Key}])).
-
+-spec startDecayTimer(time(), pid(), {none | timer()}) 
+	    -> {ok, timer:tref()} | {error, reason()}.
+startDecayTimer(DecayTime, Receiver, none) ->
+	timer:send_interval(DecayTime, Receiver, {decay, self(), 0});
+startDecayTimer(DecayTime, Key, Timer) ->
+	_ = stopDecayTimer(Timer), %% FIXME?
+	startDecayTimer(DecayTime, Key, none).
+	
 %% @doc Stops the decay process.
--spec stopDecay(key()) -> ok | {error, reason()}.
-stopDecay(Key) ->
-	% Stops the decay process
-	DecayKey = buildPid(Key),
-	% No reply is sent back to sender
-	try DecayKey ! {stop, self(), 0} of
-		_ ->
-			% Succeed
-			ok
-	catch
-		error:badarg -> 
-			{error, may_not_exist}
-	end.
-
-%% @doc Builds the decay process ID for the specified key.
--spec buildPid(key()) -> atom().
-buildPid(Key) ->
-	list_to_atom(string:concat(atom_to_list(Key), "decay")).
+-spec stopDecayTimer(timer()) -> ok | {error, reason()}.
+stopDecayTimer(Timer) ->
+	{ok, cancel} = timer:cancel(Timer),
+	ok.
