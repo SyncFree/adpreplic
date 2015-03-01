@@ -30,149 +30,58 @@
 %% 
 %% @doc Internal dispatch of messages.
 -module(adpreps_).
--author('aas@trifork.co.uk').
+-author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de']).
 
--ifdef(EUNIT).
+-ifdef(TEST).
 -compile(export_all).
 -else.
 -compile(report).
--export([create/5, read/2, write/3, send/2, send/3, stop/1]).
+-export([create/4, read/1, write/2]).
 -endif.
 
-%% =============================================================================
-%% Adaptive Replication support
-%% =============================================================================
-%% @spec create(Key::atom(), Id::integer(), Value, Strategy::float(), Args::tuple()) -> Result::tuple()
-%% 
-%% @doc Creates the first instance of the specified data in this DC. The results is of the format 
-%%		{ok} or {error, ErrorCode}.
-create(Key, Id, Value, Strategy, Args) ->
-	send(Key, {create, self(), Id, {Value, Strategy, Args}}).
-
-%% @spec read(Key::atom(), Id::integer) -> Result::tuple()
-%% 
-%% @doc Reads the value of the specified data. The results is of the format {ok, Value} or 
-%%		{error, ErrorCode}.
-read(Key, Id) ->
-	send(Key, {read, self(), Id}).
-
-%% @spec write(Key::atom(), Id::integer(), Value) -> Result::tuple()
-%% 
-%% @doc Writes the new value of the specified data. The results is of the format {ok} or 
-%%		{error, ErrorCode}.
-write(Key, Id, Value) ->
-	send(Key, {read, self(), Id, Value}).
-
-%% @spec stop(Key::atom()) -> Result::tuple()
-%% 
-%% @doc Requests to stop the process for the specified data. The results is of the format {ok} or 
-%%		{error, ErrorCode}.
-stop(Key) ->
-	send(Key, {stop, self(), 0}).
+-include("adprep.hrl").
 
 %% =============================================================================
-%% @spec send(Key::atom(), Msg) -> Response::tuple()
-%% 
-%% @doc Sends the specified message for the specified data and wait for the replay, synchronous. The 
-%%		results is of the format {ok, Value} or {error, ErrorCode}.
-send(Key, Msg) ->
-	send(Key, Msg, true).
-%% @spec send(Key::atom(), Msg, WaitReply::boolean()) -> Response::tuple()
-%% 
-%% @doc Sends the specified message for the specified data and wait for the replay if WaitReply is 
-%%		true. The results is of the format {ok, Value}, {ok, without_replay}, 
-%%		{error, invalid_msg_format} or {error, timeout}.
-send(Key, Msg, WaitReply) ->
-    {Type, Id, Msg1} = case Msg of
-        {create, Id2, {Value, Strategy, Args}} ->
-			Result = startProcess(Key, Strategy, Args),
-			if
-				Result == created ->
-				    {create, Id2, {create, Id2, Value}};
-				true ->
-					{error, none, Result}
-			end;
+%% Public API
+%% =============================================================================
+%% @doc Creates the first instance of the specified data in this DC. 
+%TODO Check if it has been created in other DCs already.
+-spec create(key(), value(), strategy(), args()) -> ok | {error, reason()}.
+create(Key, Value, StrategyName, Args) ->
+    Strategy = list_to_atom(string:concat("strategy_", StrategyName)),
+    Result = gen_server:start_link({global, Key}, Strategy, {Key, Args, Value}, []),
+    case Result of
+        {ok,_Pid}      -> ok;
+        {error,_Error} -> {error, _Error};
+        ignore         -> {error, ignored}
+    end. 
 
-		{Type1, _Pid, Id2, _Value} ->
-            % Message to send to the strategy process
-            {Type1, Id2, Msg};
+%% @doc Reads the value of the specified data. 
+-spec read(key()) -> {ok, value()} | {error, reason()}.
+read(Key) ->
+	send(Key, {read}, true).
 
-		{Type1, _Pid, Id2} ->
-            % Message to send to the strategy process
-            {Type1, Id2, Msg};
+%% @doc Writes the new value of the specified data. 
+-spec write(key(), value()) -> ok | {error, reason()}.
+write(Key, Value) ->
+	send(Key, {write, Value}, false).
 
-		_ ->
-            {error, none, {error, invalid_msg_format}}
-    end,
-	try
-        case Type of
-            error ->
-                % Message is not supported
-                Msg1;
-
-			_ ->
-        		sendIt(Key, Type, Id, Msg1, WaitReply)
-        end
-	catch
-        _ ->
-			% The process for that data does not exist yet
-	        Id1 = dcs:getNewID(Key),
-			dcs:sendToAllDCs({has_replica, self(), Id1}),
-			receive
-				{reply, has_replica, _, Id1, {ok, {Strategy1, _DCs, Args1}}} ->
-					startProcess(Key, Strategy1, Args1),
-					sendIt(Key, Type, Id, Msg1, WaitReply)
-			after 
-				6000 ->
-					{error, timeout}
-			end
-	end.
-
-%% @spec sendIt(Key::atom(), Type, Id, Msg1, WaitReply::boolean()) -> Response::tuple()
-%% 
-%% @doc Sends the specified message of the specified type (Type) and identifier (Id) and waits for 
-%%		reply if WaitReply is true. The results is of the format {ok, Value}, {ok, without_replay} 
-%%		or {error, timeout}.
-sendIt(Key, Type, Id, Msg, WaitReply) ->
-	if
-		WaitReply == true ->
-			Reply = gen_server:call(Key, Msg, 5000),
-			case Reply of
-				{reply, Type, Key, Id, Response} ->
-	        		Response;
-
-				Response ->
-					Response
-			end;
-
-		WaitReply == false ->
-			% Don't wait for reply
-			gen_server:cast(Key, Msg),
-			{ok, without_replay}
+%% @doc Sends the specified message for the specified data and 
+%%      wait for the replay if WaitReply is true. 
+%TODO: Refine type!
+%FIXME: Check if process exists and possibly forward to other DCs.
+-spec send(key(), term(), boolean()) -> term().
+send(Key, Msg, WaitForReply) ->
+    case WaitForReply of
+        true ->
+            Reply = gen_server:call(Key, Msg, infinity),
+            case Reply of
+                {reply, Response} ->
+                    Response;
+                Response ->
+                    Response
+            end;
+        false ->
+            gen_server:cast(Key, Msg)
     end.
 
-%% @spec startProcess(Key::atom(), Strategy::atom(), Args::tuple()) -> Result::atom()
-%% 
-%% @doc Sends the specified message for the specified data. The result may be already_exist, ok or 
-%%		created.
-startProcess(Key, StrategyName, Args) ->
-	% Check if the process already exists, i.e. the data is known to exist
-	Result = nodes(Key),
-	case Result of
-		[nonode@nohost] ->
-			% The process does not exists yet
-		    % Start the strategy process
-			Strategy = list_to_atom(string:concat("strategy_", StrategyName)),
-			try gen_server:start({global, Key}, Strategy, {Key, Args}, []) of
-				_ ->
-				    % Succeed
-				    created
-			catch
-				error:badarg -> 
-					already_exist
-			end;
-
-		_ ->
-			% The process already exist, so the data already exists locally or somewhere else
-			already_exist
-	end.

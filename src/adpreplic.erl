@@ -39,25 +39,25 @@
 -compile(export_all).
 -else.
 -compile(report).
--export([create/5, read/2, write/3]).
+-export([create/4, read/1, write/2]).
 -endif.
 
 %% Public API, can be called by clients using RPC.
 
 %% @doc The create/2 function creates a new entry under some key,
 %%      with an initial value.
-%-spec create(key(), id(), value(), strategy(), args()) -> ok | {error, reason()}.
-create(Key, Id, Value, Strategy, Args) ->
-    adpreps_:create(Key, Id, Value, Strategy, Args).
+%-spec create(key(), value(), strategy(), args()) -> ok | {error, reason()}.
+create(Key, Value, Strategy, Args) ->
+    adpreps_:create(Key, Value, Strategy, Args).
 
 %% @doc The read/2 function returns the current value for the
 %%      object stored at some key.
-%-spec read(key(), id()) -> {ok, value()} | {error, reason()}.
-read(Key, Id) ->
-    adpreps_:read(Key, Id).
+%-spec read(key() -> {ok, value()} | {error, reason()}.
+read(Key) ->
+    adpreps_:read(Key).
 
 %% @doc The write/3 function updates the current value for the
 %%      data stored at some key.
-%-spec write(key(), id(), value()) -> ok | {error, reason()}.
-write(Key, Id, Value) ->
-    adpreps_:write(Key, Id, Value).
+%-spec write(key(), value()) -> ok | {error, reason()}.
+write(Key, Value) ->
+    adpreps_:write(Key, Value).
