@@ -109,7 +109,6 @@ handle_call({remove, Id}, _From, Tid) ->
 handle_call(_Message, _From, State) ->
 	{noreply, State}.
 
-%% Termination
 handle_cast(shutdown, Tid) ->
     lager:info("Shutting down the datastore"),
     ets:delete(Tid),
@@ -122,7 +121,7 @@ handle_info(_Message, State) ->
 
 %% Server termination
 terminate(_Reason, _State) -> 
-	ok.
+    ok.
 
 %% Code change
 code_change(_OldVersion, State, _Extra) -> 

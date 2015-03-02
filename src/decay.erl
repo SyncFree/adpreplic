@@ -52,7 +52,7 @@
 
 
 %% @doc Starts the decay process for the specified key and time period.
--spec startDecayTimer(time(), pid(), {none | timer()}) 
+-spec startDecayTimer(time(), pid(), none | timer()) 
 	    -> {ok, timer:tref()} | {error, reason()}.
 
 startDecayTimer(DecayTime, Receiver, none) ->

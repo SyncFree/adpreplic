@@ -35,11 +35,11 @@
 
 -include("adprep.hrl").
 
--ifdef(EUNIT).
+-ifdef(TEST).
 -compile(export_all).
 -else.
 -compile(report).
--export([create/4, read/1, write/2]).
+-export([create/4, read/1, update/2]).
 -endif.
 
 %% Public API, can be called by clients using RPC.
@@ -48,16 +48,16 @@
 %%      with an initial value.
 %-spec create(key(), value(), strategy(), args()) -> ok | {error, reason()}.
 create(Key, Value, Strategy, Args) ->
-    adpreps_:create(Key, Value, Strategy, Args).
+    replica_manager:create(Key, Value, Strategy, Args).
 
 %% @doc The read/2 function returns the current value for the
 %%      object stored at some key.
 %-spec read(key() -> {ok, value()} | {error, reason()}.
 read(Key) ->
-    adpreps_:read(Key).
+    replica_manager:read(Key).
 
-%% @doc The write/3 function updates the current value for the
+%% @doc The update/3 function updates the current value for the
 %%      data stored at some key.
 %-spec write(key(), value()) -> ok | {error, reason()}.
-write(Key, Value) ->
-    adpreps_:write(Key, Value).
+update(Key, Value) ->
+    replica_manager:update(Key, Value).

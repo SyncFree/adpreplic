@@ -21,7 +21,10 @@
 -type reason() :: atom().
 -type time() :: timer:time().
 -type timer() :: timer:tref().
+-type tcp_port() :: integer().
+-type address() :: string().
+-type dc() :: {address(), tcp_port()}.
 
 -export_type([key/0, id/0, value/0, strategy/0, args/0, 
-    reason/0, time/0, timer/0]).
+    reason/0, time/0, timer/0, dc/0]).
 

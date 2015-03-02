@@ -27,5 +27,6 @@
                     decay, 
                     wdecay, 
                     rstrength, 
-                    wstrength}).
+                    wstrength,
+                    decay_timer}).
 
