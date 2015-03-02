@@ -41,6 +41,7 @@
 -export([buildReply/2,buildReply/3,create/2,createReplica/1,createReplica/2,forwardMsg/2,forwardMsg/3,getAllDCs/0,getDCsReplica/1,getNewID/1,getNewID/0,newReplica/2,read/1,replicated/1,rmvFromReplica/2,rmvReplica/2,setDCsReplica/2,sendReply/4,sendToAllDCs/1,write/2,updates/2,startReplicationLayer/0]).
 -endif.
 
+-include("adprep.hrl").
 
 startReplicationLayer() ->
 	gen_server:start({global, getReplicationLayerPid()}, adprep, [], []).
@@ -159,11 +160,11 @@ updates(Key, Value) ->
     sendToDCsReplica(Key, {update, Key, Id, Value}),
     Result.
 
-%% @spec replicated(Key::atom()) -> HasReply::boolean()
-%% 
 %% @doc Checks if the data is locally replicated.
+-spec replicated(key()) -> boolean().
 replicated(Key) ->
-	{reply, has_a_replica, 0, {ok, HasReply}} = gen_server:call(getReplicationLayerPid(key), {has_a_replica, 0, Key}, 1000),
+    pid = getReplicationLayerPid(key),
+	{ok, HasReply} = gen_server:call(pid, {has_a_replica, 0, Key}, 1000),
 	HasReply.
 
 %% @spec sendToAllDCs(Msg) -> {ok}

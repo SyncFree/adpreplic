@@ -17,3 +17,15 @@
 					wdecay, 
 					rstrength, 
 					wstrength}).
+
+-record(strategyState,
+                    {decay_time, 
+                    min_num_replicas = 1, 
+                    replication_threshold, 
+                    rmv_threshold, 
+                    max_strength, 
+                    decay, 
+                    wdecay, 
+                    rstrength, 
+                    wstrength}).
+

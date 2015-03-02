@@ -1,10 +1,29 @@
+%% -------------------------------------------------------------------
+%%
+%% Copyright (c) 2014 SyncFree Consortium.  All Rights Reserved.
+%%
+%% This file is provided to you under the Apache License,
+%% Version 2.0 (the "License"); you may not use this file
+%% except in compliance with the License.  You may obtain
+%% a copy of the License at
+%%
+%%   http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing,
+%% software distributed under the License is distributed on an
+%% "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+%% KIND, either express or implied.  See the License for the
+%% specific language governing permissions and limitations
+%% under the License.
+%%
+%% -------------------------------------------------------------------
 %% =============================================================================
 %% First Proposed Adaptive Replication Strategy - SyncFree
 %%
 %% Any strategy must implement the function run(Key, DCs, Args) and process the 
 %% received messages.
 %%
-%% @author Amadeo Asco
+%% @author Amadeo Asco, Annette Bieniusa
 %% @version 1.0.0
 %% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
 %% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
@@ -14,63 +33,66 @@
 %%
 %% @doc Provides operations required in a database.
 -module(strategy_adprep).
--author('aas@trifork.co.uk').
+-author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de']).
 
--ifdef(EUNIT).
+-ifdef(TEST).
 -compile(export_all).
 -else.
 -compile(report).
+%% Public API
+-export([notify_decay/1]).
+%% Callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 -endif.
 -behaviour(gen_server).
 
 -include("strategy_adprep.hrl").
-
+-include("adprep.hrl").
 
 %% =============================================================================
-%% Propossed Adaptive Replication Strategy process
+%% Public API.
+%% =============================================================================
+
+notify_decay(Pid) ->
+    gen_server:call(Pid, decay, infinity).
+
+%% =============================================================================
+%% Gen_server callbacks.
 %% =============================================================================
 %% @spec init({Key::atom(), Args::tuple()}) -> {ok, LoopData::tuple()}
 %%
-%% @doc Initialises the process and start the process with the specified arguments.
-init({Key, #adpargs{decay_time=DecayTime, 
-					min_num_replicas=MinNumReplicas, 
-					replication_threshold=ReplicationThreshold,
-					rmv_threshold=RmvThreshold,
-					max_strength=MaxStrength, 
-					decay=Decay,
-					wdecay=WDecay,
-					rstrength=RStrength,
-					wstrength=WStrength}}) ->
-	Result = dcs:replicated(Key),
+%% @doc Initializes the process and start the process 
+%%      with the specified arguments.
+init({Key, Value, 
+		#adpargs{ 	decay_time 		 = DecayTime, 
+				  	min_num_replicas = MinNumReplicas, 
+				  	replication_threshold = ReplicationThreshold,
+				  	rmv_threshold	 = RmvThreshold,
+				  	max_strength	 = MaxStrength, 
+					decay 			 = Decay,
+					wdecay 			 = WDecay,
+					rstrength 		 = RStrength,
+					wstrength 		 = WStrength}}) ->
+	{ok, Replicated} = dcs:replicated(Key),
+	ok = datastore:create(Key,Value),
 	% Calculate strength of the replica
-	{Replicated, Strength} = case Result of
-		{ok, Replicated1} ->
-			case Replicated1 of
-				true -> 
-					% With Replica
-					{Replicated1, ReplicationThreshold + WStrength};
-				false ->
-					% No replica
-					{Replicated1, 0}
-			end;
-		_ ->
-			% No replica
-			{false, 0}
+	Strength = case Replicated of 
+		true  -> ReplicationThreshold + WStrength;
+		false -> 0
 	end,
-	decay:startDecay(DecayTime, Key, false),
-	{ok, {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}}.
+	{ok, Timer} = decay:startDecayTimer(DecayTime, self(), none),
+	{ok, {Key, Replicated, Strength, DecayTime, MinNumReplicas, ReplicationThreshold, RmvThreshold, MaxStrength, Decay, WDecay, RStrength, WStrength}, Timer}.
 
 %% @spec handle_info(Msg, LoopData) -> {noreply, LoopData}
 %%
 %% @doc Does nothing.
-handle_info(_Msg, LoopData) ->
-	{noreply, LoopData}.
+handle_info(_Msg, State) ->
+	{noreply, State}.
 
 %% @spec terminate(Reason, LoopData) -> ok
 %%
 %% @doc Does nothing.
-terminate(_Reason, _LoopData) ->
+terminate(_Reason, _State) ->
 	ok.
 
 %% @spec code_change(PreviousVersion, State, Extra) -> {ok, State}

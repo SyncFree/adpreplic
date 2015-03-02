@@ -49,7 +49,7 @@
 -spec create(key(), value(), strategy(), args()) -> ok | {error, reason()}.
 create(Key, Value, StrategyName, Args) ->
     Strategy = list_to_atom(string:concat("strategy_", StrategyName)),
-    Result = gen_server:start_link({global, Key}, Strategy, {Key, Args, Value}, []),
+    Result = gen_server:start_link({global, Key}, Strategy, {Key, Value, Args}, []),
     case Result of
         {ok,_Pid}      -> ok;
         {error,_Error} -> {error, _Error};

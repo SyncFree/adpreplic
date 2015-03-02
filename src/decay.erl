@@ -54,14 +54,17 @@
 %% @doc Starts the decay process for the specified key and time period.
 -spec startDecayTimer(time(), pid(), {none | timer()}) 
 	    -> {ok, timer:tref()} | {error, reason()}.
+
 startDecayTimer(DecayTime, Receiver, none) ->
-	timer:send_interval(DecayTime, Receiver, {decay, self(), 0});
+	timer:apply_interval(DecayTime, strategy_adprep, notify_decay, [Receiver]);
+
 startDecayTimer(DecayTime, Key, Timer) ->
 	_ = stopDecayTimer(Timer), %% FIXME?
 	startDecayTimer(DecayTime, Key, none).
 	
 %% @doc Stops the decay process.
 -spec stopDecayTimer(timer()) -> ok | {error, reason()}.
+
 stopDecayTimer(Timer) ->
 	{ok, cancel} = timer:cancel(Timer),
 	ok.
