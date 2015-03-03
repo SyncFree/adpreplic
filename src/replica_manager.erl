@@ -76,8 +76,9 @@ read(Key) ->
 update(Key, Value) ->
     gen_server:call(?MODULE, {write, Key, Value}, infinity).
 
+-spec remove_replica(key()) -> ok | {error, reason()}.
 remove_replica(Key) ->
-    gen_server:cast(?MODULE, {remove, Key}).
+    gen_server:call(?MODULE, {remove, Key}, infinity).
 
 %% @doc Shutdown replication manager.
 stop() ->
@@ -104,19 +105,19 @@ handle_call({create, Key, Value, _Strategy, Args}, _From, Tid) ->
     end;
 
 handle_call({read, Key}, _From, Tid) ->
-   stategey_adprep:local_read(Key),
+   {ok, _ShouldReplicate} = stategey_adprep:local_read(Key),
    CurrValue = datastore:read(Key),
    {reply, {ok, CurrValue}, Tid};
 
 handle_call({write, Key, Value}, _From, Tid) ->
-   stategey_adprep:local_write(Key),
+   {ok, _ShouldReplicate} = stategey_adprep:local_write(Key),
    datastore:update(Key, Value),
-    {reply, {ok}, Tid}.
+   {reply, {ok}, Tid};
 
-handle_cast({remove, Key}, Tid) ->
+handle_call({remove, Key}, _From, Tid) ->
     datastore:remove(Key),
     true = ets:delete(Tid, Key),
-    {noreply, Tid};
+    {reply, {ok}, Tid}.
 
 handle_cast(shutdown, Tid) ->
     lager:info("Shutting down the replica manager"),
