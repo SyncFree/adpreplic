@@ -54,19 +54,22 @@
 %% =============================================================================
 %% Public API.
 %% =============================================================================
+
+%% @doc Update strength because of update to the local replica
+-spec local_write(key()) -> {ok, boolean()}.
+local_write(Key) ->
+    gen_server:call(Key, {local_write}, infinity).
+
+%% @doc Update because of read from the local replica
+-spec local_read(key()) -> {ok, boolean()}.
+local_read(Key) ->
+    gen_server:call(Key, {loca_read}, infinity).
+
+%% @doc Notification about decay
 -spec notify_decay(pid()) -> ok.
 notify_decay(Pid) ->
     gen_server:cast(Pid, decay).
 
-%% @doc Read to the local replica
--spec local_write(key()) -> ok.
-local_write(Key) ->
-    gen_server:call(Key, {local_write}, infinity).
-
-%% @doc Update to the local replica
--spec local_read(key()) -> ok.
-local_read(Key) ->
-    gen_server:call(Key, {loca_read}, infinity).
 
 %% =============================================================================
 %% Gen_server callbacks.
@@ -116,6 +119,7 @@ handle_cast({decay},
 	ShouldStopReplicate = (RmvThreshold > NewStrength) and Replicated,
 	% Notify replication manager if replica should not longer be replicated
 	if ShouldStopReplicate ->
+		lager:info("Below replication threshold for key ~p",[Key]),
 		replication_manager:remove_replica(Key)
 	end,
 	{noreply, StrategyState#strategy_state{strength=NewStrength}};
