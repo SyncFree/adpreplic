@@ -61,8 +61,7 @@ start() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %% @doc Creates the first instance of the specified data in this DC. 
-%TODO Check if it has been created in other DCs already.
-%-spec create(key(), value(), strategy(), args()) -> ok | {error, reason()}.
+-spec create(key(), value(), strategy(), args()) -> ok | {error, reason()}.
 create(Key, Value, Strategy, Args) ->
     gen_server:call(?MODULE, {create, Key, Value, Strategy, Args}, infinity).
 
@@ -76,6 +75,7 @@ read(Key) ->
 update(Key, Value) ->
     gen_server:call(?MODULE, {write, Key, Value}, infinity).
 
+%% @doc Remove the local replica.
 -spec remove_replica(key()) -> ok | {error, reason()}.
 remove_replica(Key) ->
     gen_server:call(?MODULE, {remove, Key}, infinity).
@@ -93,12 +93,14 @@ init([]) ->
    {ok, ?MODULE}.
 
 handle_call({create, Key, Value, _Strategy, Args}, _From, Tid) ->
-    Result = gen_server:start_link({global, Key}, strategy_adprep, {Key, Value, Args}, []),
+    %TODO Handle the case that replica has already been created at other DC
+    Result = strategy_adprep:init_strategy(Key, true, Args),
     case Result of
         {ok,_Pid}      -> 
             ok = datastore:create(Key,Value),
-            thisDC = inter_dc_manager:get_my_dc(),
-            true = ets:insert(Tid,[{Key,[thisDC]}]),
+            ThisDC = inter_dc_manager:get_my_dc(),
+            Info = #replica{key=Key,num_replicas=1,dcs=[ThisDC]},
+            true = ets:insert(Tid,{Key,Info}),
             {reply, {ok}, Tid};
         {error,_Error} -> {reply, {error, _Error}, Tid};
         ignore         -> {reply, {error, ignored}, Tid}

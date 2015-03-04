@@ -8,10 +8,13 @@
 %% @end
 %% =============================================================================
 
--record(replica,   {key :: key(), 
-					value :: value(), 
-					num_replicas = 1 :: integer(), 
-					list_dcs_with_replicas}).
+-record(replica, {
+    key              :: key(), 
+	num_replicas = 1 :: integer(),
+    value , 
+	list_dcs_with_replicas, %:: [dc()]
+    dcs :: [dc()]
+}).
 
 -record(strategy_params, {       
     decay_time       :: integer(),
@@ -44,8 +47,10 @@
 -type dc() :: {address(), tcp_port()}.
 -type strategy_state() :: #strategy_state{}.
 -type strategy_params() :: #strategy_params{}.
+-type replica_info() :: #replica{}.
 
 
 -export_type([key/0, id/0, value/0, strategy/0, args/0, 
-    reason/0, time/0, timer/0, dc/0, strategy_state/0, strategy_params/0]).
+    reason/0, time/0, timer/0, dc/0, strategy_state/0, strategy_params/0,
+    replica_info/0]).
 
