@@ -34,20 +34,37 @@
 %% @doc Provides operations required in a database.
 -module(strategy_adprep).
 -author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de']).
+-behaviour(gen_server).
 
--ifdef(TEST).
--compile(export_all).
--else.
--compile(report).
 %% Public API
--export([init_strategy/3, notify_decay/1, local_write/1, local_read/1, stop/1, get_strength/1]).
+-export([init_strategy/9, notify_decay/1, local_write/1, local_read/1, stop/1, get_strength/1]).
 %% Callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
--endif.
--behaviour(gen_server).
 
 -include("strategy_adprep.hrl").
 -include("adprep.hrl").
+
+-record(strategy_state, {
+    key         :: key(),
+    strength    :: float(),
+    replicated  :: boolean(),
+    params      :: strategy_params(),
+    timer       :: timer()
+}).
+
+-record(strategy_params, {       
+    decay_time       :: integer(),
+    repl_threshold   :: float(),
+    rmv_threshold    :: float(),
+    max_strength     :: float(),
+    decay_factor     :: float(),
+    rstrength        :: float(),
+    wstrength        :: float() 
+}).
+
+-type strategy_state() :: #strategy_state{}.
+-type strategy_params() :: #strategy_params{}.
+
 
 %TODO Methods should return whether local replica should be installed / removed.
 
@@ -56,10 +73,21 @@
 %% =============================================================================
 
 %% @doc Initializes the strategy process for some key.
--spec init_strategy(key(), boolean(), strategy_params()) 
+-spec init_strategy(key(), boolean(), float(), float(),
+	float(),float(),float(),float(),float()) 
 	-> ignore | {error, reason()} | {ok, pid()}.
-init_strategy(Key, Replicated, Args) ->
-	gen_server:start_link({global, Key}, strategy_adprep, {Key, Replicated, Args}, []).
+init_strategy(Key, Replicated, DecayTime, ReplThreshold, RmvThreshold, MaxStrength,DecayFactor, RStrength, WStrength) ->
+	StrategyParams = #strategy_params{
+	decay_time     = DecayTime,
+    repl_threshold = ReplThreshold,
+    rmv_threshold  = RmvThreshold,
+    max_strength   = MaxStrength,
+    decay_factor   = DecayFactor,
+    rstrength      = RStrength,
+    wstrength      = WStrength
+	},
+	gen_server:start({local, list_to_atom(Key)}, strategy_adprep, 
+		{Key, Replicated, StrategyParams}, []).
 
 %% @doc Update strength because of update to the local replica
 -spec local_write(key()) -> {ok, boolean()}.
@@ -85,7 +113,7 @@ get_strength(Key) ->
 %% @doc Stop the strategy process
 -spec stop(pid()) -> ok.
 stop(Pid) ->
-    gen_server:cast(Pid, stop).
+    gen_server:call(Pid, stop).
 
 
 %% =============================================================================
@@ -93,10 +121,10 @@ stop(Pid) ->
 %% =============================================================================
 %% @doc Initializes the process and start the process 
 %%      with the specified arguments.
--spec init({key(),boolean(),strategy_params()}) -> {ok,strategy_state()}.
+-spec init({key(), boolean(), strategy_params()}) -> {ok, strategy_state()}.
 init({Key, Replicated,
 		#strategy_params{ 	
-		            decay_time 		 = DecayTime, 
+		            decay_time 		 = _DecayTime, 
 				  	repl_threshold 	 = ReplThreshold,
 				  	wstrength 		 = WStrength} = Strategy }) ->
 	% Calculate strength of the replica
@@ -104,8 +132,10 @@ init({Key, Replicated,
 		true  -> ReplThreshold + WStrength;
 		false -> 0.0
 	end,
-	{ok, Timer} = decay:startDecayTimer(DecayTime, self(), none),
-	{ok, #strategy_state{key=Key, strength=Strength, replicated=Replicated, params=Strategy, timer=Timer}}.
+	%{ok, Timer} = decay:startDecayTimer(DecayTime, self(), none),
+	Timer = [],
+	{ok, #strategy_state{key=Key, strength=Strength, replicated=Replicated, 
+		params=Strategy, timer=Timer}}.
 
 %% =============================================================================
 %% Messages handlers
@@ -130,7 +160,10 @@ handle_call(local_read, _From,
 
 handle_call(get_strength, _From, 
 	{#strategy_state{strength=Strength}=StrategyState}) ->
-	{reply, {ok, Strength}, StrategyState}.
+	{reply, {ok, Strength}, StrategyState};
+
+handle_call(stop, _From, State) ->
+	{stop, normal, ok, State}.
 
 handle_cast(decay, 
 	{#strategy_state{key=Key, strength=Strength, replicated=Replicated, 
@@ -144,10 +177,8 @@ handle_cast(decay,
 		lager:info("Below replication threshold for key ~p",[Key]),
 		replication_manager:remove_replica(Key)
 	end,
-	{noreply, StrategyState#strategy_state{strength=NewStrength}};
+	{noreply, StrategyState#strategy_state{strength=NewStrength}}.
 
-handle_cast(stop, State) ->
-	{stop, normal, State}.
 
 %% @doc Does nothing.
 handle_info(_Msg, State) ->

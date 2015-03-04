@@ -58,7 +58,7 @@
 
 %% @doc Start the replication manager.
 start() ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+    gen_server:start({local, ?MODULE}, ?MODULE, [], []).
 
 %% @doc Creates the first instance of the specified data in this DC. 
 -spec create(key(), value(), strategy(), args()) -> ok | {error, reason()}.

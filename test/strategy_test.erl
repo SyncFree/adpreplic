@@ -29,15 +29,17 @@
 local_read_test() ->
     Key = "test",
     Replicated = true,
-    Strategy = #strategy_params{
-        decay_time     = 5000,
-        repl_threshold = 100,
-        rmv_threshold  = 10,
-        max_strength   = 200,
-        decay_factor   = 5,
-        rstrength      = 20,
-        wstrength      = 100
-    },
-    {ok, Pid} = strategy_adprep:init_strategy(Key, Replicated, Strategy),
-    ok = strategy_adprep:stop(Pid).
+    DecayTime     = 5000,
+    ReplThreshold = 100,
+    RmvThreshold  = 10,
+    MaxStrength   = 200,
+    DecayFactor   = 5,
+    Rstrength      = 20,
+    Wstrength      = 100,
+    
+    {ok, Pid} = strategy_adprep:init_strategy(Key, Replicated, DecayTime, 
+        ReplThreshold, RmvThreshold, MaxStrength, DecayFactor, Rstrength, Wstrength),
+    ?assertNotEqual(undefined, whereis(list_to_atom(Key))),
+    ok = strategy_adprep:stop(Pid),
+    ?assertEqual(undefined, whereis(list_to_atom(Key))).
 
