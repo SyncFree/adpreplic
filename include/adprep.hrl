@@ -16,6 +16,15 @@
     dcs :: [dc()]
 }).
 
+-record(strategy_params, {       
+    decay_time       :: integer(),
+    repl_threshold   :: float(),
+    rmv_threshold    :: float(),
+    max_strength     :: float(),
+    decay_factor     :: float(),
+    rstrength        :: float(),
+    wstrength        :: float() 
+}).
 
 -type key() :: string().
 -type id() :: integer().
@@ -29,8 +38,8 @@
 -type address() :: string().
 -type dc() :: {address(), tcp_port()}.
 -type replica_info() :: #replica{}.
-
+-type strategy_params() :: #strategy_params{}.
 
 -export_type([key/0, id/0, value/0, strategy/0, args/0, 
-    reason/0, time/0, timer/0, dc/0, replica_info/0]).
+    reason/0, time/0, timer/0, dc/0, replica_info/0, strategy_params/0]).
 

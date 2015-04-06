@@ -28,7 +28,7 @@
 %% @end
 %% =============================================================================
 
-%% @doc Provides the user interface.
+%% @doc Provides the public client interface.
 
 -module(adpreplic).
 -author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de']).
@@ -39,7 +39,7 @@
 -compile(export_all).
 -else.
 -compile(report).
--export([create/4, read/1, update/2]).
+-export([create/10, read/1, update/2]).
 -endif.
 
 %% Public API, can be called by clients using RPC.
@@ -47,8 +47,18 @@
 %% @doc The create/2 function creates a new entry under some key,
 %%      with an initial value.
 %-spec create(key(), value(), strategy(), args()) -> ok | {error, reason()}.
-create(Key, Value, Strategy, Args) ->
-    replica_manager:create(Key, Value, Strategy, Args).
+create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength, 
+    DecayFactor, RStrength, WStrength) ->
+    StrategyParams = #strategy_params{
+    decay_time     = DecayTime,
+    repl_threshold = ReplThreshold,
+    rmv_threshold  = RmvThreshold,
+    max_strength   = MaxStrength,
+    decay_factor   = DecayFactor,
+    rstrength      = RStrength,
+    wstrength      = WStrength
+    },
+    replica_manager:create(Key, Value, Strategy, StrategyParams).
 
 %% @doc The read/2 function returns the current value for the
 %%      object stored at some key.

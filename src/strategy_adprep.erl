@@ -37,7 +37,7 @@
 -behaviour(gen_server).
 
 %% Public API
--export([init_strategy/9, notify_decay/1, local_write/1, local_read/1, stop/1, get_strength/1]).
+-export([init_strategy/3, notify_decay/1, local_write/1, local_read/1, stop/1, get_strength/1]).
 %% Callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 
@@ -52,18 +52,8 @@
     timer       :: timer()
 }).
 
--record(strategy_params, {       
-    decay_time       :: integer(),
-    repl_threshold   :: float(),
-    rmv_threshold    :: float(),
-    max_strength     :: float(),
-    decay_factor     :: float(),
-    rstrength        :: float(),
-    wstrength        :: float() 
-}).
 
 -type strategy_state() :: #strategy_state{}.
--type strategy_params() :: #strategy_params{}.
 
 
 %TODO Methods should return whether local replica should be installed / removed.
@@ -73,19 +63,9 @@
 %% =============================================================================
 
 %% @doc Initializes the strategy process for some key.
--spec init_strategy(key(), boolean(), float(), float(),
-	float(),float(),float(),float(),float()) 
+-spec init_strategy(key(), boolean(), strategy_params()) 
 	-> ignore | {error, reason()} | {ok, pid()}.
-init_strategy(Key, Replicated, DecayTime, ReplThreshold, RmvThreshold, MaxStrength,DecayFactor, RStrength, WStrength) ->
-	StrategyParams = #strategy_params{
-	decay_time     = DecayTime,
-    repl_threshold = ReplThreshold,
-    rmv_threshold  = RmvThreshold,
-    max_strength   = MaxStrength,
-    decay_factor   = DecayFactor,
-    rstrength      = RStrength,
-    wstrength      = WStrength
-	},
+init_strategy(Key, Replicated, StrategyParams) ->
 	gen_server:start({local, list_to_atom(Key)}, strategy_adprep, 
 		{Key, Replicated, StrategyParams}, []).
 
@@ -124,18 +104,17 @@ stop(Pid) ->
 -spec init({key(), boolean(), strategy_params()}) -> {ok, strategy_state()}.
 init({Key, Replicated,
 		#strategy_params{ 	
-		            decay_time 		 = _DecayTime, 
+		            decay_time 		 = DecayTime, 
 				  	repl_threshold 	 = ReplThreshold,
-				  	wstrength 		 = WStrength} = Strategy }) ->
+				  	wstrength 		 = WStrength} = StrategyParams }) ->
 	% Calculate strength of the replica
 	Strength = case Replicated of 
 		true  -> ReplThreshold + WStrength;
 		false -> 0.0
 	end,
-	%{ok, Timer} = decay:startDecayTimer(DecayTime, self(), none),
-	Timer = [],
+	{ok, Timer} = decay:startDecayTimer(DecayTime, self(), none),
 	{ok, #strategy_state{key=Key, strength=Strength, replicated=Replicated, 
-		params=Strategy, timer=Timer}}.
+		params=StrategyParams, timer=Timer}}.
 
 %% =============================================================================
 %% Messages handlers
@@ -173,10 +152,13 @@ handle_cast(decay,
 	NewStrength = decrStrength(Strength, DecayFactor),
 	ShouldStopReplicate = (RmvThreshold > NewStrength) and Replicated,
 	% Notify replication manager if replica should not longer be replicated
-	if ShouldStopReplicate ->
-		lager:info("Below replication threshold for key ~p",[Key]),
-		replication_manager:remove_replica(Key)
-	end,
+	_ = case ShouldStopReplicate of
+		true ->
+			lager:info("Below replication threshold for key ~p",[Key]),
+			replica_manager:remove_replica(Key);
+		false ->
+			ok
+		end,
 	{noreply, StrategyState#strategy_state{strength=NewStrength}}.
 
 

@@ -61,9 +61,10 @@ start() ->
     gen_server:start({local, ?MODULE}, ?MODULE, [], []).
 
 %% @doc Creates the first instance of the specified data in this DC. 
--spec create(key(), value(), strategy(), args()) -> ok | {error, reason()}.
-create(Key, Value, Strategy, Args) ->
-    gen_server:call(?MODULE, {create, Key, Value, Strategy, Args}, infinity).
+-spec create(key(), value(), strategy(), strategy_params()) 
+  -> ok | {error, reason()}.
+create(Key, Value, Strategy, StrategyParams) ->
+    gen_server:call(?MODULE, {create, Key, Value, Strategy, StrategyParams}, infinity).
 
 %% @doc Reads the value of the specified data. 
 -spec read(key()) -> {ok, value()} | {error, reason()}.
@@ -92,9 +93,9 @@ init([]) ->
    ?MODULE = ets:new(?MODULE, [set, named_table, protected]),
    {ok, ?MODULE}.
 
-handle_call({create, Key, Value, _Strategy, Args}, _From, Tid) ->
+handle_call({create, Key, Value, _Strategy, StrategyParams}, _From, Tid) ->
     %TODO Handle the case that replica has already been created at other DC
-    Result = strategy_adprep:init_strategy(Key, true, Args),
+    Result = strategy_adprep:init_strategy(Key, true, StrategyParams),
     case Result of
         {ok,_Pid}      -> 
             ok = datastore:create(Key,Value),
@@ -107,12 +108,12 @@ handle_call({create, Key, Value, _Strategy, Args}, _From, Tid) ->
     end;
 
 handle_call({read, Key}, _From, Tid) ->
-   {ok, _ShouldReplicate} = stategey_adprep:local_read(Key),
+   {ok, _ShouldReplicate} = strategy_adprep:local_read(Key),
    CurrValue = datastore:read(Key),
    {reply, {ok, CurrValue}, Tid};
 
 handle_call({write, Key, Value}, _From, Tid) ->
-   {ok, _ShouldReplicate} = stategey_adprep:local_write(Key),
+   {ok, _ShouldReplicate} = strategy_adprep:local_write(Key),
    datastore:update(Key, Value),
    {reply, {ok}, Tid};
 
