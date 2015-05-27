@@ -23,7 +23,7 @@
 %% Any strategy must implement the function run(Key, DCs, Args) and process the 
 %% received messages.
 %%
-%% @author Amadeo Asco, Annette Bieniusa
+%% @author Amadeo Asco, Annette Bieniusa, Adrian Vladu
 %% @version 1.0.0
 %% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
 %% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
@@ -33,7 +33,8 @@
 %%
 %% @doc Provides operations required in a database.
 -module(strategy_adprep).
--author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de']).
+-author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de',
+         'adrian.vladu21@gmail.com']).
 -behaviour(gen_server).
 
 %% Public API
@@ -102,11 +103,7 @@ stop(Pid) ->
 %% @doc Initializes the process and start the process 
 %%      with the specified arguments.
 -spec init({key(), boolean(), strategy_params()}) -> {ok, strategy_state()}.
-init({Key, Replicated,
-		#strategy_params{ 	
-		            decay_time 		 = DecayTime, 
-				  	repl_threshold 	 = ReplThreshold,
-				  	wstrength 		 = WStrength} = StrategyParams }) ->
+init({Key, Replicated,[DecayTime, ReplThreshold,_, _, _, _,WStrength]}) ->
 	% Calculate strength of the replica
 	Strength = case Replicated of 
 		true  -> ReplThreshold + WStrength;
@@ -114,7 +111,7 @@ init({Key, Replicated,
 	end,
 	{ok, Timer} = decay:startDecayTimer(DecayTime, self(), none),
 	{ok, #strategy_state{key=Key, strength=Strength, replicated=Replicated, 
-		params=StrategyParams, timer=Timer}}.
+	timer=Timer}}.
 
 %% =============================================================================
 %% Messages handlers

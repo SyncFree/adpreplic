@@ -35,9 +35,9 @@
 -author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de']).
 -behaviour(gen_server).
 
--ifdef(TEST).
--compile(export_all).
--else.
+%-ifdef(TEST).
+%-compile(export_all).
+%-else.
 -compile(report).
 % interface calls
 -export([start/0, stop/0, create/4, read/1, update/2, remove_replica/1]).
@@ -45,7 +45,7 @@
 % gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, 
          terminate/2, code_change/3]).
--endif.
+%-endif.
 
 -include("adprep.hrl").
 
