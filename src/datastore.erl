@@ -67,47 +67,47 @@ init([]) ->
 
 handle_call({create, Id, Obj}, _From, Tid) ->
     lager:info("Creating entry for ~p",[Id]),
-	case ets:lookup(Tid, Id) of
-		[{_Id,Obj}] -> 
-			{reply, {error, already_created}, Tid};
-		[] ->		
-			ets:insert(Tid, {Id, Obj}),
-			{reply, ok, Tid}
-	end;
-  	
+    case ets:lookup(Tid, Id) of
+        [{_Id,Obj}] -> 
+            {reply, {error, already_created}, Tid};
+        [] ->
+            ets:insert(Tid, {Id, Obj}),
+            {reply, ok, Tid}
+    end;
 
 handle_call({read, Id}, _From, Tid) ->
     lager:info("Reading entry for ~p",[Id]),
-	case ets:lookup(Tid, Id) of
-		[{_Id,Obj}] -> 
-			{reply, {ok, Obj}, Tid};
-		[] ->		
-			{reply, {error, not_found}, Tid}
-	end;
+    case ets:lookup(Tid, Id) of
+        [{_Id,Obj}] -> 
+            {reply, {ok, Obj}, Tid};
+        [] ->
+            {reply, {error, not_found}, Tid}
+    end;
 
 handle_call({update, Id, Obj}, _From, Tid) ->
     lager:info("Updating entry for ~p",[Id]),
-	case ets:lookup(Tid, Id) of
-		[{_Id,Obj}] ->
-		    %%TODO: Add CRDT merge here! For now, just take the new version
-		    ets:insert(Tid, {Id, Obj}),
-			{reply, ok, Tid};
-		[] ->		
-			{reply, {error, not_found}, Tid}
-	end;
+    case ets:lookup(Tid, Id) of
+        [{_Id, _}] ->
+            %%TODO: Add CRDT merge here! For now, just take the new version
+            ets:insert(Tid, {Id, Obj}),
+            {reply, ok, Tid};
+        [] ->
+            ets:insert(Tid, {Id, Obj}),
+            {reply, ok, Tid}
+    end;
 
 handle_call({remove, Id}, _From, Tid) ->
     lager:info("Removing entry for ~p",[Id]),
     case ets:lookup(Tid, Id) of
-    	[{_Id, _Obj}] ->
-    		ets:delete(Tid, Id),
-    		{reply, ok, Tid};
+        [{_Id, _Obj}] ->
+            ets:delete(Tid, Id),
+            {reply, ok, Tid};
         [] ->
             {reply, ok, Tid}
     end;
 
 handle_call(_Message, _From, State) ->
-	{noreply, State}.
+    {noreply, State}.
 
 handle_cast(shutdown, Tid) ->
     lager:info("Shutting down the datastore"),
@@ -116,13 +116,13 @@ handle_cast(shutdown, Tid) ->
 handle_cast(_Message, State) ->
     {noreply, State}.
 
-handle_info(_Message, State) -> 
+handle_info(_Message, State) ->
     {noreply, State}.
 
 %% Server termination
-terminate(_Reason, _State) -> 
+terminate(_Reason, _State) ->
     ok.
 
 %% Code change
-code_change(_OldVersion, State, _Extra) -> 
-    {ok, State}.    
+code_change(_OldVersion, State, _Extra) ->
+    {ok, State}.
