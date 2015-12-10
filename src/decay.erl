@@ -47,8 +47,8 @@
 %% =============================================================================
 
 %FIXME: Start Timer service? Documentation says the following:
-% start() -> ok
-
+start() ->
+    timer:start().
 % Starts the timer server. Normally, the server does not need to be started explicitly.
 % It is started dynamically if it is needed. This is useful during development,
 % but in a target system the server should be started explicitly.
