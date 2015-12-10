@@ -1,5 +1,5 @@
 %% =============================================================================
-%% Haedrer for First Propossed Adaptive Replication Strategy - SyncFree
+%% Header for First Proposed Adaptive Replication Strategy - SyncFree
 %%
 %% @author Amadeo Asco
 %% @version 1.0.0
