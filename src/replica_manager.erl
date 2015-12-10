@@ -95,7 +95,7 @@ init([]) ->
 
 handle_call({create, Key, Value, _Strategy, StrategyParams}, _From, Tid) ->
     %TODO Handle the case that replica has already been created at other DC
-    Result = strategy_adprep:init_strategy(Key, true, StrategyParams),
+    Result = strategy_adprep:init_strategy(_Strategy, true, StrategyParams),
     case Result of
         {ok,_Pid}      -> 
             ok = datastore:create(Key,Value),

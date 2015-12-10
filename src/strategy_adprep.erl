@@ -102,7 +102,7 @@ stop(Pid) ->
 %% @doc Initializes the process and start the process 
 %%      with the specified arguments.
 -spec init({key(), boolean(), strategy_params()}) -> {ok, strategy_state()}.
-init({Key, Replicated,[DecayTime, ReplThreshold,_, _, _, _,WStrength]}) ->
+init({Key, Replicated,{_strategy_params, DecayTime, ReplThreshold,_, _, _, _,WStrength}}) ->
 	% Calculate strength of the replica
 	Strength = case Replicated of 
 		true  -> ReplThreshold + WStrength;
