@@ -33,8 +33,7 @@
 %%
 %% @doc Provides operations required in a database.
 -module(strategy_adprep).
--author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de',
-         'adrian.vladu21@gmail.com']).
+-author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de','adrian.vladu21@gmail.com']).
 -behaviour(gen_server).
 
 %% Public API
@@ -65,10 +64,10 @@
 
 %% @doc Initializes the strategy process for some key.
 -spec init_strategy(key(), boolean(), strategy_params()) 
-	-> ignore | {error, reason()} | {ok, pid()}.
+    -> ignore | {error, reason()} | {ok, pid()}.
 init_strategy(Key, Replicated, StrategyParams) ->
-	gen_server:start({local, list_to_atom(Key)}, strategy_adprep, 
-		{Key, Replicated, StrategyParams}, []).
+    gen_server:start({local, list_to_atom(Key)}, strategy_adprep,
+        {Key, Replicated, StrategyParams}, []).
 
 %% @doc Update strength because of update to the local replica
 -spec local_write(key()) -> {ok, boolean()}.
@@ -118,59 +117,55 @@ init({Key, Replicated,[DecayTime, ReplThreshold,_, _, _, _,WStrength]}) ->
 %% =============================================================================
 
 handle_call(local_write, _From, 
-	{#strategy_state{strength=Strength, replicated=Replicated, 
-	params=#strategy_params{wstrength=WStrength, max_strength=MaxStrength, 
-	repl_threshold=ReplThreshold}}=StrategyState}) ->
-	%Update strength
-	NewStrength = incStrength(Strength, WStrength, MaxStrength),
-	ShouldReplicate = (NewStrength > ReplThreshold) or Replicated,
-	{reply, {ok, ShouldReplicate}, StrategyState#strategy_state{strength=NewStrength}};
+    {#strategy_state{strength=Strength, replicated=Replicated, 
+    params=#strategy_params{wstrength=WStrength, max_strength=MaxStrength,
+    repl_threshold=ReplThreshold}}=StrategyState}) ->
+    %Update strength
+    NewStrength = incStrength(Strength, WStrength, MaxStrength),
+    ShouldReplicate = (NewStrength > ReplThreshold) or Replicated,
+    {reply, {ok, ShouldReplicate}, StrategyState#strategy_state{strength=NewStrength}};
 
-handle_call(local_read, _From, 
-	{#strategy_state{strength=Strength, replicated=Replicated, 
-	params=#strategy_params{rstrength=RStrength, max_strength=MaxStrength, 
-	repl_threshold=ReplThreshold}}=StrategyState}) ->
-	NewStrength = incStrength(Strength, RStrength, MaxStrength),
-	ShouldReplicate = (NewStrength > ReplThreshold) or Replicated,
-	{reply, {ok, ShouldReplicate}, StrategyState#strategy_state{strength=NewStrength}};
+handle_call(local_read, _From,
+    {#strategy_state{strength=Strength, replicated=Replicated,
+    params=#strategy_params{rstrength=RStrength, max_strength=MaxStrength,
+    repl_threshold=ReplThreshold}}=StrategyState}) -> 
+    NewStrength = incStrength(Strength, RStrength, MaxStrength), 
+    ShouldReplicate = (NewStrength > ReplThreshold) or Replicated, 
+    {reply, {ok, ShouldReplicate}, StrategyState#strategy_state{strength=NewStrength}};
 
-handle_call(get_strength, _From, 
-	{#strategy_state{strength=Strength}=StrategyState}) ->
-	{reply, {ok, Strength}, StrategyState};
+handle_call(get_strength, _From, {#strategy_state{strength=Strength}=StrategyState}) ->
+    {reply, {ok, Strength}, StrategyState};
 
-handle_call(stop, _From, State) ->
-	{stop, normal, ok, State}.
+handle_call(stop, _From, State) -> {stop, normal, ok, State}.
 
 handle_cast(decay, 
-	{#strategy_state{key=Key, strength=Strength, replicated=Replicated, 
-	params=#strategy_params{rmv_threshold=RmvThreshold, 
-	decay_factor=DecayFactor}}=StrategyState}) ->
-	% Time decay
-	NewStrength = decrStrength(Strength, DecayFactor),
-	ShouldStopReplicate = (RmvThreshold > NewStrength) and Replicated,
-	% Notify replication manager if replica should not longer be replicated
-	_ = case ShouldStopReplicate of
-		true ->
-			lager:info("Below replication threshold for key ~p",[Key]),
-			replica_manager:remove_replica(Key);
-		false ->
-			ok
-		end,
-	{noreply, StrategyState#strategy_state{strength=NewStrength}}.
+    {#strategy_state{key=Key, strength=Strength, replicated=Replicated, 
+    params=#strategy_params{rmv_threshold=RmvThreshold, 
+    decay_factor=DecayFactor}}=StrategyState}) ->
+    % Time decay
+    NewStrength = decrStrength(Strength, DecayFactor),
+    ShouldStopReplicate = (RmvThreshold > NewStrength) and Replicated,
+    % Notify replication manager if replica should not longer be replicated
+    _ = case ShouldStopReplicate of true -> 
+        lager:info("Below replication threshold for key ~p",[Key]),
+        replica_manager:remove_replica(Key);
+        false -> ok
+    end,
+   {noreply, StrategyState#strategy_state{strength=NewStrength}}.
 
 
 %% @doc Does nothing.
 handle_info(_Msg, State) ->
-	{noreply, State}.
+    {noreply, State}.
 
 %% @doc Does nothing.
 terminate(_Reason, _State) ->
-	ok.
+    ok.
 
 %% @doc Does nothing. No change planned yet.
-code_change(_PreviousVersion, State, _Extra) ->
-	% The function is there for the behavior, but will not be used. 
-	{ok, State}.
+code_change(_PreviousVersion, State, _Extra) -> 
+    % The function is there for the behavior, but will not be used. 
+    {ok, State}.
 
 
 %% =============================================================================
@@ -179,12 +174,10 @@ code_change(_PreviousVersion, State, _Extra) ->
 
 %% @doc Decrements the strength.
 -spec decrStrength(float(), float()) -> float().
-decrStrength(Strength, Decay) ->
-	max(Strength - Decay, 0).
+decrStrength(Strength, Decay) -> max(Strength - Decay, 0).
 
 %% @doc Increments the strength by the specified amount and returns the new strength.
 -spec incStrength(float(), float(), float()) -> float().
-incStrength(Strength, Inc, MaxStrength) ->
-	min(Strength + Inc, MaxStrength).
+incStrength(Strength, Inc, MaxStrength) -> min(Strength + Inc, MaxStrength).
 
 

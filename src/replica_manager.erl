@@ -22,7 +22,7 @@
 %%
 %% Managing information about replica placement
 %% 
-%% @author Amadeo Asco, Annette Bieniusa
+%% @author Amadeo Asco, Annette Bieniusa, Adrian Vladu
 %% @version 1.0.0
 %% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
 %% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
@@ -32,7 +32,7 @@
 %% @doc Replication management
 
 -module(replica_manager).
--author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de']).
+-author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de', 'vladu@rhrk.uni-kl.de']).
 -behaviour(gen_server).
 
 %-ifdef(TEST).
