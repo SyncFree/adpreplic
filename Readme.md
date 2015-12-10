@@ -1,3 +1,4 @@
+## Readme
 This site contains the work carried out for the Adaptive Replication, which 
 includes various types of documentation. Please refer to the documentation in 
 the directory docs for more information about this work.
@@ -11,8 +12,34 @@ e.g. strategy_adprep.erl, and the name for the replication layer files should st
 with replica_.
 
 
-To build run
-	make
+## To install Erlang/OTP On Ubuntu 14.04:
 
-To build javadoc like documentation run
-	erl -noshell -run edoc_run packages '[""]' '[{source_path, ["./src" | ["./include"]]}, {dir,”./docs/doc"}, {private,true}, {todo,true}]'
+    sudo apt-get install build-essential ncurses-dev libssl-dev openjdk-6-jdk xsltproc fop libxml2-utils -y
+    # this project works only with OTP version R16B02
+    wget http://www.erlang.org/download/otp_src_R16B02.tar.gz
+    tar -xvzf otp_src_R16B02.tar.gz
+    pushd otp_src_R16B02
+    ./configure --prefix=$HOME/erlang-R16B02 --disable-hipe --without-odbc
+    make
+    make install
+    popd
+    # add erlang bin folder $HOME/erlang-R16B02/bin to your path
+
+## To build/run the adpreplic application:
+
+    # compile
+    make rel
+    # run the app
+    ./rel/adpreplic/bin/adpreplic console
+
+## To build javadoc like documentation run(not working for now):
+    erl -noshell -run edoc_run packages '[""]' '[{source_path, ["./src" | ["./include"]]}, {dir,”./docs/doc"}, {private,true}, {todo,true}]'
+
+## To see the docs in a browser:
+
+    # install a web server like apache2
+    # sudo apt-get install apache2 -y
+    cp -r docs /var/www/html/
+    chmod -R 755 /var/www/html/docs
+    # access via a browser http://<IP>/docs
+
