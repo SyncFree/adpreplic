@@ -1,3 +1,9 @@
+%% Name: adpreplic
+%% Description: Adaptive replication prototype
+%% Version: 1
+%% On app start, it will run adpreplic_app:start(normal, [])
+%% All applications that must be started before: kernel, stdlib
+
 {application, adpreplic,
  [
   {description, "Adaptive replication prototype"},
