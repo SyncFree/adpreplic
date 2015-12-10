@@ -19,7 +19,7 @@ with replica_.
     wget http://www.erlang.org/download/otp_src_R16B02.tar.gz
     tar -xvzf otp_src_R16B02.tar.gz
     pushd otp_src_R16B02
-    ./configure --prefix=$HOME/erlang-R16B02 --disable-hipe --without-odbc
+    ./configure --prefix=$HOME/erlang-R16B02
     make
     make install
     popd
@@ -31,6 +31,8 @@ with replica_.
     make rel
     # run the app
     ./rel/adpreplic/bin/adpreplic console
+    # run an app method
+    adpreplic:create().
 
 ## To build javadoc like documentation run(not working for now):
     erl -noshell -run edoc_run packages '[""]' '[{source_path, ["./src" | ["./include"]]}, {dir,”./docs/doc"}, {private,true}, {todo,true}]'
@@ -43,3 +45,6 @@ with replica_.
     chmod -R 755 /var/www/html/docs
     # access via a browser http://<IP>/docs
 
+# Resources to understand OTP applications
+
+    http://www.erlang.org/doc/design_principles/applications.html#appl_res_file
