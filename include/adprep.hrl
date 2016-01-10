@@ -8,20 +8,38 @@
 %% @end
 %% =============================================================================
 
--record(replica,   {key :: key(), 
-					value :: value(), 
-					num_replicas = 1 :: integer(), 
-					list_dcs_with_replicas}).
+-record(replica, {
+    key              :: key(), 
+	num_replicas = 1 :: integer(),
+    value , 
+	list_dcs_with_replicas, %:: [dc()]
+    dcs :: [dc()]
+}).
+
+-record(strategy_params, {       
+    decay_time       :: integer(),
+    repl_threshold   :: float(),
+    rmv_threshold    :: float(),
+    max_strength     :: float(),
+    decay_factor     :: float(),
+    rstrength        :: float(),
+    wstrength        :: float() 
+}).
 
 -type key() :: string().
 -type id() :: integer().
 -type value() :: term().
--type strategy() :: atom().
--type args() :: tuple().
+-type strategy() :: string().
+-type args() :: term().
 -type reason() :: atom().
--type time() :: timer:time().
+-type time() :: integer().
 -type timer() :: timer:tref().
+-type tcp_port() :: integer().
+-type address() :: string().
+-type dc() :: {address(), tcp_port()}.
+-type replica_info() :: #replica{}.
+-type strategy_params() :: #strategy_params{}.
 
 -export_type([key/0, id/0, value/0, strategy/0, args/0, 
-    reason/0, time/0, timer/0]).
+    reason/0, time/0, timer/0, dc/0, replica_info/0, strategy_params/0]).
 

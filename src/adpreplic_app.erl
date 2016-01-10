@@ -30,8 +30,8 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    lager:start(),
+    lager:info("Starting adpreplic supervisor"),
     adpreplic_sup:start_link().
-    
+
 stop(_State) ->
     ok.

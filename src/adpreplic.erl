@@ -21,43 +21,53 @@
 %% =============================================================================
 %% Adaptive Replication User Interface
 %%
-%% @author Amadeo Asco, Annette Bieniusa
+%% @author Amadeo Asco, Annette Bieniusa, Adrian Vladu
 %% @version 1.0.0
 %% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
 %% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
 %% @end
 %% =============================================================================
 
-%% @doc Provides the user interface.
+%% @doc Provides the public client interface.
 
 -module(adpreplic).
--author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de']).
+-author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de', 'vladu@rhrk.uni-kl.de']).
 
 -include("adprep.hrl").
 
--ifdef(EUNIT).
+-ifdef(TEST).
 -compile(export_all).
 -else.
 -compile(report).
--export([create/5, read/2, write/3]).
+-export([create/10, read/1, update/2]).
 -endif.
 
 %% Public API, can be called by clients using RPC.
 
 %% @doc The create/2 function creates a new entry under some key,
 %%      with an initial value.
-%-spec create(key(), id(), value(), strategy(), args()) -> ok | {error, reason()}.
-create(Key, Id, Value, Strategy, Args) ->
-    adpreps_:create(Key, Id, Value, Strategy, Args).
+%-spec create(key(), value(), strategy(), args()) -> ok | {error, reason()}.
+create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength, 
+    DecayFactor, RStrength, WStrength) ->
+    StrategyParams = #strategy_params{
+    decay_time     = DecayTime,
+    repl_threshold = ReplThreshold,
+    rmv_threshold  = RmvThreshold,
+    max_strength   = MaxStrength,
+    decay_factor   = DecayFactor,
+    rstrength      = RStrength,
+    wstrength      = WStrength
+    },
+    replica_manager:create(Key, Value, Strategy, StrategyParams).
 
 %% @doc The read/2 function returns the current value for the
 %%      object stored at some key.
-%-spec read(key(), id()) -> {ok, value()} | {error, reason()}.
-read(Key, Id) ->
-    adpreps_:read(Key, Id).
+%-spec read(key() -> {ok, value()} | {error, reason()}.
+read(Key) ->
+    replica_manager:read(Key).
 
-%% @doc The write/3 function updates the current value for the
+%% @doc The update/3 function updates the current value for the
 %%      data stored at some key.
-%-spec write(key(), id(), value()) -> ok | {error, reason()}.
-write(Key, Id, Value) ->
-    adpreps_:write(Key, Id, Value).
+%-spec write(key(), value()) -> ok | {error, reason()}.
+update(Key, Value) ->
+    replica_manager:update(Key, Value).

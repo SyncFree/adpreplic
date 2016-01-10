@@ -20,7 +20,7 @@
 %% =============================================================================
 %% Adaptive Replication
 %% 
-%% @author Amadeo Asco, Annette Bieniusa
+%% @author Amadeo Asco, Annette Bieniusa, Adrian Vladu
 %% @version 1.0.0
 %% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
 %% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
@@ -28,8 +28,9 @@
 %% =============================================================================
 %% 
 %% @doc Decay timer.
+
 -module(decay).
--author(['aas@trifork.co.uk', 'bieniusa@cs.uni-kl.de']).
+-author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de', 'vladu@rhrk.uni-kl.de']).
 
 -include("adprep.hrl").
 
@@ -45,23 +46,29 @@
 %% Decay process interface
 %% =============================================================================
 
-%FIXME: Start Timer service? Documentation says:
-% start() -> ok
-
-% Starts the timer server. Normally, the server does not need to be started explicitly. It is started dynamically if it is needed. This is useful during development, but in a target system the server should be started explicitly. Use configuration parameters for kernel for this.
+%FIXME: Start Timer service? Documentation says the following:
+start() ->
+    timer:start().
+% Starts the timer server. Normally, the server does not need to be started explicitly.
+% It is started dynamically if it is needed. This is useful during development,
+% but in a target system the server should be started explicitly.
+% Use configuration parameters for kernel for this.
 
 
 %% @doc Starts the decay process for the specified key and time period.
--spec startDecayTimer(time(), pid(), {none | timer()}) 
-	    -> {ok, timer:tref()} | {error, reason()}.
+-spec startDecayTimer(time(), pid(), none | timer()) 
+        -> {ok, timer:tref()} | {error, reason()}.
+
 startDecayTimer(DecayTime, Receiver, none) ->
-	timer:send_interval(DecayTime, Receiver, {decay, self(), 0});
+    timer:apply_interval(DecayTime, strategy_adprep, notify_decay, [Receiver]);
+
 startDecayTimer(DecayTime, Key, Timer) ->
-	_ = stopDecayTimer(Timer), %% FIXME?
-	startDecayTimer(DecayTime, Key, none).
-	
+    _ = stopDecayTimer(Timer), %% FIXME?
+    startDecayTimer(DecayTime, Key, none).
+
 %% @doc Stops the decay process.
 -spec stopDecayTimer(timer()) -> ok | {error, reason()}.
+
 stopDecayTimer(Timer) ->
-	{ok, cancel} = timer:cancel(Timer),
-	ok.
+    {ok, cancel} = timer:cancel(Timer),
+    ok.
