@@ -35,7 +35,7 @@ with replica_.
     adpreplic:create().
 
 ## To build javadoc like documentation run(not working for now):
-    erl -noshell -run edoc_run packages '[""]' '[{source_path, ["./src" | ["./include"]]}, {dir,”./docs/doc"}, {private,true}, {todo,true}]'
+    erl -noshell -run edoc_run packages '[""]' '[{source_path, ["./src" | ["./include"]]}, {dir,"./docs/doc"}, {private,true}, {todo,true}]'
 
 ## To see the docs in a browser:
 
