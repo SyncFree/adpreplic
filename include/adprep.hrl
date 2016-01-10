@@ -1,5 +1,5 @@
 %% =============================================================================
-%% Haedrer for Partial Replication Layer - SyncFree
+%% Header for Partial Replication Layer - SyncFree
 %%
 %% @author Amadeo Asco
 %% @version 1.0.0
@@ -9,21 +9,21 @@
 %% =============================================================================
 
 -record(replica, {
-    key              :: key(), 
-	num_replicas = 1 :: integer(),
-    value , 
-	list_dcs_with_replicas, %:: [dc()]
-    dcs :: [dc()]
+    key              :: key(),
+    num_replicas = 1 :: integer(),
+    value            :: value(),
+    list_dcs_with_replicas,
+    dcs              :: [dc()]
 }).
 
--record(strategy_params, {       
+-record(strategy_params, {
     decay_time       :: integer(),
     repl_threshold   :: float(),
     rmv_threshold    :: float(),
     max_strength     :: float(),
     decay_factor     :: float(),
     rstrength        :: float(),
-    wstrength        :: float() 
+    wstrength        :: float()
 }).
 
 -type key() :: string().
@@ -42,4 +42,3 @@
 
 -export_type([key/0, id/0, value/0, strategy/0, args/0, 
     reason/0, time/0, timer/0, dc/0, replica_info/0, strategy_params/0]).
-
