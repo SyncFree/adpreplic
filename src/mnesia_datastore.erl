@@ -66,8 +66,8 @@ remove(Id) ->
 init([]) ->
    lager:info("Initializing the mnesia datastore"),
 
-   {State,Message} = mnesia:create_schema(node()),
-   lager:info("Schema created with status: ~p and message: ~p", [State, Message]),
+   Message = mnesia:create_schema([node()]),
+   lager:info("Schema created with message: ~p", [Message]),
 
    Mnesia_state = mnesia:start(),
    lager:info("Mnesia started with status: ~p", [Mnesia_state]),
@@ -88,7 +88,7 @@ handle_call({read, Id}, _From, Tid) ->
     lager:info("Reading entry for ~p",[Id]),
     DataItemId = #data_item{key = Id, _ = '_'},
     FunRead = fun() ->mnesia:select(data_item, [{DataItemId, [], ['$_']}]) end,
-    {_, Obj} = mnesia:transaction(FunRead),
+    {_, [Obj | _]} = mnesia:transaction(FunRead),
     {reply, {ok, Obj}, Tid};
 
 handle_call({update, Id, Obj}, _From, Tid) ->
