@@ -26,6 +26,11 @@
     wstrength        :: float()
 }).
 
+-record(data_item, {
+    key       :: id(),
+    value   :: value()
+}).
+
 -type key() :: string().
 -type id() :: integer().
 -type value() :: term().
