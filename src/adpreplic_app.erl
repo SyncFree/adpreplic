@@ -32,10 +32,10 @@
 start(_StartType, _StartArgs) ->
     lager:info("Starting adpreplic supervisor"),
     decay:start(),
-    datastore_supervisor:start_link(),
-    mnesia_datastore_supervisor:start_link(),
-    replica_manager_supervisor:start_link(),
-    inter_dc_manager_supervisor:start_link().
+    supervisor_datastore_ets:start_link(),
+    supervisor_datastore_mnesia:start_link(),
+    supervisor_replica_manager:start_link(),
+    supervisor_inter_dc_manager:start_link().
 
 stop(_State) ->
     ok.

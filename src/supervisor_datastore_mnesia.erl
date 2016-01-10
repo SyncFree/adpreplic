@@ -18,7 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 
--module(inter_dc_manager_supervisor).
+-module(supervisor_datastore_mnesia).
 
 -behaviour(supervisor).
 
@@ -40,10 +40,10 @@ start_link() ->
 %% ===================================================================
 
 init(_Args) ->
-    %% The supervisor will start the Inter Data Center application
-    lager:info("Starting Inter Data Center application"),
-    Replica = {inter_dc_manager, {inter_dc_manager, start_link, []},
-                 permanent, 5000, worker, [inter_dc_manager]},
+    %% The supervisor will start the Mnesia Datastore application
+    lager:info("Starting mnesia datastore application"),
+    DatastoreMnesia = {datastore_mnesia, {datastore_mnesia, start, []},
+                 permanent, 5000, worker, [datastore_mnesia]},
 
-    {ok, { {one_for_one, 5, 10}, [Replica]} }.
+    {ok, { {one_for_one, 5, 10}, [DatastoreMnesia]} }.
 

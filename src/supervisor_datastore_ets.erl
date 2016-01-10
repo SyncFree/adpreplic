@@ -18,7 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 
--module(mnesia_datastore_supervisor).
+-module(supervisor_datastore_ets).
 
 -behaviour(supervisor).
 
@@ -40,10 +40,10 @@ start_link() ->
 %% ===================================================================
 
 init(_Args) ->
-    %% The supervisor will start the Mnesia Datastore application
-    lager:info("Starting mnesia datastore application"),
-    Datastore = {mnesia_datastore, {mnesia_datastore, start, []},
-                 permanent, 5000, worker, [mnesia_datastore]},
+    %% The supervisor will start the Ets Datastore application
+    lager:info("Starting ets datastore application"),
+    DatastoreEts = {datastore_ets, {datastore_ets, start, []},
+                 permanent, 5000, worker, [datastore_ets]},
 
-    {ok, { {one_for_one, 5, 10}, [Datastore]} }.
+    {ok, { {one_for_one, 5, 10}, [DatastoreEts]} }.
 

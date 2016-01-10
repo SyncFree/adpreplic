@@ -18,7 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 
--module(datastore_supervisor).
+-module(supervisor_replica_manager).
 
 -behaviour(supervisor).
 
@@ -40,10 +40,10 @@ start_link() ->
 %% ===================================================================
 
 init(_Args) ->
-    %% The supervisor will start the Datastore application
-    lager:info("Starting datastore application"),
-    Datastore = {datastore, {datastore, start, []},
-                 permanent, 5000, worker, [datastore]},
+    %% The supervisor will start the Replica Manager application
+    lager:info("Starting replica application"),
+    Replica = {replica_manager, {replica_manager, start, []},
+                 permanent, 5000, worker, [replica_manager]},
 
-    {ok, { {one_for_one, 5, 10}, [Datastore]} }.
+    {ok, { {one_for_one, 5, 10}, [Replica]} }.
 

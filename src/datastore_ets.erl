@@ -20,7 +20,7 @@
 
 %%% Simple in-memory data store dummy for test purposes.
 
--module(datastore).
+-module(datastore_ets).
 -behaviour(gen_server).
 
 % interface calls
@@ -62,7 +62,7 @@ remove(Id) ->
 %% gen_server callbacks
 %%====================================================================
 init([]) ->
-   lager:info("Initializing the datastore"),
+   lager:info("Initializing the ets datastore"),
    ?MODULE = ets:new(?MODULE, [set, named_table, protected]),
    {ok, ?MODULE}.
 
@@ -111,7 +111,7 @@ handle_call(_Message, _From, State) ->
     {noreply, State}.
 
 handle_cast(shutdown, Tid) ->
-    lager:info("Shutting down the datastore"),
+    lager:info("Shutting down the ets datastore"),
     ets:delete(Tid),
     {stop, normal, Tid};
 handle_cast(_Message, State) ->

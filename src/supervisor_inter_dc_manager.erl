@@ -18,7 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 
--module(replica_manager_supervisor).
+-module(supervisor_inter_dc_manager).
 
 -behaviour(supervisor).
 
@@ -40,10 +40,10 @@ start_link() ->
 %% ===================================================================
 
 init(_Args) ->
-    %% The supervisor will start the Replica Manager application
-    lager:info("Starting replica application"),
-    Replica = {replica_manager, {replica_manager, start, []},
-                 permanent, 5000, worker, [replica_manager]},
+    %% The supervisor will start the Inter Data Center application
+    lager:info("Starting Inter Data Center application"),
+    InterDcManager = {inter_dc_manager, {inter_dc_manager, start_link, []},
+                 permanent, 5000, worker, [inter_dc_manager]},
 
-    {ok, { {one_for_one, 5, 10}, [Replica]} }.
+    {ok, { {one_for_one, 5, 10}, [InterDcManager]} }.
 

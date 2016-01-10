@@ -20,7 +20,7 @@
 
 %%% Persistent data store for test purposes.
 
--module(mnesia_datastore).
+-module(datastore_mnesia).
 -behaviour(gen_server).
 
 % interface calls
