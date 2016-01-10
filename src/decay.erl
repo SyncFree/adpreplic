@@ -38,7 +38,7 @@
 -compile(export_all).
 -else.
 -compile(report).
--export([start/0, startDecayTimer/3, startDecayTimer/2, stopDecayTimer/1]).
+-export([start/0, startDecayTimer/3, stopDecayTimer/1]).
 -endif.
 
 
@@ -67,7 +67,7 @@ startDecayTimer(DecayTime, Receiver, none) ->
 startDecayTimer(DecayTime, Key, Timer) ->
     %%_ = stopDecayTimer(Timer), %% FIXME?
     lager:info(Timer),
-    startDecayTimer(DecayTime, Key).
+    startDecayTimer(DecayTime, Key, none).
 
 %% @doc Stops the decay process.
 -spec stopDecayTimer(timer()) -> ok | {error, reason()}.
