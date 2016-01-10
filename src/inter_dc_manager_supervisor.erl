@@ -18,24 +18,32 @@
 %%
 %% -------------------------------------------------------------------
 
--module(adpreplic_app).
+-module(inter_dc_manager_supervisor).
 
--behaviour(application).
+-behaviour(supervisor).
 
-%% Application callbacks
--export([start/2, stop/1]).
+%% API
+-export([start_link/0]).
+
+%% Supervisor callbacks
+-export([init/1]).
 
 %% ===================================================================
-%% Application callbacks
+%% API functions
 %% ===================================================================
 
-start(_StartType, _StartArgs) ->
-    lager:info("Starting adpreplic supervisor"),
-    decay:start(),
-    datastore_supervisor:start_link(),
-    mnesia_datastore_supervisor:start_link(),
-    replica_manager_supervisor:start_link(),
-    inter_dc_manager_supervisor:start_link().
+start_link() ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
-stop(_State) ->
-    ok.
+%% ===================================================================
+%% Supervisor callbacks
+%% ===================================================================
+
+init(_Args) ->
+    %% The supervisor will start the Inter Data Center application
+    lager:info("Starting Inter Data Center application"),
+    Replica = {inter_dc_manager, {inter_dc_manager, start_link, []},
+                 permanent, 5000, worker, [inter_dc_manager]},
+
+    {ok, { {one_for_one, 5, 10}, [Replica]} }.
+

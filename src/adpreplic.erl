@@ -44,11 +44,14 @@
 
 %% Public API, can be called by clients using RPC.
 
-%% @doc The create/2 function creates a new entry under some key,
+%% @doc The create/10 function creates a new entry under some key,
 %%      with an initial value.
-%-spec create(key(), value(), strategy(), args()) -> ok | {error, reason()}.
-create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength, 
+%-spec create(key(), value(), strategy(), integer(), float(), float(), float(), float(), float(), -> ok | {error, reason()}.
+create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength,
     DecayFactor, RStrength, WStrength) ->
+
+    lager:info("Creating key ~B", [Key]),
+
     StrategyParams = #strategy_params{
     decay_time     = DecayTime,
     repl_threshold = ReplThreshold,
@@ -58,16 +61,23 @@ create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength
     rstrength      = RStrength,
     wstrength      = WStrength
     },
+
+    lager:info("Using strategy params ~p", [StrategyParams]),
+
     replica_manager:create(Key, Value, Strategy, StrategyParams).
 
-%% @doc The read/2 function returns the current value for the
+%% @doc The read/1 function returns the current value for the
 %%      object stored at some key.
 %-spec read(key() -> {ok, value()} | {error, reason()}.
 read(Key) ->
+    lager:info("Retrieving key ~B", [Key]),
+
     replica_manager:read(Key).
 
-%% @doc The update/3 function updates the current value for the
+%% @doc The update/2 function updates the current value for the
 %%      data stored at some key.
 %-spec write(key(), value()) -> ok | {error, reason()}.
 update(Key, Value) ->
+    lager:info("Updating key ~B", [Key]),
+
     replica_manager:update(Key, Value).

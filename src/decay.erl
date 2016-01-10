@@ -38,7 +38,7 @@
 -compile(export_all).
 -else.
 -compile(report).
--export([startDecayTimer/3, stopDecayTimer/1]).
+-export([start/0, startDecayTimer/3, startDecayTimer/2, stopDecayTimer/1]).
 -endif.
 
 
@@ -59,12 +59,15 @@ start() ->
 -spec startDecayTimer(time(), pid(), none | timer()) 
         -> {ok, timer:tref()} | {error, reason()}.
 
-startDecayTimer(DecayTime, Receiver, none) ->
-    timer:apply_interval(DecayTime, strategy_adprep, notify_decay, [Receiver]);
+startDecayTimer(DecayTime, Receiver) ->
+    lager:info(Receiver),
+    timer:apply_after(DecayTime, io, format, ["~nTo be implemented~n", []]).
+%%    timer:apply_interval(DecayTime, strategy_adprep, notify_decay, [Receiver]);
 
 startDecayTimer(DecayTime, Key, Timer) ->
-    _ = stopDecayTimer(Timer), %% FIXME?
-    startDecayTimer(DecayTime, Key, none).
+    %%_ = stopDecayTimer(Timer), %% FIXME?
+    lager:info(Timer),
+    startDecayTimer(DecayTime, Key).
 
 %% @doc Stops the decay process.
 -spec stopDecayTimer(timer()) -> ok | {error, reason()}.

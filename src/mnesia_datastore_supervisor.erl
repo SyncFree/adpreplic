@@ -18,7 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 
--module(adpreplic_sup).
+-module(mnesia_datastore_supervisor).
 
 -behaviour(supervisor).
 
@@ -40,10 +40,10 @@ start_link() ->
 %% ===================================================================
 
 init(_Args) ->
-    %% The supervisor will start the Datastore application
-    lager:info("Starting datastore application"),
-    Datastore = {datastore, {datastore, start, []},
-                 permanent, 5000, worker, [datastore]},
+    %% The supervisor will start the Mnesia Datastore application
+    lager:info("Starting mnesia datastore application"),
+    Datastore = {mnesia_datastore, {mnesia_datastore, start, []},
+                 permanent, 5000, worker, [mnesia_datastore]},
 
     {ok, { {one_for_one, 5, 10}, [Datastore]} }.
 
