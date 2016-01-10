@@ -18,23 +18,32 @@
 %%
 %% -------------------------------------------------------------------
 
--module(adpreplic_app).
+-module(replica_manager_supervisor).
 
--behaviour(application).
+-behaviour(supervisor).
 
-%% Application callbacks
--export([start/2, stop/1]).
+%% API
+-export([start_link/0]).
+
+%% Supervisor callbacks
+-export([init/1]).
 
 %% ===================================================================
-%% Application callbacks
+%% API functions
 %% ===================================================================
 
-start(_StartType, _StartArgs) ->
-    lager:info("Starting adpreplic supervisor"),
-    decay:start(),
-    datastore_supervisor:start_link(),
-    replica_manager_supervisor:start_link(),
-    inter_dc_manager_supervisor:start_link().
+start_link() ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
-stop(_State) ->
-    ok.
+%% ===================================================================
+%% Supervisor callbacks
+%% ===================================================================
+
+init(_Args) ->
+    %% The supervisor will start the Replica Manager application
+    lager:info("Starting replica application"),
+    Replica = {replica_manager, {replica_manager, start, []},
+                 permanent, 5000, worker, [replica_manager]},
+
+    {ok, { {one_for_one, 5, 10}, [Replica]} }.
+

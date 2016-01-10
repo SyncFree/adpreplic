@@ -18,7 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 
--module(adpreplic_sup).
+-module(inter_dc_manager_supervisor).
 
 -behaviour(supervisor).
 
@@ -40,10 +40,10 @@ start_link() ->
 %% ===================================================================
 
 init(_Args) ->
-    %% The supervisor will start the Datastore application
-    lager:info("Starting datastore application"),
-    Datastore = {datastore, {datastore, start, []},
-                 permanent, 5000, worker, [datastore]},
+    %% The supervisor will start the Inter Data Center application
+    lager:info("Starting Inter Data Center application"),
+    Replica = {inter_dc_manager, {inter_dc_manager, start_link, []},
+                 permanent, 5000, worker, [inter_dc_manager]},
 
-    {ok, { {one_for_one, 5, 10}, [Datastore]} }.
+    {ok, { {one_for_one, 5, 10}, [Replica]} }.
 
