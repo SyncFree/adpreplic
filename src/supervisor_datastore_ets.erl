@@ -18,7 +18,10 @@
 %%
 %% -------------------------------------------------------------------
 
+%% @doc Supervisor for ets datatstore
+
 -module(supervisor_datastore_ets).
+-author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de', 'vladu@rhrk.uni-kl.de']).
 
 -behaviour(supervisor).
 
@@ -32,6 +35,7 @@
 %% API functions
 %% ===================================================================
 
+%% @doc Start the ets datastore application
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
@@ -39,8 +43,8 @@ start_link() ->
 %% Supervisor callbacks
 %% ===================================================================
 
+%% @doc Callback to start the ets datastore application
 init(_Args) ->
-    %% The supervisor will start the Ets Datastore application
     lager:info("Starting ets datastore application"),
     DatastoreEts = {datastore_ets, {datastore_ets, start, []},
                  permanent, 5000, worker, [datastore_ets]},
