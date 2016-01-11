@@ -98,7 +98,7 @@ handle_call({send_data_item_location, Key}, _From, #state{dcs=DCs} = _State) ->
     lager:info("Key is: ~p and From is: ~p", [Key, _From]),
     lager:info("DCs are: ~p", [DCs]),
     lists:foreach(
-        fun(DC) -> rpc:call(DC, inter_dc_manager, receive_data_item_location, [Key, DC]) end,
+        fun(DC) -> erlang:spawn(DC, inter_dc_manager, receive_data_item_location, [Key, DC]) end,
     DCs),
 
     {reply, {ok, DCs}, _State};
