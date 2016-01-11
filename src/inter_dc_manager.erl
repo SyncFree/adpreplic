@@ -27,7 +27,7 @@
          get_dcs/0,
          add_dc/1,
          add_list_dcs/1,
-         receive_data_item_location/1,
+         receive_data_item_location/2,
          send_data_item_location/1
          ]).
 
@@ -64,8 +64,8 @@ add_list_dcs(DCs) ->
 send_data_item_location(Key) ->
     gen_server:call(?MODULE, {send_data_item_location, Key}).
 
-receive_data_item_location(Key) ->
-    gen_server:call(?MODULE, {receive_data_item_location, Key}).
+receive_data_item_location(Key, DC) ->
+    gen_server:call(?MODULE, {receive_data_item_location, Key, DC}).
 
 %% ===================================================================
 %% gen_server callbacks
@@ -98,14 +98,15 @@ handle_call({send_data_item_location, Key}, _From, #state{dcs=DCs} = _State) ->
     lager:info("Key is: ~p and From is: ~p", [Key, _From]),
     lager:info("DCs are: ~p", [DCs]),
     lists:foreach(
-        fun(DC) -> lager:info("DC is ~p", [DC]) end,
-        DCs),
+        fun(DC) -> rpc:call(DC, inter_dc_manager, receive_data_item_location, [Key, DC]) end,
+    DCs),
 
     {reply, {ok, DCs}, _State};
 
-handle_call({receive_data_item_location, Key}, _From, #state{dcs=DCs} = _State) ->
-    lager:info("Key is: ~p and From is: ~p and DCs are: ~p", [Key, _From, DCs]),
-    {reply, ok, DCs}.
+handle_call({receive_data_item_location, Key, DC}, _From, #state{dcs=DCs} = _State) ->
+    lager:info("Key is: ~p and From is: ~p and DCs are: ~p and DC is: ~p",
+        [Key, _From, DCs, DC]),
+    {reply, {ok, DCs}, _State}.
 
 handle_cast(_Info, State) ->
     {noreply, State}.
