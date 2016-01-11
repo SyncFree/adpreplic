@@ -94,22 +94,59 @@ init([]) ->
    {ok, ?MODULE}.
 
 handle_call({create, Key, Value, Strategy, StrategyParams}, _From, Tid) ->
-    %TODO Handle the case that replica has already been created at other DC
     lager:info("Create data item with key: ~B, value: ~p, strategy: ~p 
         and StrategyParams: ~p, with Tid: ~p",
         [Key, Value, Strategy, StrategyParams, Tid]),
 
-    Result = strategy_adprep:init_strategy(Strategy, true, StrategyParams),
+    %% Start the replication strategy
+    Result = strategy_adprep:init_strategy(Strategy, true,
+        StrategyParams),
+    lager:info("Replication info is ~p", [Result]),
     case Result of
-        {ok,_Pid}      ->
-            ok = datastore_mnesia:create(Key,Value),
+        {ok, _ReplicationInfo} ->
+
+            %% Save data item meta information locally
+            State = sys:get_state(_ReplicationInfo),
+            { _, _, Strength, _, _, _} = State,
+            lager:info("New Strength is ~p", [Strength]),
             ThisDC = inter_dc_manager:get_my_dc(),
-            Info = #replica{key=Key,num_replicas=1,dcs=[ThisDC]},
-            true = ets:insert(Tid,{Key,Info}),
+            datastore_mnesia_data_info:create(Key,
+                #data_info{
+                    replicated = true,
+                    strength = Strength,
+                    strategy = Strategy,
+                    dcs = [ThisDC]
+                }),
+
+            %% Save data item value locally
+            ok = datastore_mnesia:create(Key,Value),
+
+            %% Send data to all available DCs
+            SendResult = inter_dc_manager:send_data_item_location(Key),
+            lager:info("SendResult is ~p", [SendResult]),
+
             {reply, {ok}, Tid};
-        {error,_Error} -> {reply, {error, _Error}, Tid};
-        ignore         -> {reply, {error, ignored}, Tid}
+        {error, Error} ->
+            lager:info("Error starting strategy ~p", [Error]),
+            {reply, {error, Error}, Tid};
+        ignore -> {reply, {error, ignored}, Tid}
     end;
+    % TO DO
+    %% Send the data item location to other DCs
+    %% Send the data item to the minimum required DCs
+    %%     (for now we consider the minimum required 1)
+    %% Handle the case that replica has already been created at other DC
+
+    %Result = strategy_adprep:init_strategy(Strategy, true, StrategyParams),
+    %case Result of
+    %    {ok,_Pid}      ->
+    %        ok = datastore_mnesia:create(Key,Value),
+    %        Info = #replica{key=Key,num_replicas=1,dcs=[ThisDC]},
+    %        true = ets:insert(Tid,{Key,Info}),
+    %        {reply, {ok}, Tid};
+    %    {error,_Error} -> {reply, {error, _Error}, Tid};
+    %    ignore         -> {reply, {error, ignored}, Tid}
+    %end;
 
 handle_call({read, Key}, _From, Tid) ->
     lager:info("Read data item with key: ~p", [Key]),

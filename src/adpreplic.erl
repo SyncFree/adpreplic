@@ -46,7 +46,8 @@
 
 %% @doc The create/10 function creates a new entry under some key,
 %%      with an initial value and with a defined strategy.
-%-spec create(key(), value(), strategy(), integer(), float(), float(), float(), float(), float(), -> ok | {error, reason()}.
+%-spec create(key(), value(), strategy(), integer(), float(), 
+%    float(), float(), float(), float(), -> ok | {error, reason()}.
 create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength,
     DecayFactor, RStrength, WStrength) ->
 

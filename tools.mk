@@ -42,7 +42,7 @@ cleanplt:
 	@echo "Are you sure?  It takes several minutes to re-build."
 	@echo Deleting $(PLT) and $(LOCAL_PLT) in 5 seconds.
 	@echo 
-	sleep 5
-	rm $(PLT)
-	rm $(LOCAL_PLT)
+	#sleep 5
+	rm -f $(PLT)
+	rm -f $(LOCAL_PLT)
 

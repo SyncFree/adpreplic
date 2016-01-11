@@ -18,29 +18,32 @@
 %%
 %% -------------------------------------------------------------------
 
-%% @doc Starts all the required adpreplic components
+-module(supervisor_datastore_mnesia_data_info).
 
--module(adpreplic_app).
+-behaviour(supervisor).
 
--behaviour(application).
+%% API
+-export([start_link/0]).
 
-%% Application callbacks
--export([start/2, stop/1]).
+%% Supervisor callbacks
+-export([init/1]).
 
 %% ===================================================================
-%% Application callbacks
+%% API functions
 %% ===================================================================
 
-%% @doc Starts the supervisors for datastores, replica manager 
-%% and inter-dc-manager
-start(_StartType, _StartArgs) ->
-    lager:info("Starting adpreplic supervisors"),
-    decay:start(),
-    supervisor_datastore_ets:start_link(),
-    supervisor_datastore_mnesia:start_link(),
-    supervisor_datastore_mnesia_data_info:start_link(),
-    supervisor_replica_manager:start_link(),
-    supervisor_inter_dc_manager:start_link().
+start_link() ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
-stop(_State) ->
-    ok.
+%% ===================================================================
+%% Supervisor callbacks
+%% ===================================================================
+
+init(_Args) ->
+    %% The supervisor will start the Mnesia Datastore Info application
+    lager:info("Starting mnesia datastore application"),
+    DatastoreMnesia = {datastore_mnesia_data_info, {datastore_mnesia_data_info, start, []},
+                 permanent, 5000, worker, [datastore_mnesia_data_info]},
+
+    {ok, { {one_for_one, 5, 10}, [DatastoreMnesia]} }.
+
