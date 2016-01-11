@@ -20,7 +20,7 @@
 
 %% @doc Persistent data store for test purposes.
 
--module(datastore_mnesia).
+-module(datastore_mnesia_data_info).
 -author(['vladu@rhrk.uni-kl.de']).
 -behaviour(gen_server).
 
@@ -28,7 +28,7 @@
 -export([start/0, stop/0, create/2, read/1, update/2, remove/1]).
     
 % gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, 
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
 -include("adprep.hrl").
@@ -73,16 +73,8 @@ init([]) ->
    Mnesia_state = mnesia:start(),
    lager:info("Mnesia started with status: ~p", [Mnesia_state]),
 
-   {State_Table, Message_table} = mnesia:create_table(data_item,
-        [{attributes, record_info(fields, data_item)},
-        {ram_copies, nodes()}, {disc_only_copies, [node()]},
-        {storage_properties, [{ets, [compressed]},
-        {dets, [{auto_save, 5000}]}]}]),
-   lager:info("Table created with status: ~p and message: ~p",
-        [State_Table, Message_table]),
-
-   {StateDataInfoTable, MessageDataInfoTable} = mnesia:create_table(data_info,
-        [{attributes, record_info(fields, data_info)},
+   {StateDataInfoTable, MessageDataInfoTable} = mnesia:create_table(data_info_with_key,
+        [{attributes, record_info(fields, data_info_with_key)},
         {ram_copies, nodes()}, {disc_only_copies, [node()]},
         {storage_properties, [{ets, [compressed]},
         {dets, [{auto_save, 5000}]}]}]),
@@ -92,31 +84,31 @@ init([]) ->
    {Mnesia_state, ?MODULE}.
 
 handle_call({create, Id, Obj}, _From, Tid) ->
-    lager:info("Creating Data value with key for  ~p",[Id]),
+    lager:info("Creating Data info with key for  ~p",[Id]),
 
-    FunWrite = fun() ->mnesia:write(#data_item{key=Id,value=Obj}) end,
+    FunWrite = fun() ->mnesia:write(#data_info_with_key{key=Id,value=Obj}) end,
     mnesia:transaction(FunWrite),
     {reply, ok, Tid};
 
 handle_call({read, Id}, _From, Tid) ->
-    lager:info("Reading Data value with key for  ~p",[Id]),
-    DataItemId = #data_item{key = Id, _ = '_'},
-    FunRead = fun() ->mnesia:select(data_item, [{DataItemId, [], ['$_']}]) end,
+    lager:info("Reading Data info with key for  ~p",[Id]),
+    DataItemId = #data_info_with_key{key = Id, _ = '_'},
+    FunRead = fun() ->mnesia:select(data_info_with_key, [{DataItemId, [], ['$_']}]) end,
     {_, [Obj | _]} = mnesia:transaction(FunRead),
     ObjF = erlang:delete_element(1, Obj),
     {reply, {ok, ObjF}, Tid};
 
 handle_call({update, Id, Obj}, _From, Tid) ->
-    lager:info("Updating Data value with key for  ~p",[Id]),
+    lager:info("Updating Data info with key for  ~p",[Id]),
 
-    FunWrite = fun() ->mnesia:write(#data_item{key=Id,value=Obj}) end,
+    FunWrite = fun() ->mnesia:write(#data_info_with_key{key=Id,value=Obj}) end,
     mnesia:transaction(FunWrite),
     {reply, {ok, Obj}, Tid};
 
 handle_call({remove, Id}, _From, Tid) ->
-    lager:info("Removing Data value with key for  ~p",[Id]),
+    lager:info("Removing Data info with key for  ~p",[Id]),
 
-    FunDelete = fun() -> mnesia:delete({data_item, Id}) end,
+    FunDelete = fun() -> mnesia:delete({data_info_with_key, Id}) end,
     {_, Message} = mnesia:transaction(FunDelete),
     lager:info("Mnesia item deleted with message: ~p", [Message]),
 

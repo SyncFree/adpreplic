@@ -38,6 +38,7 @@ start(_StartType, _StartArgs) ->
     decay:start(),
     supervisor_datastore_ets:start_link(),
     supervisor_datastore_mnesia:start_link(),
+    supervisor_datastore_mnesia_data_info:start_link(),
     supervisor_replica_manager:start_link(),
     supervisor_inter_dc_manager:start_link().
 

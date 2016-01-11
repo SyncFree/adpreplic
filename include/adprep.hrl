@@ -31,6 +31,18 @@
     value   :: value()
 }).
 
+-record(data_info_with_key, {
+    key      :: id(),
+    value :: data_info()
+}).
+
+-record(data_info, {
+    replicated :: boolean(),
+    strength :: float(),
+    strategy :: strategy(),
+    dcs      :: [dc()]
+}).
+
 -type key() :: string().
 -type id() :: integer().
 -type value() :: term().
@@ -44,6 +56,8 @@
 -type dc() :: {address(), tcp_port()}.
 -type replica_info() :: #replica{}.
 -type strategy_params() :: #strategy_params{}.
+-type data_info() :: #data_info{}.
 
 -export_type([key/0, id/0, value/0, strategy/0, args/0, 
-    reason/0, time/0, timer/0, dc/0, replica_info/0, strategy_params/0]).
+    reason/0, time/0, timer/0, dc/0, replica_info/0, strategy_params/0,
+    data_info/0]).
