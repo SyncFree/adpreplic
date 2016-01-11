@@ -39,13 +39,13 @@
 -compile(export_all).
 -else.
 -compile(report).
--export([create/10, read/1, update/2]).
+-export([create/10, read/1, update/2, delete/1]).
 -endif.
 
 %% Public API, can be called by clients using RPC.
 
 %% @doc The create/10 function creates a new entry under some key,
-%%      with an initial value.
+%%      with an initial value and with a defined strategy.
 %-spec create(key(), value(), strategy(), integer(), float(), float(), float(), float(), float(), -> ok | {error, reason()}.
 create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength,
     DecayFactor, RStrength, WStrength) ->
@@ -81,3 +81,10 @@ update(Key, Value) ->
     lager:info("Updating key ~B", [Key]),
 
     replica_manager:update(Key, Value).
+
+%% @doc The delete/1 function deletes the data stored at some key.
+%-spec delete(key(),) -> ok | {error, reason()}.
+delete(Key) ->
+    lager:info("Deleting key ~B", [Key]),
+
+    replica_manager:remove_replica(Key).
