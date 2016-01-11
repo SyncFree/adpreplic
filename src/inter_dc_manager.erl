@@ -26,7 +26,10 @@
          start_receiver/1,
          get_dcs/0,
          add_dc/1,
-         add_list_dcs/1]).
+         add_list_dcs/1,
+         receive_data_item_location/1,
+         send_data_item_location/1
+         ]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
         terminate/2, code_change/3]).
@@ -57,14 +60,21 @@ add_dc(NewDC) ->
 
 add_list_dcs(DCs) ->
     gen_server:call(?MODULE, {add_list_dcs, DCs}, infinity).
-   
+
+send_data_item_location(Key) ->
+    gen_server:call(?MODULE, {send_data_item_location, Key}, infinity).
+
+receive_data_item_location(Key) ->
+    gen_server:call(?MODULE, {receive_data_item_location, Key}, infinity).
 
 %% ===================================================================
 %% gen_server callbacks
 %% ===================================================================
 
 init([]) ->
-    {ok, #state{dcs=[]}}.
+    {ok, #state{dcs=['adpreplic@adpreplic-1.com',
+                     'adpreplic@adpreplic-2.com']
+    }}.
 
 handle_call(get_my_dc, _From, #state{port=Port} = State) ->
     {reply, {ok, {my_ip(),Port, node()}}, State};
@@ -82,7 +92,20 @@ handle_call({add_dc, NewDC}, _From, #state{dcs=DCs0} = State) ->
 
 handle_call({add_list_dcs, DCs}, _From, #state{dcs=DCs0} = State) ->
     DCs1 = DCs0 ++ DCs,
-    {reply, ok, State#state{dcs=DCs1}}.
+    {reply, ok, State#state{dcs=DCs1}};
+
+handle_call({send_data_item_location, Key}, _From, #state{dcs=DCs} = _State) ->
+    lager:info("Key is: ~p and From is: ~p", [Key, _From]),
+    lager:info("DCs are: ~p", [DCs]),
+    lists:foreach(
+        fun(DC) -> lager:info("DC is ~p", [DC]) end,
+        DCs),
+
+    {reply, ok, DCs};
+
+handle_call({receive_data_item_location, Key}, _From, #state{dcs=DCs} = _State) ->
+    lager:info("Key is: ~p and From is: ~p and DCs are: ~p", [Key, _From, DCs]),
+    {reply, ok, DCs}.
 
 handle_cast(_Info, State) ->
     {noreply, State}.

@@ -104,6 +104,7 @@ handle_call({create, Key, Value, Strategy, StrategyParams}, _From, Tid) ->
     lager:info("Replication info is ~p", [Result]),
     case Result of
         {ok, _ReplicationInfo} ->
+
             %% Save data item meta information locally
             State = sys:get_state(_ReplicationInfo),
             { _, _, Strength, _, _, _} = State,
@@ -116,8 +117,14 @@ handle_call({create, Key, Value, Strategy, StrategyParams}, _From, Tid) ->
                     strategy = Strategy,
                     dcs = [ThisDC]
                 }),
+
             %% Save data item value locally
             ok = datastore_mnesia:create(Key,Value),
+
+            %% Send data to all available DCs
+            SendResult = inter_dc_manager:send_data_item_location(Key),
+            lager:info("SendResult is ~p", [SendResult]),
+
             {reply, {ok}, Tid};
         {error, Error} ->
             lager:info("Error starting strategy ~p", [Error]),
