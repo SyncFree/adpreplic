@@ -101,7 +101,7 @@ handle_call({send_data_item_location, Key}, _From, #state{dcs=DCs} = _State) ->
         fun(DC) -> lager:info("DC is ~p", [DC]) end,
         DCs),
 
-    {reply, {ok, DCs}};
+    {reply, {ok, DCs}, _State};
 
 handle_call({receive_data_item_location, Key}, _From, #state{dcs=DCs} = _State) ->
     lager:info("Key is: ~p and From is: ~p and DCs are: ~p", [Key, _From, DCs]),
