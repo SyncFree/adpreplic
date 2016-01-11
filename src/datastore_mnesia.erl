@@ -18,9 +18,10 @@
 %%
 %% -------------------------------------------------------------------
 
-%%% Persistent data store for test purposes.
+%% @doc Persistent data store for test purposes.
 
 -module(datastore_mnesia).
+-author(['vladu@rhrk.uni-kl.de']).
 -behaviour(gen_server).
 
 % interface calls
@@ -82,14 +83,15 @@ handle_call({create, Id, Obj}, _From, Tid) ->
 
     FunWrite = fun() ->mnesia:write(#data_item{key=Id,value=Obj}) end,
     mnesia:transaction(FunWrite),
-    {reply, {ok, Obj}, Tid};
+    {reply, ok, Tid};
 
 handle_call({read, Id}, _From, Tid) ->
     lager:info("Reading entry for ~p",[Id]),
     DataItemId = #data_item{key = Id, _ = '_'},
     FunRead = fun() ->mnesia:select(data_item, [{DataItemId, [], ['$_']}]) end,
     {_, [Obj | _]} = mnesia:transaction(FunRead),
-    {reply, {ok, Obj}, Tid};
+    ObjF = erlang:delete_element(1, Obj),
+    {reply, {ok, ObjF}, Tid};
 
 handle_call({update, Id, Obj}, _From, Tid) ->
     lager:info("Updating entry for ~p",[Id]),
