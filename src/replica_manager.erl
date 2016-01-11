@@ -98,18 +98,32 @@ handle_call({create, Key, Value, Strategy, StrategyParams}, _From, Tid) ->
         and StrategyParams: ~p, with Tid: ~p",
         [Key, Value, Strategy, StrategyParams, Tid]),
 
-    %% Save data item information
-    ThisDC = inter_dc_manager:get_my_dc(),
-    datastore_mnesia_data_info:create(Key,
-        #data_info{replicated = true,
-            strength = StrategyParams#strategy_params.wstrength,
-            strategy = Strategy,
-            dcs = [ThisDC]
-        }),
-
-    %% Save data item
-    ok = datastore_mnesia:create(Key,Value),
-    {reply, {ok}, Tid};
+    %% Start the replication strategy
+    Result = strategy_adprep:init_strategy(Strategy, true,
+        StrategyParams),
+    lager:info("Replication info is ~p", [Result]),
+    case Result of
+        {ok, _ReplicationInfo} ->
+            %% Save data item meta information locally
+            State = sys:get_state(_ReplicationInfo),
+            { _, _, Strength, _, _, _} = State,
+            lager:info("New Strength is ~p", [Strength]),
+            ThisDC = inter_dc_manager:get_my_dc(),
+            datastore_mnesia_data_info:create(Key,
+                #data_info{
+                    replicated = true,
+                    strength = Strength,
+                    strategy = Strategy,
+                    dcs = [ThisDC]
+                }),
+            %% Save data item value locally
+            ok = datastore_mnesia:create(Key,Value),
+            {reply, {ok}, Tid};
+        {error, Error} ->
+            lager:info("Error starting strategy ~p", [Error]),
+            {reply, {error, Error}, Tid};
+        ignore -> {reply, {error, ignored}, Tid}
+    end;
     % TO DO
     %% Send the data item location to other DCs
     %% Send the data item to the minimum required DCs

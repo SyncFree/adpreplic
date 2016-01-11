@@ -55,7 +55,6 @@
 
 -type strategy_state() :: #strategy_state{}.
 
-
 %TODO Methods should return whether local replica should be installed / removed.
 
 %% =============================================================================
@@ -102,15 +101,23 @@ stop(Pid) ->
 %% @doc Initializes the process and start the process 
 %%      with the specified arguments.
 -spec init({key(), boolean(), strategy_params()}) -> {ok, strategy_state()}.
-init({Key, Replicated,{_strategy_params, DecayTime, ReplThreshold,_, _, _, _,WStrength}}) ->
-	% Calculate strength of the replica
-	Strength = case Replicated of 
-		true  -> ReplThreshold + WStrength;
-		false -> 0.0
-	end,
-	{ok, Timer} = decay:startDecayTimer(DecayTime, self(), none),
-	{ok, #strategy_state{key=Key, strength=Strength, replicated=Replicated, 
-	timer=Timer}}.
+init({Key, Replicated,
+        {_strategy_params, _, ReplThreshold,_, _, _, _,WStrength}
+    }) ->
+
+    lager:info("Initiating replication strategy with Replicated: ~p",
+        [Replicated]),
+    % Calculate strength of the replica
+    Strength = case Replicated of 
+        true  -> ReplThreshold + WStrength;
+        false -> 0.0
+    end,
+
+    lager:info("New replication strength is: ~p", [Strength]),
+
+    %%{ok, Timer} = decay:startDecayTimer(DecayTime, self(), none),
+    {ok, #strategy_state{key=Key, strength=Strength, replicated=Replicated,
+    timer=none}}.
 
 %% =============================================================================
 %% Messages handlers
@@ -125,7 +132,7 @@ handle_call(local_write, _From,
     ShouldReplicate = (NewStrength > ReplThreshold) or Replicated,
     {reply, {ok, ShouldReplicate}, StrategyState#strategy_state{strength=NewStrength}};
 
-handle_call(local_read, _From,
+handle_call(local_read, _From, 
     {#strategy_state{strength=Strength, replicated=Replicated,
     params=#strategy_params{rstrength=RStrength, max_strength=MaxStrength,
     repl_threshold=ReplThreshold}}=StrategyState}) -> 
