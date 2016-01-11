@@ -62,10 +62,10 @@ add_list_dcs(DCs) ->
     gen_server:call(?MODULE, {add_list_dcs, DCs}, infinity).
 
 send_data_item_location(Key) ->
-    gen_server:call(?MODULE, {send_data_item_location, Key}, infinity).
+    gen_server:call(?MODULE, {send_data_item_location, Key}).
 
 receive_data_item_location(Key) ->
-    gen_server:call(?MODULE, {receive_data_item_location, Key}, infinity).
+    gen_server:call(?MODULE, {receive_data_item_location, Key}).
 
 %% ===================================================================
 %% gen_server callbacks
@@ -101,7 +101,7 @@ handle_call({send_data_item_location, Key}, _From, #state{dcs=DCs} = _State) ->
         fun(DC) -> lager:info("DC is ~p", [DC]) end,
         DCs),
 
-    {reply, ok, DCs};
+    {reply, {ok, DCs}};
 
 handle_call({receive_data_item_location, Key}, _From, #state{dcs=DCs} = _State) ->
     lager:info("Key is: ~p and From is: ~p and DCs are: ~p", [Key, _From, DCs]),
