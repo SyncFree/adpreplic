@@ -194,18 +194,21 @@ handle_call({remove_dc_from_replica, Key, DC}, _From, Tid) ->
 
 handle_call({read, Key}, _From, Tid) ->
     lager:info("Read data item with key: ~p", [Key]),
-    %%strategy_adprep:local_read(),
+    strategy_adprep:local_read(Key),
     Result = datastore_mnesia:read(Key),
     {reply, Result, Tid};
 
 handle_call({write, Key, Value}, _From, Tid) ->
-    %%{ok, _ShouldReplicate} = strategy_adprep:local_write(Key),
+    lager:info("Write data item with key: ~p", [Key]),
+    strategy_adprep:local_write(Key),
     datastore_mnesia:update(Key, Value),
     {reply, {ok}, Tid};
 
 handle_call({remove, Key}, _From, Tid) ->
+    lager:info("Remove data item with key: ~p", [Key]),
+    %% TO DO
+    %% Remove DC from other DCs data retrieval storage
     datastore_mnesia:remove(Key),
-    true = ets:delete(Tid, Key),
     {reply, {ok}, Tid}.
 
 handle_cast(shutdown, Tid) ->
