@@ -28,7 +28,9 @@
          add_dc/1,
          add_list_dcs/1,
          receive_data_item_location/2,
-         send_data_item_location/1
+         send_data_item_location/1,
+         get_other_dcs/1,
+         read_from_any_dc/2
          ]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -66,6 +68,9 @@ send_data_item_location(Key) ->
 
 receive_data_item_location(Key, DC) ->
     gen_server:call(?MODULE, {receive_data_item_location, Key, DC}).
+
+read_from_any_dc(Key, DCs) ->
+    gen_server:call(?MODULE, {read_from_any_dc, Key, DCs}).
 
 %% ===================================================================
 %% gen_server callbacks
@@ -110,7 +115,11 @@ handle_call({receive_data_item_location, Key, DC}, _From, #state{dcs=DCs} = _Sta
     lager:info("Key is: ~p and From is: ~p and DCs are: ~p and DC is: ~p",
         [Key, _From, DCs, DC]),
     replica_manager:add_dc_to_replica(Key, DC),
-    {reply, {ok, DC}, _State}.
+    {reply, {ok, DC}, _State};
+
+handle_call({read_from_any_dc, Key, DCsWithReplica}, _From, #state{dcs=_DCs} = _State) ->
+    lager:info("Read from any dc the key value: ~p", [DCsWithReplica]),
+    {reply, {ok, Key}, _State}.
 
 handle_cast(_Info, State) ->
     {noreply, State}.

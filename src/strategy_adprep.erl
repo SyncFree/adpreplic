@@ -137,11 +137,7 @@ handle_call(local_write, _From, #strategy_state{
         }=StrategyState) ->
 
     NewStrength = incStrength(Strength, WStrength, MaxStrength),
-    {ok, DataInfoWithKey} = datastore_mnesia_data_info:read(Key),
-    DataInfo = DataInfoWithKey#data_info_with_key.value,
-    DataInfoUpdated = DataInfo#data_info{strength= NewStrength},
-    datastore_mnesia_data_info:update(Key, DataInfoUpdated),
-    lager:info("Updated strength for ~p", [Key]),
+    save_strength(Key, NewStrength),
 
     ShouldReplicate = (NewStrength >= ReplThreshold) or Replicated,
 
@@ -160,11 +156,7 @@ handle_call(local_read, _From, #strategy_state{
         }=StrategyState) ->
 
     NewStrength = incStrength(Strength, RStrength, MaxStrength),
-    {ok, DataInfoWithKey} = datastore_mnesia_data_info:read(Key),
-    DataInfo = DataInfoWithKey#data_info_with_key.value,
-    DataInfoUpdated = DataInfo#data_info{strength= NewStrength},
-    datastore_mnesia_data_info:update(Key, DataInfoUpdated),
-    lager:info("Updated strength for ~p", [Key]),
+    save_strength(Key, NewStrength),
 
     ShouldReplicate = (NewStrength >= ReplThreshold) or Replicated,
 
@@ -218,5 +210,15 @@ decrStrength(Strength, Decay) -> max(Strength - Decay, 0).
 %% @doc Increments the strength by the specified amount and returns the new strength.
 -spec incStrength(float(), float(), float()) -> float().
 incStrength(Strength, Inc, MaxStrength) -> min(Strength + Inc, MaxStrength).
+
+%% @doc Persists the replica strength
+-spec save_strength(key(), float()) -> {ok}.
+save_strength(Key, NewStrength) ->
+    {ok, DataInfoWithKey} = datastore_mnesia_data_info:read(Key),
+    DataInfo = DataInfoWithKey#data_info_with_key.value,
+    DataInfoUpdated = DataInfo#data_info{strength= NewStrength},
+    datastore_mnesia_data_info:update(Key, DataInfoUpdated),
+    lager:info("Updated strength for ~p", [Key]),
+    {ok}.
 
 

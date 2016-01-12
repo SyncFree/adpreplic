@@ -75,7 +75,7 @@ read(Key) ->
 %% @doc Writes the new value of the specified data.
 -spec update(key(), value()) -> ok | {error, reason()}.
 update(Key, Value) ->
-    gen_server:call(?MODULE, {write, Key, Value}, infinity).
+    gen_server:call(?MODULE, {update, Key, Value}, infinity).
 
 %% @doc Remove the local replica.
 -spec remove_replica(key()) -> ok | {error, reason()}.
@@ -115,7 +115,6 @@ handle_call({create, Key, Value, Strategy, StrategyParams}, _From, Tid) ->
     lager:info("Replication info is ~p", [Result]),
     case Result of
         {ok, _ReplicationInfo} ->
-
             %% Save data item meta information locally
             State = sys:get_state(_ReplicationInfo),
             { _, _, Strength, _, _, _} = State,
@@ -128,14 +127,11 @@ handle_call({create, Key, Value, Strategy, StrategyParams}, _From, Tid) ->
                     strategy = Strategy,
                     dcs = [ThisDC]
                 }),
-
             %% Save data item value locally
             ok = datastore_mnesia:create(Key,Value),
-
             %% Send data to all available DCs
             SendResult = inter_dc_manager:send_data_item_location(Key),
             lager:info("SendResult is ~p", [SendResult]),
-
             {reply, {ok}, Tid};
         {error, Error} ->
             lager:info("Error starting strategy ~p", [Error]),
@@ -194,12 +190,39 @@ handle_call({remove_dc_from_replica, Key, DC}, _From, Tid) ->
 
 handle_call({read, Key}, _From, Tid) ->
     lager:info("Read data item with key: ~p", [Key]),
-    strategy_adprep:local_read(Key),
     Result = datastore_mnesia:read(Key),
-    {reply, Result, Tid};
+    case Result of
+        {error, _ErrorMessage} ->
+            lager:info("Key not present on ~p", [node()]),
+            ResultDataInfo = datastore_mnesia_data_info:read(Key),
+            case ResultDataInfo of
+                {ok, DataInfoWithKey} ->
+                    DataInfo = DataInfoWithKey#data_info_with_key.value,
+                    DCs = DataInfo#data_info.dcs,
+                    DCsWithKey = inter_dc_manager:get_other_dcs(DCs),
+                    lager:info("Key present on ~p", [DCsWithKey]),
+                    {ok, KeyValue} = inter_dc_manager:read_from_any_dc(Key, DCsWithKey),
+                    {reply, {ok, KeyValue}, Tid};
+                {error, _ErrorInfo} ->
+                    {reply, {error, _ErrorMessage}, Tid};
+                _Info ->
+                    lager:info("Failure: ~p", [_Info]),
+                    {reply, {error, _Info}, Tid}
+            end;
+        {ok, KeyValue} ->
+            {ok, StrategyParams} = get_strategy(Key),
+            _Result = strategy_adprep:init_strategy(Key, true, StrategyParams),
+            strategy_adprep:local_read(Key),
+            {reply, {ok, KeyValue}, Tid}
+    end;
 
-handle_call({write, Key, Value}, _From, Tid) ->
-    lager:info("Write data item with key: ~p", [Key]),
+handle_call({update, Key, Value}, _From, Tid) ->
+    %% TO DO
+    %% Update on other DC in case it is not on this DC
+    %% Proxy the update process
+    lager:info("Update data item with key: ~p", [Key]),
+    {ok, StrategyParams} = get_strategy(Key),
+    _Result = strategy_adprep:init_strategy(Key, true, StrategyParams),
     strategy_adprep:local_write(Key),
     datastore_mnesia:update(Key, Value),
     {reply, {ok}, Tid};
@@ -228,3 +251,15 @@ terminate(_Reason, _State) ->
 %% Code change
 code_change(_OldVersion, State, _Extra) ->
     {ok, State}.
+
+get_strategy(_Key) ->
+    StrategyParams = #strategy_params{
+    decay_time     = 5,
+    repl_threshold = 100.0,
+    rmv_threshold  = 50.0,
+    max_strength   = 300.0,
+    decay_factor   = 10.0,
+    rstrength      = 10.0,
+    wstrength      = 20.0
+    },
+    {ok, StrategyParams}.
