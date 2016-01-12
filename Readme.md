@@ -3,6 +3,10 @@ This site contains the work carried out for the Adaptive Replication, which
 includes various types of documentation. Please refer to the documentation in 
 the directory docs for more information about this work.
 
+This solution based on an adaptive geo-replication algorithm aims to make a decision without the need of human intervention where and when to replicate a data item while keeping into account the benefits and costs.
+
+This algorithm shall take into account the following variables: available data centers, the replicas number of a data item, number of reads of that data item from a data center, number of writes of that data item from a data center, time spent from the last read or write of that data item in a data center, number of replicas for that data item, minimum number of replicas for that data item, threshold for which data item is added to or removed from a data center.
+
 The docs directory contains all the documentation related to this work, 
 including the javadoc like documentation under docs/doc.
 
@@ -10,6 +14,20 @@ The source code is Erlang and it is located in the src, test and include directo
 The Strategies and strategy layer files should have the name starting with strategy_, 
 e.g. strategy_adprep.erl, and the name for the replication layer files should start 
 with replica_.
+
+## Automated scripts for Ubuntu 14.04:
+
+    # Make sure the configuration from ./deploy/ubuntu-14-04/etc/adpreplic.config
+    # suits your needs before running the following scripts
+
+    # To build install Erlang/OTP R16B02
+    ./deploy/ubuntu-14-04/scripts/install-erlang.sh
+
+    # To update the local files from the git repo
+    ./deploy/ubuntu-14-04/scripts/update-git-repo.sh
+
+    # To restart adpreplic
+    ./deploy/ubuntu-14-04/scripts/restart-adpreplic.sh
 
 
 ## To install Erlang/OTP On Ubuntu 14.04:
