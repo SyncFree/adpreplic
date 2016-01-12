@@ -5,6 +5,8 @@ SECRET=$1
 ADPREPLIC_NODE=$2
 BASEDIR=$(dirname $0)
 CONFIG_PATH="${BASEDIR}/../etc/adpreplic.config"
+ERLANG_DIRECTORY=$(crudini --get ${CONFIG_PATH} DEFAULT erlang_dir)
+PATH=$PATH:$ERLANG_DIRECTORY"/bin"
 
 pushd $BASEDIR/../../..
 ES=$?
