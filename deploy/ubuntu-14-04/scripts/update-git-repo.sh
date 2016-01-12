@@ -1,6 +1,7 @@
 #!/!bin/bash
 set -e
 
+sudo apt-get install crudini -y
 BASEDIR=$(dirname $0)
 CONFIG_PATH="${BASEDIR}/../etc/adpreplic.config"
 
