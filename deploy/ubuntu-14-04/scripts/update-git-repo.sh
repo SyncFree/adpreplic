@@ -5,7 +5,7 @@ sudo apt-get install crudini -y
 BASEDIR=$(dirname $0)
 CONFIG_PATH="${BASEDIR}/../etc/adpreplic.config"
 
-ADPREPLIC_DIRECTORY=$(crudini --get ${CONFIG_PATH} local adpreplic_dir)
+ADPREPLIC_DIRECTORY=$(crudini --get ${CONFIG_PATH} DEFAULT adpreplic_dir)
 GIT_REPOSITORY=$(crudini --get ${CONFIG_PATH} git repository) 
 GIT_BRANCH=$(crudini --get ${CONFIG_PATH} git branch) 
 GIT_COMMIT=$(crudini --get ${CONFIG_PATH} git commit)
