@@ -67,10 +67,10 @@ with replica_.
 
     http://www.erlang.org/doc/design_principles/applications.html#appl_res_file
 
-# To run in a dsitributed scenario
+# To run in a distributed scenario
 
     Modify the contents of ./rel/files/vm.args -name entry to the hostname of the node.
 
-    Make sure you add in all the other nodes a valid hosts entry if you do not have a DNS.
+    Make sure you add in all the other nodes a valid hosts entry if you do not have a DNS server.
 
     The hostnames must be in a FQDN format, like <entry>.local
