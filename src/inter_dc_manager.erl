@@ -109,7 +109,7 @@ handle_call({send_data_item_location, Key}, _From, #state{dcs=DCs} = _State) ->
 handle_call({receive_data_item_location, Key, DC}, _From, #state{dcs=DCs} = _State) ->
     lager:info("Key is: ~p and From is: ~p and DCs are: ~p and DC is: ~p",
         [Key, _From, DCs, DC]),
-    %% 
+    replica_manager:add_dc_to_replica(Key, DC),
     {reply, {ok, DC}, _State}.
 
 handle_cast(_Info, State) ->
