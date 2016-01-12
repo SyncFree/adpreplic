@@ -142,26 +142,40 @@ handle_call({create, Key, Value, Strategy, StrategyParams}, _From, Tid) ->
             {reply, {error, Error}, Tid};
         ignore -> {reply, {error, ignored}, Tid}
     end;
+
     % TO DO
-    %% Send the data item location to other DCs
     %% Send the data item to the minimum required DCs
     %%     (for now we consider the minimum required 1)
     %% Handle the case that replica has already been created at other DC
 
 handle_call({add_dc_to_replica, Key, DC}, _From, Tid) ->
     lager:info("Adding DC: ~p to data item: ~p", [Key, DC]),
-    {_Key, DataInfoWithKey} = datastore_mnesia_data_info:read(Key),
-    DataInfo = DataInfoWithKey#data_info_with_key.value,
-    DCs = DataInfo#data_info.dcs,
-    DCIsMember = lists:member(DC, DCs),
-    case DCIsMember of
-        false ->
-            lager:info("Adding to DCs: ~p", [DC]),
-            DataInfoWithDC = DataInfo#data_info{dcs= DCs ++ [DC]},
-            datastore_mnesia_data_info:update(Key, DataInfoWithDC);
-        _ -> lager:info("Not adding to DCs: ~p", [DC])
-    end,
-    {reply, {ok}, Tid};
+    Result = datastore_mnesia_data_info:read(Key),
+    case Result of
+        {ok, DataInfoWithKey} ->
+            DataInfo = DataInfoWithKey#data_info_with_key.value,
+            DCs = DataInfo#data_info.dcs,
+            DCIsMember = lists:member(DC, DCs),
+            case DCIsMember of
+                false ->
+                    lager:info("Adding to DCs: ~p", [DC]),
+                    DataInfoWithDC = DataInfo#data_info{dcs= DCs ++ [DC]},
+                    datastore_mnesia_data_info:update(Key, DataInfoWithDC);
+                _ -> lager:info("Not adding to DCs: ~p", [DC])
+            end,
+            {reply, {ok}, Tid};
+        {error, _ErrorInfo} ->
+            datastore_mnesia_data_info:create(Key, #data_info{
+                    replicated = false,
+                    strength = 0.0,
+                    strategy = none,
+                    dcs = [DC]
+                }),
+            {reply, {ok}, Tid};
+        _Info ->
+            lager:info("Failure: ~p", [_Info]),
+            {reply, {error}, Tid}
+    end;
 
 handle_call({remove_dc_from_replica, Key, DC}, _From, Tid) ->
     lager:info("Removing DC: ~p from data item: ~p", [Key, DC]),
