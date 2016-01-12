@@ -40,7 +40,8 @@
 %-else.
 -compile(report).
 % interface calls
--export([start/0, stop/0, create/4, read/1, update/2, remove_replica/1]).
+-export([start/0, stop/0, create/4, read/1, update/2, remove_replica/1,
+    add_dc_to_replica/2, remove_dc_from_replica/2]).
     
 % gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -81,6 +82,16 @@ update(Key, Value) ->
 remove_replica(Key) ->
     gen_server:call(?MODULE, {remove, Key}, infinity).
 
+%% @doc Add the DC to the replica locations.
+-spec add_dc_to_replica(key(), datacenter()) -> ok | {error, reason()}.
+add_dc_to_replica(Key, DC) ->
+    gen_server:call(?MODULE, {add_dc_to_replica, Key, DC}, infinity).
+
+%% @doc Remove the DC from the replica locations.
+-spec remove_dc_from_replica(key(), datacenter()) -> ok | {error, reason()}.
+remove_dc_from_replica(Key, DC) ->
+    gen_server:call(?MODULE, {remove_dc_from_replica, Key, DC}, infinity).
+
 %% @doc Shutdown replication manager.
 stop() ->
     gen_server:call(?MODULE, terminate).
@@ -109,7 +120,7 @@ handle_call({create, Key, Value, Strategy, StrategyParams}, _From, Tid) ->
             State = sys:get_state(_ReplicationInfo),
             { _, _, Strength, _, _, _} = State,
             lager:info("New Strength is ~p", [Strength]),
-            ThisDC = inter_dc_manager:get_my_dc(),
+            {ok, ThisDC} = inter_dc_manager:get_my_dc(),
             datastore_mnesia_data_info:create(Key,
                 #data_info{
                     replicated = true,
@@ -137,16 +148,35 @@ handle_call({create, Key, Value, Strategy, StrategyParams}, _From, Tid) ->
     %%     (for now we consider the minimum required 1)
     %% Handle the case that replica has already been created at other DC
 
-    %Result = strategy_adprep:init_strategy(Strategy, true, StrategyParams),
-    %case Result of
-    %    {ok,_Pid}      ->
-    %        ok = datastore_mnesia:create(Key,Value),
-    %        Info = #replica{key=Key,num_replicas=1,dcs=[ThisDC]},
-    %        true = ets:insert(Tid,{Key,Info}),
-    %        {reply, {ok}, Tid};
-    %    {error,_Error} -> {reply, {error, _Error}, Tid};
-    %    ignore         -> {reply, {error, ignored}, Tid}
-    %end;
+handle_call({add_dc_to_replica, Key, DC}, _From, Tid) ->
+    lager:info("Adding DC: ~p to data item: ~p", [Key, DC]),
+    {_Key, DataInfoWithKey} = datastore_mnesia_data_info:read(Key),
+    DataInfo = DataInfoWithKey#data_info_with_key.value,
+    DCs = DataInfo#data_info.dcs,
+    DCIsMember = lists:member(DC, DCs),
+    case DCIsMember of
+        false ->
+            lager:info("Adding to DCs: ~p", [DC]),
+            DataInfoWithDC = DataInfo#data_info{dcs= DCs ++ [DC]},
+            datastore_mnesia_data_info:update(Key, DataInfoWithDC);
+        _ -> lager:info("Not adding to DCs: ~p", [DC])
+    end,
+    {reply, {ok}, Tid};
+
+handle_call({remove_dc_from_replica, Key, DC}, _From, Tid) ->
+    lager:info("Removing DC: ~p from data item: ~p", [Key, DC]),
+    {_Key, DataInfoWithKey} = datastore_mnesia_data_info:read(Key),
+    DataInfo = DataInfoWithKey#data_info_with_key.value,
+    DCs = DataInfo#data_info.dcs,
+    DCIsMember = lists:member(DC, DCs),
+    case DCIsMember of
+        true ->
+            lager:info("Removing from DCs: ~p", [DC]),
+            DataInfoWithDC = DataInfo#data_info{dcs= DCs -- [DC]},
+            datastore_mnesia_data_info:update(Key, DataInfoWithDC);
+        _ -> lager:info("Not removing from DCs: ~p", [DC])
+    end,
+    {reply, {ok}, Tid};
 
 handle_call({read, Key}, _From, Tid) ->
     lager:info("Read data item with key: ~p", [Key]),

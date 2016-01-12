@@ -95,8 +95,18 @@ handle_call({read, Id}, _From, Tid) ->
     DataItemId = #data_info_with_key{key = Id, _ = '_'},
     FunRead = fun() ->mnesia:select(data_info_with_key, [{DataItemId, [], ['$_']}]) end,
     {_, [Obj | _]} = mnesia:transaction(FunRead),
-    ObjF = erlang:delete_element(1, Obj),
-    {reply, {ok, ObjF}, Tid};
+    %%ObjF = erlang:delete_element(1, Obj),
+    {_, Key,  { _, Replicated, Strength, Strategy, DCs}} = Obj,
+    DataInfoWithKey = #data_info_with_key{key=Key,
+        value = #data_info{
+            replicated = Replicated,
+            strength = Strength,
+            strategy = Strategy,
+            dcs =DCs
+        }
+    },
+
+    {reply, {ok, DataInfoWithKey}, Tid};
 
 handle_call({update, Id, Obj}, _From, Tid) ->
     lager:info("Updating Data info with key for  ~p",[Id]),

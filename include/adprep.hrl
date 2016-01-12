@@ -40,7 +40,7 @@
     replicated :: boolean(),
     strength :: float(),
     strategy :: strategy(),
-    dcs      :: [dc()]
+    dcs      :: [datacenter()]
 }).
 
 -type key() :: string().
@@ -54,10 +54,11 @@
 -type tcp_port() :: integer().
 -type address() :: string().
 -type dc() :: {address(), tcp_port()}.
+-type datacenter() :: string().
 -type replica_info() :: #replica{}.
 -type strategy_params() :: #strategy_params{}.
 -type data_info() :: #data_info{}.
 
 -export_type([key/0, id/0, value/0, strategy/0, args/0, 
-    reason/0, time/0, timer/0, dc/0, replica_info/0, strategy_params/0,
+    reason/0, time/0, timer/0, dc/0, datacenter/0, replica_info/0, strategy_params/0,
     data_info/0]).
