@@ -105,12 +105,12 @@ init([]) ->
    {ok, ?MODULE}.
 
 handle_call({create, Key, Value, Strategy, StrategyParams}, _From, Tid) ->
-    lager:info("Create data item with key: ~B, value: ~p, strategy: ~p 
+    lager:info("Create data item with key: ~p, value: ~p, strategy: ~p 
         and StrategyParams: ~p, with Tid: ~p",
         [Key, Value, Strategy, StrategyParams, Tid]),
 
     %% Start the replication strategy
-    Result = strategy_adprep:init_strategy(Strategy, true,
+    Result = strategy_adprep:init_strategy(Key, true,
         StrategyParams),
     lager:info("Replication info is ~p", [Result]),
     case Result of
@@ -194,6 +194,7 @@ handle_call({remove_dc_from_replica, Key, DC}, _From, Tid) ->
 
 handle_call({read, Key}, _From, Tid) ->
     lager:info("Read data item with key: ~p", [Key]),
+    %%strategy_adprep:local_read(),
     Result = datastore_mnesia:read(Key),
     {reply, Result, Tid};
 

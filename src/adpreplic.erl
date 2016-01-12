@@ -51,7 +51,7 @@
 create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength,
     DecayFactor, RStrength, WStrength) ->
 
-    lager:info("Creating key ~B", [Key]),
+    lager:info("Creating key ~p", [Key]),
 
     StrategyParams = #strategy_params{
     decay_time     = DecayTime,
@@ -71,7 +71,7 @@ create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength
 %%      object stored at some key.
 %-spec read(key() -> {ok, value()} | {error, reason()}.
 read(Key) ->
-    lager:info("Retrieving key ~B", [Key]),
+    lager:info("Retrieving key ~p", [Key]),
 
     replica_manager:read(Key).
 
@@ -79,13 +79,13 @@ read(Key) ->
 %%      data stored at some key.
 %-spec write(key(), value()) -> ok | {error, reason()}.
 update(Key, Value) ->
-    lager:info("Updating key ~B", [Key]),
+    lager:info("Updating key ~p", [Key]),
 
     replica_manager:update(Key, Value).
 
 %% @doc The delete/1 function deletes the data stored at some key.
 %-spec delete(key(),) -> ok | {error, reason()}.
 delete(Key) ->
-    lager:info("Deleting key ~B", [Key]),
+    lager:info("Deleting key ~p", [Key]),
 
     replica_manager:remove_replica(Key).

@@ -71,12 +71,12 @@ init_strategy(Key, Replicated, StrategyParams) ->
 %% @doc Update strength because of update to the local replica
 -spec local_write(key()) -> {ok, boolean()}.
 local_write(Key) ->
-    gen_server:call(Key, local_write, infinity).
+    gen_server:call(list_to_atom(Key), local_write, infinity).
 
 %% @doc Update because of read from the local replica
 -spec local_read(key()) -> {ok, boolean()}.
 local_read(Key) ->
-    gen_server:call(Key, local_read, infinity).
+    gen_server:call(list_to_atom(Key), local_read, infinity).
 
 %% @doc Notification about decay
 -spec notify_decay(pid()) -> ok.
@@ -86,8 +86,7 @@ notify_decay(Pid) ->
 %% @doc Returns the current strength factor
 -spec get_strength(key()) -> {ok, float()}.
 get_strength(Key) ->
-    gen_server:call(Key, get_strength, infinity).
-
+    gen_server:call(list_to_atom(Key), get_strength, infinity).
 
 %% @doc Stop the strategy process
 -spec stop(pid()) -> ok.
@@ -102,8 +101,10 @@ stop(Pid) ->
 %%      with the specified arguments.
 -spec init({key(), boolean(), strategy_params()}) -> {ok, strategy_state()}.
 init({Key, Replicated,
-        {_strategy_params, _, ReplThreshold,_, _, _, _,WStrength}
-    }) ->
+        #strategy_params{
+            decay_time       = DecayTime, 
+            repl_threshold   = ReplThreshold,
+            wstrength        = WStrength} = StrategyParams })->
 
     lager:info("Initiating replication strategy with Replicated: ~p",
         [Replicated]),
@@ -115,37 +116,55 @@ init({Key, Replicated,
 
     lager:info("New replication strength is: ~p", [Strength]),
 
-    %%{ok, Timer} = decay:startDecayTimer(DecayTime, self(), none),
+    {ok, Timer} = decay:startDecayTimer(DecayTime, self(), none),
     {ok, #strategy_state{key=Key, strength=Strength, replicated=Replicated,
-    timer=none}}.
+        params=StrategyParams, timer=Timer}}.
 
 %% =============================================================================
 %% Messages handlers
 %% =============================================================================
 
-handle_call(local_write, _From, 
-    {#strategy_state{strength=Strength, replicated=Replicated, 
-    params=#strategy_params{wstrength=WStrength, max_strength=MaxStrength,
-    repl_threshold=ReplThreshold}}=StrategyState}) ->
-    %Update strength
+handle_call(local_write, _From, #strategy_state{
+        key = _Key,
+        strength   = Strength,
+        replicated = Replicated,
+        timer      = _Info,
+        params     = #strategy_params{
+            wstrength      = WStrength,
+            max_strength   = MaxStrength,
+            repl_threshold = ReplThreshold
+            }
+        }=StrategyState) ->
+
     NewStrength = incStrength(Strength, WStrength, MaxStrength),
     ShouldReplicate = (NewStrength > ReplThreshold) or Replicated,
     {reply, {ok, ShouldReplicate}, StrategyState#strategy_state{strength=NewStrength}};
 
-handle_call(local_read, _From, 
-    {#strategy_state{strength=Strength, replicated=Replicated,
-    params=#strategy_params{rstrength=RStrength, max_strength=MaxStrength,
-    repl_threshold=ReplThreshold}}=StrategyState}) -> 
-    NewStrength = incStrength(Strength, RStrength, MaxStrength), 
-    ShouldReplicate = (NewStrength > ReplThreshold) or Replicated, 
-    {reply, {ok, ShouldReplicate}, StrategyState#strategy_state{strength=NewStrength}};
+handle_call(local_read, _From, #strategy_state{
+        key = _Key,
+        strength   = Strength,
+        replicated = Replicated,
+        timer      = _Info,
+        params     = #strategy_params{
+            rstrength      = RStrength,
+            max_strength   = MaxStrength,
+            repl_threshold = ReplThreshold
+            }
+        }=StrategyState) ->
+
+    NewStrength = incStrength(Strength, RStrength, MaxStrength),
+    ShouldReplicate = (NewStrength > ReplThreshold) or Replicated,
+
+    {reply, {ok, ShouldReplicate},
+        StrategyState#strategy_state{strength = NewStrength}
+    };
 
 handle_call(get_strength, _From, {#strategy_state{strength=Strength}=StrategyState}) ->
     {reply, {ok, Strength}, StrategyState};
 
 handle_call(stop, _From, State) -> {stop, normal, ok, State}.
 
-handle_cast(decay, 
+handle_cast(decay,
     {#strategy_state{key=Key, strength=Strength, replicated=Replicated, 
     params=#strategy_params{rmv_threshold=RmvThreshold, 
     decay_factor=DecayFactor}}=StrategyState}) ->
