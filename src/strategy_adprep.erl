@@ -125,7 +125,7 @@ init({Key, Replicated,
 %% =============================================================================
 
 handle_call(local_write, _From, #strategy_state{
-        key = _Key,
+        key = Key,
         strength   = Strength,
         replicated = Replicated,
         timer      = _Info,
@@ -137,11 +137,18 @@ handle_call(local_write, _From, #strategy_state{
         }=StrategyState) ->
 
     NewStrength = incStrength(Strength, WStrength, MaxStrength),
-    ShouldReplicate = (NewStrength > ReplThreshold) or Replicated,
+    {ok, DataInfoWithKey} = datastore_mnesia_data_info:read(Key),
+    DataInfo = DataInfoWithKey#data_info_with_key.value,
+    DataInfoUpdated = DataInfo#data_info{strength= NewStrength},
+    datastore_mnesia_data_info:update(Key, DataInfoUpdated),
+    lager:info("Updated strength for ~p", [Key]),
+
+    ShouldReplicate = (NewStrength >= ReplThreshold) or Replicated,
+
     {reply, {ok, ShouldReplicate}, StrategyState#strategy_state{strength=NewStrength}};
 
 handle_call(local_read, _From, #strategy_state{
-        key = _Key,
+        key = Key,
         strength   = Strength,
         replicated = Replicated,
         timer      = _Info,
@@ -153,7 +160,13 @@ handle_call(local_read, _From, #strategy_state{
         }=StrategyState) ->
 
     NewStrength = incStrength(Strength, RStrength, MaxStrength),
-    ShouldReplicate = (NewStrength > ReplThreshold) or Replicated,
+    {ok, DataInfoWithKey} = datastore_mnesia_data_info:read(Key),
+    DataInfo = DataInfoWithKey#data_info_with_key.value,
+    DataInfoUpdated = DataInfo#data_info{strength= NewStrength},
+    datastore_mnesia_data_info:update(Key, DataInfoUpdated),
+    lager:info("Updated strength for ~p", [Key]),
+
+    ShouldReplicate = (NewStrength >= ReplThreshold) or Replicated,
 
     {reply, {ok, ShouldReplicate},
         StrategyState#strategy_state{strength = NewStrength}
