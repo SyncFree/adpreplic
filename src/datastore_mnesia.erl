@@ -99,12 +99,22 @@ handle_call({create, Id, Obj}, _From, Tid) ->
     {reply, ok, Tid};
 
 handle_call({read, Id}, _From, Tid) ->
-    lager:info("Reading Data value with key for  ~p",[Id]),
+    lager:info("Reading Data info with key for  ~p",[Id]),
     DataItemId = #data_item{key = Id, _ = '_'},
     FunRead = fun() ->mnesia:select(data_item, [{DataItemId, [], ['$_']}]) end,
-    {_, [Obj | _]} = mnesia:transaction(FunRead),
-    ObjF = erlang:delete_element(1, Obj),
-    {reply, {ok, ObjF}, Tid};
+
+    Result = mnesia:transaction(FunRead),
+    case Result of
+        {atomic, []} ->
+            lager:info("Could not retrieve key ~p", [Id]),
+            {reply, {error, {"No entry found"}}, Tid};
+        {atomic, [Obj | _]} ->
+             ObjF = erlang:delete_element(1, Obj),
+             {reply, {ok, ObjF}, Tid};
+        _Info ->
+            lager:info("Failed with: ~p", [_Info]),
+            {reply, {error, _Info}, Tid}
+    end;
 
 handle_call({update, Id, Obj}, _From, Tid) ->
     lager:info("Updating Data value with key for  ~p",[Id]),

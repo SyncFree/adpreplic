@@ -194,10 +194,8 @@ handle_call({remove_dc_from_replica, Key, DC}, _From, Tid) ->
 
 handle_call({read, Key}, _From, Tid) ->
     lager:info("Read data item with key: ~p", [Key]),
-
-    %%{ok, _ShouldReplicate} = strategy_adprep:local_read(Key),
-    {ok, CurrValue} = datastore_mnesia:read(Key),
-    {reply, {ok, CurrValue}, Tid};
+    Result = datastore_mnesia:read(Key),
+    {reply, Result, Tid};
 
 handle_call({write, Key, Value}, _From, Tid) ->
     %%{ok, _ShouldReplicate} = strategy_adprep:local_write(Key),

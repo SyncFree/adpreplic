@@ -97,7 +97,7 @@ handle_call({read, Id}, _From, Tid) ->
 
     Result = mnesia:transaction(FunRead),
     case Result of
-        {atomic,[]} ->
+        {atomic, []} ->
             lager:info("Could not retrieve key ~p", [Id]),
             {reply, {error, {"No entry found"}}, Tid};
         {atomic, [Obj | _]} ->
@@ -111,7 +111,9 @@ handle_call({read, Id}, _From, Tid) ->
                 }
             },
             {reply, {ok, DataInfoWithKey}, Tid};
-        _Info -> lager:info("Failed with: ~p", [_Info])
+        _Info ->
+            lager:info("Failed with: ~p", [_Info]),
+            {reply, {error, _Info}, Tid}
     end;
 
 handle_call({update, Id, Obj}, _From, Tid) ->
