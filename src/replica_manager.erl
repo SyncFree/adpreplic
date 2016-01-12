@@ -201,8 +201,8 @@ handle_call({read, Key}, _From, Tid) ->
                     DCs = DataInfo#data_info.dcs,
                     DCsWithKey = inter_dc_manager:get_other_dcs(DCs),
                     lager:info("Key present on ~p", [DCsWithKey]),
-                    {ok, KeyValue} = inter_dc_manager:read_from_any_dc(Key, DCsWithKey),
-                    {reply, {ok, KeyValue}, Tid};
+                    ResultKeyValue = inter_dc_manager:read_from_any_dc(Key, DCsWithKey),
+                    {reply, ResultKeyValue, Tid};
                 {error, _ErrorInfo} ->
                     {reply, {error, _ErrorMessage}, Tid};
                 _Info ->

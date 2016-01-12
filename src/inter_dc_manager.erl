@@ -119,7 +119,8 @@ handle_call({receive_data_item_location, Key, DC}, _From, #state{dcs=DCs} = _Sta
 
 handle_call({read_from_any_dc, Key, DCsWithReplica}, _From, #state{dcs=_DCs} = _State) ->
     lager:info("Read from any dc the key value: ~p", [DCsWithReplica]),
-    {reply, {ok, Key}, _State}.
+    Result = get_replica_from_first_dc(Key, DCsWithReplica),
+    {reply, Result, _State}.
 
 handle_cast(_Info, State) ->
     {noreply, State}.
@@ -148,3 +149,16 @@ get_other_dcs(DCs) ->
             _ -> {true, X}
         end
     end, DCs).
+
+get_replica_from_dc(DC, Key) ->
+    rpc:call(DC,replica_manager,read,[Key]).
+
+get_replica_from_first_dc(_Key, []) ->
+    {error, "Failed to get the key value"};
+
+get_replica_from_first_dc(Key, [H | T]) ->
+    case get_replica_from_dc(H, Key) of
+        {ok, Value}  -> Value;
+        {error, _}   -> get_replica_from_first_dc(Key, T)
+    end
+    .
