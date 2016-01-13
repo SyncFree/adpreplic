@@ -22,4 +22,4 @@ else
     echo "Erlang/OTP version $ERLANG_VERSION already installed. Skipping..."
 fi
 
-bash "$BASEDIR/update.sh" 
+bash "$BASEDIR/update-git-repo.sh"
