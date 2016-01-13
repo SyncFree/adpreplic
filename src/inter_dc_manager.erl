@@ -25,6 +25,7 @@
          get_my_dc/0,
          start_receiver/1,
          get_dcs/0,
+         set_dcs/1,
          add_dc/1,
          add_list_dcs/1,
          receive_data_item_location/2,
@@ -57,6 +58,9 @@ start_receiver(Port) ->
 get_dcs() ->
     gen_server:call(?MODULE, get_dcs, infinity).
 
+set_dcs(DCs) ->
+    gen_server:call(?MODULE, {set_dcs, DCs}, infinity).
+
 add_dc(NewDC) ->
     gen_server:call(?MODULE, {add_dc, NewDC}, infinity).
 
@@ -77,9 +81,10 @@ read_from_any_dc(Key, DCs) ->
 %% ===================================================================
 
 init([]) ->
-    {ok, #state{dcs=['adpreplic@adpreplic-1.com',
-                     'adpreplic@adpreplic-2.com']
-    }}.
+    {ok, #state{
+        dcs=[]
+        }
+    }.
 
 handle_call(get_my_dc, _From, #state{dcs=_DCs} = State) ->
     {reply, {ok, node()}, State};
@@ -90,6 +95,9 @@ handle_call({start_receiver, Port}, _From, State) ->
 
 handle_call(get_dcs, _From, #state{dcs=DCs} = State) ->
     {reply, {ok, DCs}, State};
+
+handle_call({set_dcs, DCs}, _From, #state{dcs=_DCs0} = State) ->
+    {reply, ok, State#state{dcs=DCs}};
 
 handle_call({add_dc, NewDC}, _From, #state{dcs=DCs0} = State) ->
     DCs = DCs0 ++ [NewDC],
