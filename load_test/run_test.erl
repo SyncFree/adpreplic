@@ -1,10 +1,29 @@
 -module(run_test).
--export([test/1]).
+-export([test_ping/1]).
 
+%% Exported methods
+
+test_ping(FilePath) ->
+    DCs = get_dcs("adpreplic-nodes.txt"),
+    _LoadTestValue = get_load_test_value(FilePath),
+    {ok, Value} = run_on_dcs(DCs,
+        fun(X) -> get_ping_from_dc(X) end),
+    io:fwrite(Value).
+
+%% Test methods applied to each DC
+get_ping_from_dc(_DC) ->
+    Result = net_adm:ping(_DC),
+    case Result of
+        pong -> {ok, pong};
+        {error, _Info}   -> {ok, _Info}
+    end
+    .
+
+%% Helper methods
 for_each_line_in_file(Name, Proc, Accum0) ->
     {ok, Device} = file:open(Name, [read]),
     for_each_line(Device, Proc, Accum0).
- 
+
 for_each_line(Device, Proc, Accum) ->
     case io:get_line(Device, "") of
         eof  -> file:close(Device), Accum;
@@ -12,17 +31,14 @@ for_each_line(Device, Proc, Accum) ->
                 for_each_line(Device, Proc, NewAccum)
     end.
 
-get_replica_from_dc(_DC) ->
-    net_adm:ping(_DC).
-
-get_replica_from_first_dc([]) ->
+run_on_dcs([], _Proc) ->
     {ok, "Finished"};
 
-get_replica_from_first_dc([H | T]) ->
-    case get_replica_from_dc(H) of
-        pong  ->
-            io:fwrite("Pong sucess from ~p \n", [H]),
-            get_replica_from_first_dc(T);
+run_on_dcs([H | T], Proc) ->
+    case Proc(H) of
+        {ok, Value}  ->
+            io:fwrite("Sucess from DC:~p with result: ~p\n", [H, Value]),
+            run_on_dcs(T, Proc);
         {error, _Info}   -> {ok, _Info}
     end
     .
@@ -30,12 +46,15 @@ get_replica_from_first_dc([H | T]) ->
 trim_add_to_list(X, Y) ->
     Y ++ [erlang:list_to_atom(re:replace(X,"\n","",[{return,list}]))].
 
-test(FilePath) ->
-    {ok, Device} = file:open(FilePath, [read]),
-    _Line = io:get_line(Device, ""),
-    DCs = for_each_line_in_file("adpreplic-nodes.txt",
+get_dcs(FilePath) ->
+    for_each_line_in_file(FilePath,
         fun (X,Y) -> trim_add_to_list(X, Y) end,
-        []),
-    {ok, Value} = get_replica_from_first_dc(DCs),
-    io:fwrite(Value),
-    file:close(FilePath).
+        []).
+
+get_load_test_value(FilePath) ->
+    {ok, Device} = file:open(FilePath, [read]),
+    Line = io:get_line(Device, ""),
+    file:close(FilePath),
+    Line.
+
+
