@@ -125,7 +125,8 @@ handle_call({create, Key, Value, Strategy, StrategyParams}, _From, Tid) ->
                     replicated = true,
                     strength = Strength,
                     strategy = Strategy,
-                    dcs = [ThisDC]
+                    dcs = [ThisDC],
+                    timestamp = os:timestamp()
                 }),
             %% Save data item value locally
             ok = datastore_mnesia:create(Key,Value),

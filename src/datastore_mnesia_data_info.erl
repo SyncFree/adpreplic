@@ -99,13 +99,14 @@ handle_call({read, Id}, _From, Tid) ->
             lager:info("Could not retrieve key ~p", [Id]),
             {reply, {error, {"No entry found"}}, Tid};
         {atomic, [Obj | _]} ->
-            {_, Key,  { _, Replicated, Strength, Strategy, DCs}} = Obj,
+            {_, Key,  { _, Replicated, Strength, Strategy, DCs, TimeStamp}} = Obj,
             DataInfoWithKey = #data_info_with_key{key=Key,
                 value = #data_info{
                     replicated = Replicated,
-                    strength = Strength,
-                    strategy = Strategy,
-                    dcs =DCs
+                    strength   = Strength,
+                    strategy   = Strategy,
+                    dcs        = DCs,
+                    timestamp  = TimeStamp
                 }
             },
             {reply, {ok, DataInfoWithKey}, Tid};
