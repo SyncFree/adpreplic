@@ -25,7 +25,15 @@
 -behaviour(gen_server).
 
 % interface calls
--export([start/0, stop/0, create/2, read/1, update/2, remove/1]).
+-export([
+    start/0,
+    stop/0,
+    create/2,
+    read/1,
+    update/2,
+    remove/1,
+    reinitialize/0
+    ]).
     
 % gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, 
@@ -61,35 +69,19 @@ update(Id, Obj) ->
 remove(Id) ->
     gen_server:call(?MODULE, {remove, Id}).
 
+%% Reinitialises the database table
+reinitialize() ->
+    gen_server:call(?MODULE, {reinitialize}).
+
 %%====================================================================
 %% gen_server callbacks
 %%====================================================================
 init([]) ->
-   lager:info("Initializing the mnesia datastore"),
+    lager:info("Initializing the mnesia datastore"),
 
-   Message = mnesia:create_schema([node()]),
-   lager:info("Schema created with message: ~p", [Message]),
+    MnesiaState = init_mnesia_data_item(),
 
-   Mnesia_state = mnesia:start(),
-   lager:info("Mnesia started with status: ~p", [Mnesia_state]),
-
-   {State_Table, Message_table} = mnesia:create_table(data_item,
-        [{attributes, record_info(fields, data_item)},
-        {ram_copies, nodes()}, {disc_only_copies, [node()]},
-        {storage_properties, [{ets, [compressed]},
-        {dets, [{auto_save, 5000}]}]}]),
-   lager:info("Table created with status: ~p and message: ~p",
-        [State_Table, Message_table]),
-
-   {StateDataInfoTable, MessageDataInfoTable} = mnesia:create_table(data_info,
-        [{attributes, record_info(fields, data_info)},
-        {ram_copies, nodes()}, {disc_only_copies, [node()]},
-        {storage_properties, [{ets, [compressed]},
-        {dets, [{auto_save, 5000}]}]}]),
-   lager:info("Table created with status: ~p and message: ~p",
-        [StateDataInfoTable, MessageDataInfoTable]),
-
-   {Mnesia_state, ?MODULE}.
+    {MnesiaState, ?MODULE}.
 
 handle_call({create, Id, Obj}, _From, Tid) ->
     lager:info("Creating Data value with key for  ~p",[Id]),
@@ -99,7 +91,7 @@ handle_call({create, Id, Obj}, _From, Tid) ->
     {reply, ok, Tid};
 
 handle_call({read, Id}, _From, Tid) ->
-    lager:info("Reading Data info with key for  ~p",[Id]),
+    lager:info("Reading Data item with key for  ~p",[Id]),
     DataItemId = #data_item{key = Id, _ = '_'},
     FunRead = fun() ->mnesia:select(data_item, [{DataItemId, [], ['$_']}]) end,
 
@@ -132,6 +124,14 @@ handle_call({remove, Id}, _From, Tid) ->
 
     {reply, Message, Tid};
 
+handle_call({reinitialize}, _From, Tid) ->
+    lager:info("Deleting table data_item"),
+    mnesia:delete_table(data_item),
+
+    init_mnesia_data_item(),
+
+    {reply, {ok}, Tid};
+
 handle_call(_Message, _From, State) ->
     {noreply, State}.
 
@@ -153,3 +153,20 @@ terminate(_Reason, _State) ->
 %% Code change
 code_change(_OldVersion, State, _Extra) ->
     {ok, State}.
+
+init_mnesia_data_item() ->
+    Message = mnesia:create_schema([node()]),
+    lager:info("Schema created with message: ~p", [Message]),
+
+    MnesiaState = mnesia:start(),
+    lager:info("Mnesia started with status: ~p", [MnesiaState]),
+
+    {State_Table, Message_table} = mnesia:create_table(data_item,
+        [{attributes, record_info(fields, data_item)},
+        {ram_copies, nodes()}, {disc_only_copies, [node()]},
+        {storage_properties, [{ets, [compressed]},
+        {dets, [{auto_save, 5000}]}]}]),
+    lager:info("Table created with status: ~p and message: ~p",
+        [State_Table, Message_table]),
+
+    MnesiaState.
