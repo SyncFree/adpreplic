@@ -1,5 +1,8 @@
 -module(run_test).
--export([test_ping/1]).
+-export([
+    test_ping/1,
+    test_read/1
+    ]).
 
 %% Exported methods
 
@@ -10,12 +13,28 @@ test_ping(FilePath) ->
         fun(X) -> get_ping_from_dc(X) end),
     io:fwrite(Value).
 
+test_read(FilePath) ->
+    DCs = get_dcs("adpreplic-nodes.txt"),
+    _LoadTestValue = get_load_test_value(FilePath),
+    {ok, Value} = run_on_dcs(DCs,
+        fun(X) -> get_read_value_from_dc(X) end),
+    io:fwrite(Value).
+
 %% Test methods applied to each DC
-get_ping_from_dc(_DC) ->
-    Result = net_adm:ping(_DC),
+
+get_ping_from_dc(DC) ->
+    Result = net_adm:ping(DC),
     case Result of
         pong -> {ok, pong};
         {error, _Info}   -> {ok, _Info}
+    end
+    .
+
+get_read_value_from_dc(DC) ->
+    Result = rpc:call(DC,adpreplic,read,["1"]),
+    case Result of
+        {error, _Info}   -> {ok, _Info};
+        _Value -> {ok, _Value}
     end
     .
 
