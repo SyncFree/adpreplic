@@ -103,10 +103,10 @@ run_on_dcs([], _Proc) ->
 
 run_on_dcs([H | T], Proc) ->
     case Proc(H) of
-        {ok, Value}  ->
+        {ok, Value} ->
             io:fwrite("Sucess from DC:~p with result: ~p\n", [H, Value]),
             run_on_dcs(T, Proc);
-        {error, _Info}   -> {ok, _Info}
+        {error, _Info} -> {ok, _Info}
     end
     .
 

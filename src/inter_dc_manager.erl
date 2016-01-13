@@ -159,14 +159,14 @@ get_other_dcs(DCs) ->
     end, DCs).
 
 get_replica_from_dc(DC, Key) ->
-    rpc:call(DC,replica_manager,read,[Key]).
+    rpc:call(DC, replica_manager, read, [Key]).
 
 get_replica_from_first_dc(_Key, []) ->
     {error, "Failed to get the key value"};
 
 get_replica_from_first_dc(Key, [H | T]) ->
     case get_replica_from_dc(H, Key) of
-        {ok, Value}  -> Value;
+        {ok, Value}  -> {ok, Value};
         {error, _}   -> get_replica_from_first_dc(Key, T)
     end
     .
