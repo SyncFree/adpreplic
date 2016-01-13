@@ -2,7 +2,8 @@
 -export([
     test_ping/1,
     test_read/1,
-    test_write/1
+    test_write/1,
+    test_reinitialize_database_tables/1
     ]).
 
 %% Exported methods
@@ -26,6 +27,13 @@ test_write(FilePath) ->
     LoadTestValue = get_load_test_value(FilePath),
     {ok, Value} = run_on_dcs(DCs,
         fun(X) -> write_value_to_dc(X, LoadTestValue) end),
+    io:fwrite(Value).
+
+test_reinitialize_database_tables(FilePath) ->
+    DCs = get_dcs("adpreplic-nodes.txt"),
+    _LoadTestValue = get_load_test_value(FilePath),
+    {ok, Value} = run_on_dcs(DCs,
+        fun(X) -> reinitialize_database_tables(X) end),
     io:fwrite(Value).
 
 %% Test methods applied to each DC
@@ -55,6 +63,11 @@ write_value_to_dc(DC, LoadTestValue) ->
         _Value         -> {ok, _Value}
     end
     .
+
+reinitialize_database_tables(DC) ->
+    ResultDataItem = rpc:call(DC, datastore_mnesia, reinitialize, []),
+    ResultDataInfo = rpc:call(DC, datastore_mnesia_data_info, reinitialize, []),
+    {ok, [ResultDataItem, ResultDataInfo]}.
 
 %% Helper methods
 for_each_line_in_file(Name, Proc, Accum0) ->
