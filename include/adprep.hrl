@@ -40,7 +40,8 @@
     replicated :: boolean(),
     strength :: float(),
     strategy :: strategy(),
-    dcs      :: [datacenter()]
+    dcs      :: [datacenter()],
+    timestamp:: value()
 }).
 
 -type key() :: string().
