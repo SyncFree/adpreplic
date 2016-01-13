@@ -12,7 +12,7 @@ GIT_COMMIT=$(crudini --get ${CONFIG_PATH} git commit)
 
 sudo apt-get install git -y
 if [ ! -d "$ADPREPLIC_DIRECTORY" ]; then
-  sudo mkidr -p $ADPREPLIC_DIRECTORY
+  sudo mkdir -p $ADPREPLIC_DIRECTORY
   chmod -R 777 $ADPREPLIC_DIRECTORY
   git clone $GIT_REPOSITORY $ADPREPLIC_DIRECTORY
 else
