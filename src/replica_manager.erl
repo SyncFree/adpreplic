@@ -232,7 +232,10 @@ handle_call({remove, Key}, _From, Tid) ->
     lager:info("Remove data item with key: ~p", [Key]),
     %% TO DO
     %% Remove DC from other DCs data retrieval storage
+    {_, Pid, _, _} = sys:get_status(list_to_atom(Key)),
+    strategy_adprep:stop(Pid),
     datastore_mnesia:remove(Key),
+    datastore_mnesia_data_info:remove(Key),
     {reply, {ok}, Tid}.
 
 handle_cast(shutdown, Tid) ->
