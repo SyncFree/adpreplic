@@ -157,11 +157,15 @@ handle_call({add_dc_to_replica, Key, DC}, _From, Tid) ->
                 false ->
                     lager:info("Adding to DCs: ~p", [DC]),
                     DataInfoWithDC = DataInfo#data_info{dcs= DCs ++ [DC]},
-                    datastore_mnesia_data_info:update(Key, DataInfoWithDC);
+                    datastore_mnesia_data_info:update(Key, DataInfoWithDC),
+                    {ok, StrategyParams} = get_strategy(Key),
+                    _Result = strategy_adprep:init_strategy(Key, true, StrategyParams);
                 _ -> lager:info("Not adding to DCs: ~p", [DC])
             end,
             {reply, {ok}, Tid};
         {error, _ErrorInfo} ->
+            {ok, StrategyParams} = get_strategy(Key),
+            _Result = strategy_adprep:init_strategy(Key, true, StrategyParams),
             datastore_mnesia_data_info:create(Key, #data_info{
                     replicated = false,
                     strength = 0.0,
