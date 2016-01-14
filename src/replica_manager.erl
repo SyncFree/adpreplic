@@ -221,6 +221,7 @@ handle_call({update, Key, Value}, _From, Tid) ->
     %% TO DO
     %% Update on other DC in case it is not on this DC
     %% Proxy the update process
+    Timestamp = os:timestamp(),
     lager:info("Update data item with key: ~p", [Key]),
     {ok, StrategyParams} = get_strategy(Key),
     Result = datastore_mnesia_data_info:read(Key),
@@ -232,12 +233,14 @@ handle_call({update, Key, Value}, _From, Tid) ->
             Replicated = DataInfo#data_info.replicated,
             case Replicated of
                 false ->
-                    forward_update_to_dcs(Key, Value, DataInfo, StrategyParams),
+                    forward_update_to_dcs(Key, Value, DataInfo, StrategyParams,
+                        Timestamp),
                     {reply, {ok, "Value updated"}, Tid};
                 true ->
                     lager:info("Updating local replica: ~p", [Key]),
                     datastore_mnesia:update(Key, Value),
-                    forward_update_to_dcs(Key, Value, DataInfo, StrategyParams),
+                    forward_update_to_dcs(Key, Value, DataInfo, StrategyParams,
+                        Timestamp),
                     {reply, {ok, "Value updated"}, Tid}
             end;
         {error, ErrorInfo} ->
@@ -289,7 +292,7 @@ get_strategy(_Key) ->
     {ok, StrategyParams}.
 
 
-forward_update_to_dcs(Key, Value, DataInfo, StrategyParams) ->
+forward_update_to_dcs(Key, Value, DataInfo, StrategyParams, Timestamp) ->
     %% TO DO
     %% Forward the updated version to the other DCs
     %% that contain the replica
@@ -297,5 +300,5 @@ forward_update_to_dcs(Key, Value, DataInfo, StrategyParams) ->
     DCsWithKey = inter_dc_manager:get_other_dcs(DCs),
     lager:info("Updating external replicas on DCs: ~p", [DCsWithKey]),
     inter_dc_manager:update_external_replicas(DCsWithKey, Key, Value,
-        StrategyParams, DataInfo#data_info.timestamp),
+        StrategyParams, Timestamp),
     {ok, "Updated external replicas"}.
