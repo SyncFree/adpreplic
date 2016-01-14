@@ -3,6 +3,7 @@
     test_ping/1,
     test_read/1,
     test_write/1,
+    test_update/1,
     test_reinitialize_database_tables/1,
     test_set_dcs/1
     ]).
@@ -28,6 +29,13 @@ test_write(FilePath) ->
     LoadTestValue = get_load_test_value(FilePath),
     {ok, Value} = run_on_dcs(DCs,
         fun(X) -> write_value_to_dc(X, LoadTestValue) end),
+    io:fwrite(Value).
+
+test_update(FilePath) ->
+    DCs = get_dcs("adpreplic-nodes.txt"),
+    LoadTestValue = get_load_test_value(FilePath),
+    {ok, Value} = run_on_dcs(DCs,
+        fun(X) -> update_value_to_dc(X, LoadTestValue) end),
     io:fwrite(Value).
 
 test_reinitialize_database_tables(FilePath) ->
@@ -66,6 +74,15 @@ write_value_to_dc(DC, LoadTestValue) ->
     CreateParams = ["12", LoadTestValue, "Strategy1", 5,
                     100.0, 50.0, 300.0, 10.0, 10.0, 20.0],
     Result = rpc:call(DC, adpreplic, create, CreateParams),
+    case Result of
+        {error, _Info} -> {ok, _Info};
+        _Value         -> {ok, _Value}
+    end
+    .
+
+update_value_to_dc(DC, LoadTestValue) ->
+    UpdateParams = ["12", LoadTestValue],
+    Result = rpc:call(DC, adpreplic, update, UpdateParams),
     case Result of
         {error, _Info} -> {ok, _Info};
         _Value         -> {ok, _Value}
