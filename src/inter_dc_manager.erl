@@ -83,7 +83,7 @@ update_external_replicas(DCs, Key, Value, StrategyParams) ->
         StrategyParams}).
 
 receive_data_item_update(Key, Value, StrategyParams, DC) ->
-    gen_server:call(?MODULE, {update_external_replicas, Key, Value,
+    gen_server:call(?MODULE, {receive_data_item_update, Key, Value,
         StrategyParams, DC}).
 
 %% ===================================================================
@@ -142,7 +142,7 @@ handle_call({read_from_any_dc, Key, DCsWithReplica}, _From, #state{dcs=_DCs} = _
 
 handle_call({update_external_replicas, DCs, Key, Value, StrategyParams},
         _From, #state{dcs=_DCs} = _State) ->
-    lager:info("Inter Dc update external replicas: ~p", [DCs]),
+    lager:info("Inter DC update external replicas: ~p", [DCs]),
     Result = rpc:multicall(DCs, inter_dc_manager,
         receive_data_item_update,
         [Key, Value, StrategyParams, node()], infinity),
