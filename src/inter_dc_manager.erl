@@ -31,7 +31,9 @@
          receive_data_item_location/2,
          send_data_item_location/1,
          get_other_dcs/1,
-         read_from_any_dc/2
+         read_from_any_dc/2,
+         update_external_replicas/4,
+         receive_data_item_update/4
          ]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -75,6 +77,14 @@ receive_data_item_location(Key, DC) ->
 
 read_from_any_dc(Key, DCs) ->
     gen_server:call(?MODULE, {read_from_any_dc, Key, DCs}).
+
+update_external_replicas(DCs, Key, Value, StrategyParams) ->
+    gen_server:call(?MODULE, {update_external_replicas, DCs, Key, Value,
+        StrategyParams}).
+
+receive_data_item_update(Key, Value, StrategyParams, DC) ->
+    gen_server:call(?MODULE, {update_external_replicas, Key, Value,
+        StrategyParams, DC}).
 
 %% ===================================================================
 %% gen_server callbacks
@@ -128,7 +138,21 @@ handle_call({receive_data_item_location, Key, DC}, _From, #state{dcs=DCs} = _Sta
 handle_call({read_from_any_dc, Key, DCsWithReplica}, _From, #state{dcs=_DCs} = _State) ->
     lager:info("Read from any dc the key value: ~p", [DCsWithReplica]),
     Result = get_replica_from_first_dc(Key, DCsWithReplica),
-    {reply, Result, _State}.
+    {reply, Result, _State};
+
+handle_call({update_external_replicas, DCs, Key, Value, StrategyParams},
+        _From, #state{dcs=_DCs} = _State) ->
+    lager:info("Inter Dc update external replicas: ~p", [DCs]),
+    Result = rpc:multicall(DCs, inter_dc_manager,
+        receive_data_item_update,
+        [Key, Value, StrategyParams, node()], infinity),
+    lager:info("Response ~p", [Result]),
+    {reply, {ok, "Updated replicas"}, _State};
+
+handle_call({receive_data_item_update, Key, Value, StrategyParams, DC},
+        _From, #state{dcs=_DCs} = _State) ->
+    lager:info("Received replica info ~p ~p ~p ~p ", [Key, Value, StrategyParams, DC]),
+    {reply, {ok, "Received replica"}, _State}.
 
 handle_cast(_Info, State) ->
     {noreply, State}.

@@ -106,7 +106,9 @@ run_on_dcs([H | T], Proc) ->
         {ok, Value} ->
             io:fwrite("Sucess from DC:~p with result: ~p\n", [H, Value]),
             run_on_dcs(T, Proc);
-        {error, _Info} -> {ok, _Info}
+        {error, _Info} ->
+            io:fwrite("Failure from DC:~p with result: ~p\n", [H, _Info]),
+            {ok, _Info}
     end
     .
 
