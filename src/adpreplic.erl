@@ -39,7 +39,7 @@
 -compile(export_all).
 -else.
 -compile(report).
--export([create/10, read/1, update/2, delete/1]).
+-export([create/11, read/1, update/2, delete/1]).
 -endif.
 
 %% Public API, can be called by clients using RPC.
@@ -49,7 +49,7 @@
 %-spec create(key(), value(), strategy(), integer(), float(), 
 %    float(), float(), float(), float(), -> ok | {error, reason()}.
 create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength,
-    DecayFactor, RStrength, WStrength) ->
+    DecayFactor, RStrength, WStrength, MinimumDCsNumber) ->
 
     lager:info("Creating key ~p", [Key]),
 
@@ -60,7 +60,8 @@ create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength
     max_strength   = MaxStrength,
     decay_factor   = DecayFactor,
     rstrength      = RStrength,
-    wstrength      = WStrength
+    wstrength      = WStrength,
+    min_dcs_number = MinimumDCsNumber
     },
 
     lager:info("Using strategy params ~p", [StrategyParams]),

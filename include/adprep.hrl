@@ -23,7 +23,8 @@
     max_strength     :: float(),
     decay_factor     :: float(),
     rstrength        :: float(),
-    wstrength        :: float()
+    wstrength        :: float(),
+    min_dcs_number   :: integer
 }).
 
 -record(data_item, {

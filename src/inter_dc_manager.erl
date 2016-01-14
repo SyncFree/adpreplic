@@ -29,7 +29,9 @@
          add_dc/1,
          add_list_dcs/1,
          receive_data_item_location/2,
+         receive_data_item/4,
          send_data_item_location/1,
+         send_data_item_to_dcs/4,
          get_other_dcs/1,
          read_from_any_dc/2,
          update_external_replicas/5,
@@ -74,8 +76,16 @@ add_list_dcs(DCs) ->
 send_data_item_location(Key) ->
     gen_server:call(?MODULE, {send_data_item_location, Key}).
 
+send_data_item_to_dcs(Key, Value, Strategy, StrategyParams) ->
+    gen_server:call(?MODULE, {send_data_item_to_dcs, Key, Value, Strategy,
+        StrategyParams}).
+
 receive_data_item_location(Key, DC) ->
     gen_server:call(?MODULE, {receive_data_item_location, Key, DC}).
+
+receive_data_item(Key, Value, Strategy, StrategyParams) ->
+    gen_server:call(?MODULE, {receive_data_item, Key, Value, Strategy,
+        StrategyParams}).
 
 read_from_any_dc(Key, DCs) ->
     gen_server:call(?MODULE, {read_from_any_dc, Key, DCs}).
@@ -130,6 +140,21 @@ handle_call({send_data_item_location, Key}, _From, #state{dcs=DCs} = _State) ->
     lager:info("Response ~p", [Result]),
 
     {reply, {ok, DCs}, _State};
+
+handle_call({send_data_item_to_dcs, Key, Value, Strategy, StrategyParams},
+        _From, #state{dcs=DCs} = _State) ->
+    MaxDCs = get_max_dcs(StrategyParams#strategy_params.min_dcs_number, DCs),
+    lager:info("DCs that need to receive the data item: ~p", [MaxDCs]),
+    Result = rpc:multicall(MaxDCs, inter_dc_manager,
+        receive_data_item,
+        [Key, Value, Strategy, StrategyParams], infinity),
+    lager:info("ReceiveResult is: ~p", [Result]),
+    {reply, {ok, DCs}, _State};
+
+handle_call({receive_data_item, Key, Value, Strategy, StrategyParams},
+        _From, #state{dcs=_DCs} = _State) ->
+    lager:info("Received is: ~p ~p ~p", [Key, Value, Strategy]),
+    {reply, {ok, StrategyParams}, _State};
 
 handle_call({receive_data_item_location, Key, DC}, _From, #state{dcs=DCs} = _State) ->
     lager:info("Key is: ~p and From is: ~p and DCs are: ~p and DC is: ~p",
@@ -203,3 +228,6 @@ get_replica_from_first_dc(Key, [H | T]) ->
         {error, _}   -> get_replica_from_first_dc(Key, T)
     end
     .
+
+get_max_dcs(_MaxNumber, DCs) ->
+    {ok, DCs}.

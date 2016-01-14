@@ -72,7 +72,7 @@ get_read_value_from_dc(DC) ->
 
 write_value_to_dc(DC, LoadTestValue) ->
     CreateParams = ["12", LoadTestValue, "Strategy1", 5,
-                    100.0, 50.0, 300.0, 10.0, 10.0, 20.0],
+                    100.0, 50.0, 300.0, 10.0, 10.0, 20.0, 8],
     Result = rpc:call(DC, adpreplic, create, CreateParams),
     case Result of
         {error, _Info} -> {ok, _Info};

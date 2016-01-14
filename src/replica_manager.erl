@@ -133,6 +133,9 @@ handle_call({create, Key, Value, Strategy, StrategyParams}, _From, Tid) ->
             %% Send data to all available DCs
             SendResult = inter_dc_manager:send_data_item_location(Key),
             lager:info("SendResult is ~p", [SendResult]),
+            _ReplicationResult = inter_dc_manager:send_data_item_to_dcs(Key,
+                Value, Strategy, StrategyParams),
+            lager:info("SendResult is ~p", [_ReplicationResult]),
             {reply, {ok}, Tid};
         {error, Error} ->
             lager:info("Error starting strategy ~p", [Error]),
@@ -291,7 +294,8 @@ get_strategy(_Key) ->
     max_strength   = 300.0,
     decay_factor   = 10.0,
     rstrength      = 10.0,
-    wstrength      = 20.0
+    wstrength      = 20.0,
+    min_dcs_number = 8
     },
     {ok, StrategyParams}.
 
