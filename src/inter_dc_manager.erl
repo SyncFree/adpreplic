@@ -32,12 +32,14 @@
          send_data_item_location/1,
          get_other_dcs/1,
          read_from_any_dc/2,
-         update_external_replicas/4,
+         update_external_replicas/5,
          receive_data_item_update/4
          ]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
         terminate/2, code_change/3]).
+
+-include("adprep.hrl").
 
 -record(state, {
         dcs,
@@ -78,13 +80,13 @@ receive_data_item_location(Key, DC) ->
 read_from_any_dc(Key, DCs) ->
     gen_server:call(?MODULE, {read_from_any_dc, Key, DCs}).
 
-update_external_replicas(DCs, Key, Value, StrategyParams) ->
+update_external_replicas(DCs, Key, Value, StrategyParams, Timestamp) ->
     gen_server:call(?MODULE, {update_external_replicas, DCs, Key, Value,
-        StrategyParams}).
+        StrategyParams, Timestamp}).
 
-receive_data_item_update(Key, Value, StrategyParams, DC) ->
+receive_data_item_update(Key, Value, StrategyParams, Timestamp) ->
     gen_server:call(?MODULE, {receive_data_item_update, Key, Value,
-        StrategyParams, DC}).
+        StrategyParams, Timestamp}).
 
 %% ===================================================================
 %% gen_server callbacks
@@ -140,19 +142,26 @@ handle_call({read_from_any_dc, Key, DCsWithReplica}, _From, #state{dcs=_DCs} = _
     Result = get_replica_from_first_dc(Key, DCsWithReplica),
     {reply, Result, _State};
 
-handle_call({update_external_replicas, DCs, Key, Value, StrategyParams},
+handle_call({update_external_replicas, DCs, Key, Value, StrategyParams, Timestamp},
         _From, #state{dcs=_DCs} = _State) ->
     lager:info("Inter DC update external replicas: ~p", [DCs]),
     Result = rpc:multicall(DCs, inter_dc_manager,
         receive_data_item_update,
-        [Key, Value, StrategyParams, node()], infinity),
+        [Key, Value, StrategyParams, Timestamp], infinity),
     lager:info("Response ~p", [Result]),
     {reply, {ok, "Updated replicas"}, _State};
 
-handle_call({receive_data_item_update, Key, Value, StrategyParams, DC},
+handle_call({receive_data_item_update, Key, Value, StrategyParams, Timestamp},
         _From, #state{dcs=_DCs} = _State) ->
-    lager:info("Received replica info ~p ~p ~p ~p ", [Key, Value, StrategyParams, DC]),
-    {reply, {ok, "Received replica"}, _State}.
+    lager:info("Received replica info ~p ~p ~p ~p ",
+        [Key, Value, StrategyParams, Timestamp]),
+    strategy_adprep:init_strategy(Key, true, StrategyParams),
+    datastore_mnesia:update(Key, Value),
+    {_Key, DataInfoWithKey} = datastore_mnesia_data_info:read(Key),
+    DataInfo = DataInfoWithKey#data_info_with_key.value,
+    DataInfoWithTimeStamp = DataInfo#data_info{timestamp = Timestamp},
+    datastore_mnesia_data_info:update(Key, DataInfoWithTimeStamp),
+    {reply, {ok, "Updated replica"}, _State}.
 
 handle_cast(_Info, State) ->
     {noreply, State}.

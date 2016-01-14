@@ -297,5 +297,5 @@ forward_update_to_dcs(Key, Value, DataInfo, StrategyParams) ->
     DCsWithKey = inter_dc_manager:get_other_dcs(DCs),
     lager:info("Updating external replicas on DCs: ~p", [DCsWithKey]),
     inter_dc_manager:update_external_replicas(DCsWithKey, Key, Value,
-        StrategyParams),
+        StrategyParams, DataInfo#data_info.timestamp),
     {ok, "Updated external replicas"}.
