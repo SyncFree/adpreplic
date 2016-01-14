@@ -143,7 +143,7 @@ handle_call({send_data_item_location, Key}, _From, #state{dcs=DCs} = _State) ->
 
 handle_call({send_data_item_to_dcs, Key, Value, Strategy, StrategyParams},
         _From, #state{dcs=DCs} = _State) ->
-    MaxDCs = get_max_dcs(StrategyParams#strategy_params.min_dcs_number, DCs),
+    {ok, MaxDCs} = get_max_dcs(StrategyParams#strategy_params.min_dcs_number, DCs),
     lager:info("DCs that need to receive the data item: ~p", [MaxDCs]),
     Result = rpc:multicall(MaxDCs, inter_dc_manager,
         receive_data_item,
@@ -230,4 +230,5 @@ get_replica_from_first_dc(Key, [H | T]) ->
     .
 
 get_max_dcs(_MaxNumber, DCs) ->
-    {ok, DCs}.
+    OtherDCs = get_other_dcs(DCs),
+    {ok, OtherDCs}.
