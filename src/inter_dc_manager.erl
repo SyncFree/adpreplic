@@ -29,7 +29,7 @@
          add_dc/1,
          add_list_dcs/1,
          receive_data_item_location/2,
-         receive_data_item/4,
+         receive_data_item/5,
          send_data_item_location/1,
          send_data_item_to_dcs/4,
          get_other_dcs/1,
@@ -83,9 +83,9 @@ send_data_item_to_dcs(Key, Value, Strategy, StrategyParams) ->
 receive_data_item_location(Key, DC) ->
     gen_server:call(?MODULE, {receive_data_item_location, Key, DC}).
 
-receive_data_item(Key, Value, Strategy, StrategyParams) ->
+receive_data_item(Key, Value, Strategy, StrategyParams, MaxDCs) ->
     gen_server:call(?MODULE, {receive_data_item, Key, Value, Strategy,
-        StrategyParams}).
+        StrategyParams, MaxDCs}).
 
 read_from_any_dc(Key, DCs) ->
     gen_server:call(?MODULE, {read_from_any_dc, Key, DCs}).
@@ -145,16 +145,29 @@ handle_call({send_data_item_to_dcs, Key, Value, Strategy, StrategyParams},
         _From, #state{dcs=DCs} = _State) ->
     {ok, MaxDCs} = get_max_dcs(StrategyParams#strategy_params.min_dcs_number, DCs),
     lager:info("DCs that need to receive the data item: ~p", [MaxDCs]),
+    AllReplicatedDCs = MaxDCs ++ [node()],
     Result = rpc:multicall(MaxDCs, inter_dc_manager,
         receive_data_item,
-        [Key, Value, Strategy, StrategyParams], infinity),
+        [Key, Value, Strategy, StrategyParams, AllReplicatedDCs], infinity),
     lager:info("ReceiveResult is: ~p", [Result]),
     {reply, {ok, DCs}, _State};
 
-handle_call({receive_data_item, Key, Value, Strategy, StrategyParams},
+handle_call({receive_data_item, Key, Value, Strategy, StrategyParams, MaxDCs},
         _From, #state{dcs=_DCs} = _State) ->
     lager:info("Received is: ~p ~p ~p", [Key, Value, Strategy]),
-    {reply, {ok, StrategyParams}, _State};
+    datastore_mnesia:create(Key, Value),
+    {_Key, DataInfoWithKey} = datastore_mnesia_data_info:read(Key),
+    DataInfo = DataInfoWithKey#data_info_with_key.value,
+    DataInfoUpdated = DataInfo#data_info{
+        timestamp = os:timestamp(),
+        replicated = true,
+        strategy = Strategy,
+        dcs = MaxDCs,
+        strength = StrategyParams#strategy_params.repl_threshold
+    },
+    datastore_mnesia_data_info:update(Key, DataInfoUpdated),
+    strategy_adprep:init_strategy(Key, true, StrategyParams),
+    {reply, {ok, "Created replica"}, _State};
 
 handle_call({receive_data_item_location, Key, DC}, _From, #state{dcs=DCs} = _State) ->
     lager:info("Key is: ~p and From is: ~p and DCs are: ~p and DC is: ~p",
