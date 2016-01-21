@@ -216,7 +216,7 @@ handle_call({read, Key}, _From, Tid) ->
                     case ShouldReplicate of
                         true ->
                             lager:info("Key ~p should local replicate", [Key]),
-                            {ok, {_, ValueProxy}} = ResultKeyValue
+                            {ok, {_, ValueProxy}} = ResultKeyValue,
                             datastore_mnesia:create(Key, ValueProxy),
                             DataInfoUpdated = DataInfo#data_info{
                                 replicated = true,
