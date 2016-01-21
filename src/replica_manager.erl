@@ -223,7 +223,8 @@ handle_call({read, Key}, _From, Tid) ->
                                 strength = _StrategyParams#strategy_params.repl_threshold,
                                 dcs = DCs ++ [node()]
                             },
-                            datastore_mnesia_data_info:update(Key, DataInfoUpdated);
+                            datastore_mnesia_data_info:update(Key, DataInfoUpdated),
+                            _SendResult = inter_dc_manager:send_data_item_location(Key);
                         false ->
                             lager:info("Key ~p should not local replicate", [Key])
                     end,
