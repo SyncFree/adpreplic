@@ -215,7 +215,14 @@ handle_call({read, Key}, _From, Tid) ->
                     {ok, ShouldReplicate} = strategy_adprep:local_read(Key),
                     case ShouldReplicate of
                         true ->
-                            lager:info("Key ~p should local replicate", [Key]);
+                            lager:info("Key ~p should local replicate", [Key]),
+                            datastore_mnesia:create(ResultKeyValue),
+                            DataInfoUpdated = DataInfo#data_info{
+                                replicated = true,
+                                strength = _StrategyParams#strategy_params.repl_threshold,
+                                dcs = DCs ++ [node()]
+                            },
+                            datastore_mnesia_data_info:update(Key, DataInfoUpdated);
                         false ->
                             lager:info("Key ~p should not local replicate", [Key])
                     end,

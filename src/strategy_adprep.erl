@@ -205,7 +205,8 @@ handle_cast(decay, #strategy_state{
                     {noreply, StrategyState#strategy_state{strength=NewStrength}}
             end;
         false ->
-            lager:info("Data item is not replicated"),
+            lager:info("Data item should not be removed. Replicated status: ~p. Strength: ~p. Remove threshsold: ~p",
+                [Replicated, NewStrength, RmvThreshold]),
             {noreply, StrategyState#strategy_state{strength=NewStrength}}
     end.
 
