@@ -138,9 +138,7 @@ get_dcs(FilePath) ->
         []).
 
 get_load_test_value(FilePath) ->
-    {ok, Device} = file:open(FilePath, [read]),
-    Line = io:get_line(Device, ""),
-    file:close(FilePath),
+    {ok, Line} = file:read_file(FilePath),
     Line.
 
 

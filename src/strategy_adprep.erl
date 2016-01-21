@@ -102,14 +102,14 @@ stop(Pid) ->
 -spec init({key(), boolean(), strategy_params()}) -> {ok, strategy_state()}.
 init({Key, Replicated,
         #strategy_params{
-            decay_time       = DecayTime, 
+            decay_time       = DecayTime,
             repl_threshold   = ReplThreshold,
             wstrength        = WStrength} = StrategyParams })->
 
     lager:info("Initiating replication strategy with Replicated: ~p",
         [Replicated]),
     % Calculate strength of the replica
-    Strength = case Replicated of 
+    Strength = case Replicated of
         true  -> ReplThreshold + WStrength;
         false -> 0.0
     end,
@@ -169,18 +169,31 @@ handle_call(get_strength, _From, {#strategy_state{strength=Strength}=StrategySta
 
 handle_call(stop, _From, State) -> {stop, normal, ok, State}.
 
-handle_cast(decay,
-    {#strategy_state{key=Key, strength=Strength, replicated=Replicated, 
-    params=#strategy_params{rmv_threshold=RmvThreshold, 
-    decay_factor=DecayFactor}}=StrategyState}) ->
+handle_cast(decay, #strategy_state{
+        key = Key,
+        strength   = Strength,
+        replicated = Replicated,
+        timer      = Timer,
+        params     = #strategy_params{
+            rmv_threshold = RmvThreshold,
+            decay_time = DecayFactor
+            }
+        }=StrategyState) ->
     % Time decay
+    lager:info("start decay ~p", [DecayFactor]),
     NewStrength = decrStrength(Strength, DecayFactor),
     ShouldStopReplicate = (RmvThreshold > NewStrength) and Replicated,
     % Notify replication manager if replica should not longer be replicated
-    _ = case ShouldStopReplicate of true -> 
-        lager:info("Below replication threshold for key ~p",[Key]),
-        replica_manager:remove_replica(Key);
-        false -> ok
+    _ = case ShouldStopReplicate of
+        true -> 
+            lager:info("Below replication threshold for key ~p",[Key]),
+            replica_manager:remove_replica(Key),
+            decay:stopDecayTimer(Timer),
+            strategy_adprep:stop(self());
+        false ->
+            lager:info("Remove replication threshold for key ~p not met ~p",
+                [Key, NewStrength]),
+            ok
     end,
    {noreply, StrategyState#strategy_state{strength=NewStrength}}.
 

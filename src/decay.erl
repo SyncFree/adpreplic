@@ -60,13 +60,12 @@ start() ->
         -> {ok, timer:tref()} | {error, reason()}.
 
 startDecayTimer(DecayTime, Receiver, none) ->
-    lager:info(Receiver),
-    timer:apply_after(DecayTime, io, format, ["~nTo be implemented~n", []]);
-%%    timer:apply_interval(DecayTime, strategy_adprep, notify_decay, [Receiver]);
+    lager:info("Receiver is : ~p", [Receiver]),
+    timer:apply_interval(DecayTime * 1000, strategy_adprep, notify_decay, [Receiver]);
 
 startDecayTimer(DecayTime, Key, Timer) ->
     %%_ = stopDecayTimer(Timer), %% FIXME?
-    lager:info(Timer),
+    lager:info("Timer is: ~p", [Timer]),
     startDecayTimer(DecayTime, Key, none).
 
 %% @doc Stops the decay process.

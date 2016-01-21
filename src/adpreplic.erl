@@ -54,14 +54,14 @@ create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength
     lager:info("Creating key ~p", [Key]),
 
     StrategyParams = #strategy_params{
-    decay_time     = DecayTime,
-    repl_threshold = ReplThreshold,
-    rmv_threshold  = RmvThreshold,
-    max_strength   = MaxStrength,
-    decay_factor   = DecayFactor,
-    rstrength      = RStrength,
-    wstrength      = WStrength,
-    min_dcs_number = MinimumDCsNumber
+        decay_time     = DecayTime,
+        repl_threshold = ReplThreshold,
+        rmv_threshold  = RmvThreshold,
+        max_strength   = MaxStrength,
+        decay_factor   = DecayFactor,
+        rstrength      = RStrength,
+        wstrength      = WStrength,
+        min_dcs_number = MinimumDCsNumber
     },
 
     lager:info("Using strategy params ~p", [StrategyParams]),
