@@ -264,6 +264,7 @@ get_replica_from_first_dc(Key, [H | T]) ->
     end
     .
 
-get_max_dcs(_MaxNumber, DCs) ->
+get_max_dcs(MaxNumber, DCs) ->
     OtherDCs = get_other_dcs(DCs),
-    {ok, OtherDCs}.
+    MAxDCs = lists:sublist(OtherDCs, (MaxNumber - 1)),
+    {ok, MAxDCs}.

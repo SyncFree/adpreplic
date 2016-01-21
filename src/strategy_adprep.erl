@@ -104,7 +104,8 @@ init({Key, Replicated,
         #strategy_params{
             decay_time       = DecayTime,
             repl_threshold   = ReplThreshold,
-            wstrength        = WStrength} = StrategyParams })->
+            wstrength        = WStrength,
+            min_dcs_number = _MinimumDCsNumber} = StrategyParams })->
 
     lager:info("Initiating replication strategy with Replicated: ~p",
         [Replicated]),
@@ -176,7 +177,8 @@ handle_cast(decay, #strategy_state{
         timer      = Timer,
         params     = #strategy_params{
             rmv_threshold = RmvThreshold,
-            decay_time = DecayFactor
+            decay_factor = DecayFactor,
+            min_dcs_number = MinimumDCsNumber
             }
         }=StrategyState) ->
     % Time decay
@@ -187,10 +189,21 @@ handle_cast(decay, #strategy_state{
         true ->
             lager:info("Remove replication threshold for key ~p is met ~p",
                 [Key, RmvThreshold]),
-            replica_manager:remove_replica(Key),
-            decay:stopDecayTimer(Timer),
-            strategy_adprep:stop(self()),
-            {noreply, StrategyState#strategy_state{strength=0.0}};
+            {ok, DataInfoWithKey} = datastore_mnesia_data_info:read(Key),
+            DataInfo = DataInfoWithKey#data_info_with_key.value,
+            lager:info("~p ~p is len ~p",
+                [MinimumDCsNumber, DataInfo#data_info.dcs, length(DataInfo#data_info.dcs)]),
+            KeepReplica = MinimumDCsNumber < length(DataInfo#data_info.dcs),
+            case KeepReplica of
+                true ->
+                    replica_manager:remove_replica(Key),
+                    decay:stopDecayTimer(Timer),
+                    strategy_adprep:stop(self()),
+                    {noreply, StrategyState#strategy_state{strength=0.0}};
+                false ->
+                    lager:info("Remove replication min number of DCS not met"),
+                    {noreply, StrategyState#strategy_state{strength=NewStrength}}
+            end;
         false ->
             lager:info("Remove replication threshold for key ~p not met ~p",
                 [Key, NewStrength]),
