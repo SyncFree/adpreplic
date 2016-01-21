@@ -168,7 +168,7 @@ handle_call({add_dc_to_replica, Key, DC}, _From, Tid) ->
             {reply, {ok}, Tid};
         {error, _ErrorInfo} ->
             {ok, StrategyParams} = get_strategy(Key),
-            _Result = strategy_adprep:init_strategy(Key, true, StrategyParams),
+            _Result = strategy_adprep:init_strategy(Key, false, StrategyParams),
             datastore_mnesia_data_info:create(Key, #data_info{
                     replicated = false,
                     strength = 0.0,
