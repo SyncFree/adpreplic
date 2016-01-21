@@ -205,8 +205,7 @@ handle_cast(decay, #strategy_state{
                     {noreply, StrategyState#strategy_state{strength=NewStrength}}
             end;
         false ->
-            lager:info("Remove replication threshold for key ~p not met ~p",
-                [Key, NewStrength]),
+            lager:info("Data item is not replicated"),
             {noreply, StrategyState#strategy_state{strength=NewStrength}}
     end.
 

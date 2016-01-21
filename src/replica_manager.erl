@@ -318,8 +318,8 @@ get_strategy(_Key) ->
         rmv_threshold  = 50.0,
         max_strength   = 300.0,
         decay_factor   = 20.0,
-        rstrength      = 10.0,
-        wstrength      = 20.0,
+        rstrength      = 50.0,
+        wstrength      = 100.0,
         min_dcs_number = 1
     },
     {ok, StrategyParams}.
