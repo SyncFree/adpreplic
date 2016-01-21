@@ -198,8 +198,7 @@ handle_call({remove_dc_from_replica, Key, DC}, _From, Tid) ->
 
 handle_call({read, Key}, _From, Tid) ->
     lager:info("Read data item with key: ~p", [Key]),
-    {ok, StrategyParams} = get_strategy(Key),
-    strategy_adprep:init_strategy(Key, true, StrategyParams),
+    {ok, _StrategyParams} = get_strategy(Key),
     Result = datastore_mnesia:read(Key),
     case Result of
         {error, _ErrorMessage} ->
@@ -212,6 +211,7 @@ handle_call({read, Key}, _From, Tid) ->
                     DCsWithKey = inter_dc_manager:get_other_dcs(DCs),
                     lager:info("Key present on ~p", [DCsWithKey]),
                     ResultKeyValue = inter_dc_manager:read_from_any_dc(Key, DCsWithKey),
+                    strategy_adprep:init_strategy(Key, false, _StrategyParams),
                     {ok, ShouldReplicate} = strategy_adprep:local_read(Key),
                     case ShouldReplicate of
                         true ->
@@ -227,6 +227,7 @@ handle_call({read, Key}, _From, Tid) ->
                     {reply, {error, _Info}, Tid}
             end;
         {ok, KeyValue} ->
+            strategy_adprep:init_strategy(Key, true, _StrategyParams),
             strategy_adprep:local_read(Key),
             {reply, {ok, KeyValue}, Tid}
     end;
