@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Module strategy_adprep</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
@@ -10,99 +10,119 @@
 <hr>
 
 <h1>Module strategy_adprep</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Provides operations required in a database.
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Provides operations required in a database.
 
 <p><b>Version:</b> 1.0.0</p>
 <p><b>Behaviours:</b> <a href="gen_server.html"><tt>gen_server</tt></a>.</p>
-<p><b>Authors:</b> Amadeo Asco.</p>
+<p><b>Authors:</b> Amadeo Asco, Annette Bieniusa, Adrian Vladu.</p>
 <p><b>References</b><ul><li>Project <a href="https://syncfree.lip6.fr/">SyncFree</a></li><li>More courses at <a href="http://www.trifork.com">Trifork Leeds</a></li></ul></p>
 
 <h2><a name="description">Description</a></h2>Provides operations required in a database.
+<h2><a name="types">Data Types</a></h2>
+
+<h3 class="typedecl"><a name="type-strategy_state">strategy_state()</a></h3>
+<p><tt>strategy_state() = #strategy_state{}</tt></p>
+
+
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td>Does nothing.</td></tr>
+<tr><td valign="top"><a href="#decrStrength-2">decrStrength/2*</a></td><td>Decrements the strength.</td></tr>
+<tr><td valign="top"><a href="#get_strength-1">get_strength/1</a></td><td>Returns the current strength factor.</td></tr>
 <tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td>Does nothing.</td></tr>
-<tr><td valign="top"><a href="#incStrength-3">incStrength/3*</a></td><td>Increments the strength by the specified amount and returnst the new strength.</td></tr>
-<tr><td valign="top"><a href="#init-1">init/1</a></td><td>Initialises the process and start the process with the specified arguments.</td></tr>
-<tr><td valign="top"><a href="#nextDCsFunc-3">nextDCsFunc/3*</a></td><td>Builds the list of DCs where a replica will be created from within those in the
- 		provides list of all DCs, except fro specified DC, and another to select from in
- 		case any of the previous fail.</td></tr>
-<tr><td valign="top"><a href="#nextDCsFunc_-4">nextDCsFunc_/4*</a></td><td></td></tr>
-<tr><td valign="top"><a href="#processStrength-5">processStrength/5*</a></td><td>Processes the forwarded message.</td></tr>
-<tr><td valign="top"><a href="#read-7">read/7*</a></td><td>Reads the specified data, irrespective of where it is located.</td></tr>
+<tr><td valign="top"><a href="#incStrength-3">incStrength/3*</a></td><td>Increments the strength by the specified amount and returns the new strength.</td></tr>
+<tr><td valign="top"><a href="#init-1">init/1</a></td><td>Initializes the process and start the process
+       with the specified arguments.</td></tr>
+<tr><td valign="top"><a href="#init_strategy-3">init_strategy/3</a></td><td>Initializes the strategy process for some key.</td></tr>
+<tr><td valign="top"><a href="#local_read-1">local_read/1</a></td><td>Update because of read from the local replica.</td></tr>
+<tr><td valign="top"><a href="#local_write-1">local_write/1</a></td><td>Update strength because of update to the local replica.</td></tr>
+<tr><td valign="top"><a href="#notify_decay-1">notify_decay/1</a></td><td>Notification about decay.</td></tr>
+<tr><td valign="top"><a href="#save_strength-2">save_strength/2*</a></td><td>Persists the replica strength.</td></tr>
+<tr><td valign="top"><a href="#stop-1">stop/1</a></td><td>Stop the strategy process.</td></tr>
 <tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td>Does nothing.</td></tr>
-<tr><td valign="top"><a href="#write-8">write/8*</a></td><td>Writes the new value of the specified data and take appropiate action to update
- 		replicated sites (DCs).</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
 
 <h3 class="function"><a name="code_change-3">code_change/3</a></h3>
 <div class="spec">
-<p><tt>code_change(PreviousVersion, State, Extra) -&gt; {ok, State}</tt><br></p>
+<p><tt>code_change(PreviousVersion, State, Extra) -&gt; any()</tt></p>
 </div><p>Does nothing. No change planned yet.</p>
+
+<h3 class="function"><a name="decrStrength-2">decrStrength/2 *</a></h3>
+<div class="spec">
+<p><tt>decrStrength(Strength::float(), Decay::float()) -&gt; float()</tt><br></p>
+</div><p>Decrements the strength.</p>
+
+<h3 class="function"><a name="get_strength-1">get_strength/1</a></h3>
+<div class="spec">
+<p><tt>get_strength(Key::<a href="#type-key">key()</a>) -&gt; {ok, float()}</tt><br></p>
+</div><p>Returns the current strength factor</p>
 
 <h3 class="function"><a name="handle_call-3">handle_call/3</a></h3>
 <div class="spec">
-<p><tt>handle_call(X1, From, X3) -&gt; any()</tt></p>
+<p><tt>handle_call(X1, From, Strategy_state) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="handle_cast-2">handle_cast/2</a></h3>
 <div class="spec">
-<p><tt>handle_cast(X1, LoopData) -&gt; any()</tt></p>
+<p><tt>handle_cast(X1, X2) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="handle_info-2">handle_info/2</a></h3>
 <div class="spec">
-<p><tt>handle_info(Msg, LoopData) -&gt; {noreply, LoopData}</tt><br></p>
+<p><tt>handle_info(Msg, State) -&gt; any()</tt></p>
 </div><p>Does nothing.</p>
 
 <h3 class="function"><a name="incStrength-3">incStrength/3 *</a></h3>
 <div class="spec">
-<p><tt>incStrength(Strength::float(), Inc::float(), MaxStrength::float()) -&gt; Strength1::float()</tt><br></p>
-</div><p>Increments the strength by the specified amount and returnst the new strength.</p>
+<p><tt>incStrength(Strength::float(), Inc::float(), MaxStrength::float()) -&gt; float()</tt><br></p>
+</div><p>Increments the strength by the specified amount and returns the new strength.</p>
 
 <h3 class="function"><a name="init-1">init/1</a></h3>
 <div class="spec">
-<p><tt>init(X1::{Key::atom(), Args::tuple()}) -&gt; {ok, LoopData::tuple()}</tt><br></p>
-</div><p>Initialises the process and start the process with the specified arguments.</p>
+<p><tt>init(X1::{<a href="#type-key">key()</a>, boolean(), <a href="#type-strategy_params">strategy_params()</a>}) -&gt; {ok, <a href="#type-strategy_state">strategy_state()</a>}</tt><br></p>
+</div><p>Initializes the process and start the process
+       with the specified arguments.</p>
 
-<h3 class="function"><a name="nextDCsFunc-3">nextDCsFunc/3 *</a></h3>
+<h3 class="function"><a name="init_strategy-3">init_strategy/3</a></h3>
 <div class="spec">
-<p><tt>nextDCsFunc(Dc::atom(), AllDCs::List, MinNumReplicas::integer()) -&gt; Result::tuple()</tt><br></p>
-</div><p>Builds the list of DCs where a replica will be created from within those in the
- 		provides list of all DCs, except fro specified DC, and another to select from in
- 		case any of the previous fail.</p>
+<p><tt>init_strategy(Key::<a href="#type-key">key()</a>, Replicated::boolean(), StrategyParams::<a href="#type-strategy_params">strategy_params()</a>) -&gt; ignore | {error, <a href="#type-reason">reason()</a>} | {ok, pid()}</tt><br></p>
+</div><p>Initializes the strategy process for some key.</p>
 
-<h3 class="function"><a name="nextDCsFunc_-4">nextDCsFunc_/4 *</a></h3>
+<h3 class="function"><a name="local_read-1">local_read/1</a></h3>
 <div class="spec">
-<p><tt>nextDCsFunc_(Dc, AllDCs, MinNumReplicas, ListDCs) -&gt; any()</tt></p>
-</div>
+<p><tt>local_read(Key::<a href="#type-key">key()</a>) -&gt; {ok, boolean()}</tt><br></p>
+</div><p>Update because of read from the local replica</p>
 
-<h3 class="function"><a name="processStrength-5">processStrength/5 *</a></h3>
+<h3 class="function"><a name="local_write-1">local_write/1</a></h3>
 <div class="spec">
-<p><tt>processStrength(Key::atom(), Replicated::boolean(), Strength::float(), MinNumReplicas::float(), RmvThreshold::float()) -&gt; {Replicated1::boolean(), Strength::float()}</tt><br></p>
-</div><p>Processes the forwarded message.</p>
+<p><tt>local_write(Key::<a href="#type-key">key()</a>) -&gt; {ok, boolean()}</tt><br></p>
+</div><p>Update strength because of update to the local replica</p>
 
-<h3 class="function"><a name="read-7">read/7 *</a></h3>
+<h3 class="function"><a name="notify_decay-1">notify_decay/1</a></h3>
 <div class="spec">
-<p><tt>read(Key::atom(), Id::integer(), Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), RStrength::float(), MaxStrength::float()) -&gt; {Replicated1::boolean(), Strength1::float()}</tt><br></p>
-</div><p>Reads the specified data, irrespective of where it is located.</p>
+<p><tt>notify_decay(Pid::pid()) -&gt; ok</tt><br></p>
+</div><p>Notification about decay</p>
+
+<h3 class="function"><a name="save_strength-2">save_strength/2 *</a></h3>
+<div class="spec">
+<p><tt>save_strength(Key::<a href="#type-key">key()</a>, NewStrength::float()) -&gt; {ok}</tt><br></p>
+</div><p>Persists the replica strength</p>
+
+<h3 class="function"><a name="stop-1">stop/1</a></h3>
+<div class="spec">
+<p><tt>stop(Pid::pid()) -&gt; ok</tt><br></p>
+</div><p>Stop the strategy process</p>
 
 <h3 class="function"><a name="terminate-2">terminate/2</a></h3>
 <div class="spec">
-<p><tt>terminate(Reason, LoopData) -&gt; ok</tt><br></p>
+<p><tt>terminate(Reason, State) -&gt; any()</tt></p>
 </div><p>Does nothing.</p>
-
-<h3 class="function"><a name="write-8">write/8 *</a></h3>
-<div class="spec">
-<p><tt>write(Key::atom(), Id::integer(), Value, Replicated::boolean(), Strength::float(), ReplicationThreshold::float(), WStrength::float(), MaxStrength::float()) -&gt; {Replicated1::boolean(), Strength1::float()}</tt><br></p>
-</div><p>Writes the new value of the specified data and take appropiate action to update
- 		replicated sites (DCs).</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Dec 5 2014, 10:52:55.</i></p>
+<p><i>Generated by EDoc, Jan 14 2016, 05:05:38.</i></p>
 </body>
 </html>

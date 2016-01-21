@@ -1,3 +1,7 @@
 %% encoding: UTF-8
 {packages,[]}.
-{modules,[adprep,adpreps_,dcs,decay,strategy_adprep,userar]}.
+{modules,[adpreplic,adpreplic_app,datastore_ets,datastore_mnesia,
+          datastore_mnesia_data_info,decay,inter_dc_manager,replica_manager,
+          strategy_adprep,supervisor_datastore_ets,
+          supervisor_datastore_mnesia,supervisor_datastore_mnesia_data_info,
+          supervisor_inter_dc_manager,supervisor_replica_manager]}.

@@ -1,5 +1,5 @@
 %% =============================================================================
-%% Haedrer for First Propossed Adaptive Replication Strategy - SyncFree
+%% Header for First Proposed Adaptive Replication Strategy - SyncFree
 %%
 %% @author Amadeo Asco
 %% @version 1.0.0
@@ -8,25 +8,28 @@
 %% @end
 %% =============================================================================
 
--record(adpargs,   {decay_time, 
-					min_num_replicas = 1, 
-					replication_threshold, 
-					rmv_threshold, 
-					max_strength, 
-					decay, 
-					wdecay, 
-					rstrength, 
-					wstrength}).
+-record(adpargs, {
+     decay_time,
+     min_num_replicas = 1,
+     replication_threshold,
+     rmv_threshold,
+     max_strength,
+     decay,
+     wdecay,
+     rstrength,
+     wstrength
+}).
 
--record(strategyState,
-                    {decay_time, 
-                    min_num_replicas = 1, 
-                    replication_threshold, 
-                    rmv_threshold, 
-                    max_strength, 
-                    decay, 
-                    wdecay, 
-                    rstrength, 
-                    wstrength,
-                    decay_timer}).
+-record(strategyState, {
+     decay_time,
+     min_num_replicas = 1,
+     replication_threshold,
+     rmv_threshold,
+     max_strength,
+     decay,
+     wdecay,
+     rstrength,
+     wstrength,
+     decay_timer
+}).
 

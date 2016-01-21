@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Module replica_manager</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module replica_manager</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Replication management.
+
+<p><b>Version:</b> 1.0.0</p>
+<p><b>Behaviours:</b> <a href="gen_server.html"><tt>gen_server</tt></a>.</p>
+<p><b>Authors:</b> Amadeo Asco, Annette Bieniusa, Adrian Vladu.</p>
+<p><b>References</b><ul><li>Project <a href="https://syncfree.lip6.fr/">SyncFree</a></li><li>More courses at <a href="http://www.trifork.com">Trifork Leeds</a></li></ul></p>
+
+<h2><a name="description">Description</a></h2>Replication management
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#add_dc_to_replica-2">add_dc_to_replica/2</a></td><td>Add the DC to the replica locations.</td></tr>
+<tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#create-4">create/4</a></td><td>Creates the first instance of the specified data in this DC.</td></tr>
+<tr><td valign="top"><a href="#forward_update_to_dcs-5">forward_update_to_dcs/5*</a></td><td></td></tr>
+<tr><td valign="top"><a href="#get_strategy-1">get_strategy/1*</a></td><td></td></tr>
+<tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#init-1">init/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#read-1">read/1</a></td><td>Reads the value of the specified data.</td></tr>
+<tr><td valign="top"><a href="#remove_dc_from_replica-2">remove_dc_from_replica/2</a></td><td>Remove the DC from the replica locations.</td></tr>
+<tr><td valign="top"><a href="#remove_replica-1">remove_replica/1</a></td><td>Remove the local replica.</td></tr>
+<tr><td valign="top"><a href="#start-0">start/0</a></td><td>Start the replication manager.</td></tr>
+<tr><td valign="top"><a href="#stop-0">stop/0</a></td><td>Shutdown replication manager.</td></tr>
+<tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#update-2">update/2</a></td><td>Writes the new value of the specified data.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="add_dc_to_replica-2">add_dc_to_replica/2</a></h3>
+<div class="spec">
+<p><tt>add_dc_to_replica(Key::<a href="#type-key">key()</a>, DC::<a href="#type-datacenter">datacenter()</a>) -&gt; ok | {error, <a href="#type-reason">reason()</a>}</tt><br></p>
+</div><p>Add the DC to the replica locations.</p>
+
+<h3 class="function"><a name="code_change-3">code_change/3</a></h3>
+<div class="spec">
+<p><tt>code_change(OldVersion, State, Extra) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="create-4">create/4</a></h3>
+<div class="spec">
+<p><tt>create(Key::<a href="#type-key">key()</a>, Value::<a href="#type-value">value()</a>, Strategy::<a href="#type-strategy">strategy()</a>, StrategyParams::<a href="#type-strategy_params">strategy_params()</a>) -&gt; ok | {error, <a href="#type-reason">reason()</a>}</tt><br></p>
+</div><p>Creates the first instance of the specified data in this DC.</p>
+
+<h3 class="function"><a name="forward_update_to_dcs-5">forward_update_to_dcs/5 *</a></h3>
+<div class="spec">
+<p><tt>forward_update_to_dcs(Key, Value, DataInfo, StrategyParams, Timestamp) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="get_strategy-1">get_strategy/1 *</a></h3>
+<div class="spec">
+<p><tt>get_strategy(Key) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="handle_call-3">handle_call/3</a></h3>
+<div class="spec">
+<p><tt>handle_call(X1, From, Tid) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="handle_cast-2">handle_cast/2</a></h3>
+<div class="spec">
+<p><tt>handle_cast(Message, Tid) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="handle_info-2">handle_info/2</a></h3>
+<div class="spec">
+<p><tt>handle_info(Message, State) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="init-1">init/1</a></h3>
+<div class="spec">
+<p><tt>init(X1) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="read-1">read/1</a></h3>
+<div class="spec">
+<p><tt>read(Key::<a href="#type-key">key()</a>) -&gt; {ok, <a href="#type-value">value()</a>} | {error, <a href="#type-reason">reason()</a>}</tt><br></p>
+</div><p>Reads the value of the specified data.</p>
+
+<h3 class="function"><a name="remove_dc_from_replica-2">remove_dc_from_replica/2</a></h3>
+<div class="spec">
+<p><tt>remove_dc_from_replica(Key::<a href="#type-key">key()</a>, DC::<a href="#type-datacenter">datacenter()</a>) -&gt; ok | {error, <a href="#type-reason">reason()</a>}</tt><br></p>
+</div><p>Remove the DC from the replica locations.</p>
+
+<h3 class="function"><a name="remove_replica-1">remove_replica/1</a></h3>
+<div class="spec">
+<p><tt>remove_replica(Key::<a href="#type-key">key()</a>) -&gt; ok | {error, <a href="#type-reason">reason()</a>}</tt><br></p>
+</div><p>Remove the local replica.</p>
+
+<h3 class="function"><a name="start-0">start/0</a></h3>
+<div class="spec">
+<p><tt>start() -&gt; any()</tt></p>
+</div><p>Start the replication manager.</p>
+<p><b><font color="red">To do</font></b><ul><li><font color="red"> Parameterize by strategy</font></li><li><font color="red"> Parameterize by data store</font></li></ul></p>
+
+<h3 class="function"><a name="stop-0">stop/0</a></h3>
+<div class="spec">
+<p><tt>stop() -&gt; any()</tt></p>
+</div><p>Shutdown replication manager.</p>
+
+<h3 class="function"><a name="terminate-2">terminate/2</a></h3>
+<div class="spec">
+<p><tt>terminate(Reason, State) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="update-2">update/2</a></h3>
+<div class="spec">
+<p><tt>update(Key::<a href="#type-key">key()</a>, Value::<a href="#type-value">value()</a>) -&gt; ok | {error, <a href="#type-reason">reason()</a>}</tt><br></p>
+</div><p>Writes the new value of the specified data.</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Jan 14 2016, 05:05:38.</i></p>
+</body>
+</html>

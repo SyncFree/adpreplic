@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Module inter_dc_manager</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module inter_dc_manager</h1>
+<ul class="index"><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
+
+<p><b>Behaviours:</b> <a href="gen_server.html"><tt>gen_server</tt></a>.</p>
+
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#add_dc-1">add_dc/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#add_list_dcs-1">add_list_dcs/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#get_dcs-0">get_dcs/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#get_max_dcs-2">get_max_dcs/2*</a></td><td></td></tr>
+<tr><td valign="top"><a href="#get_my_dc-0">get_my_dc/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#get_other_dcs-1">get_other_dcs/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#get_replica_from_dc-2">get_replica_from_dc/2*</a></td><td></td></tr>
+<tr><td valign="top"><a href="#get_replica_from_first_dc-2">get_replica_from_first_dc/2*</a></td><td></td></tr>
+<tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#init-1">init/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#my_ip-0">my_ip/0*</a></td><td></td></tr>
+<tr><td valign="top"><a href="#read_from_any_dc-2">read_from_any_dc/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#receive_data_item-5">receive_data_item/5</a></td><td></td></tr>
+<tr><td valign="top"><a href="#receive_data_item_location-2">receive_data_item_location/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#receive_data_item_update-4">receive_data_item_update/4</a></td><td></td></tr>
+<tr><td valign="top"><a href="#send_data_item_location-1">send_data_item_location/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#send_data_item_to_dcs-4">send_data_item_to_dcs/4</a></td><td></td></tr>
+<tr><td valign="top"><a href="#set_dcs-1">set_dcs/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#start_link-0">start_link/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#start_receiver-1">start_receiver/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#update_external_replicas-5">update_external_replicas/5</a></td><td></td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="add_dc-1">add_dc/1</a></h3>
+<div class="spec">
+<p><tt>add_dc(NewDC) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="add_list_dcs-1">add_list_dcs/1</a></h3>
+<div class="spec">
+<p><tt>add_list_dcs(DCs) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="code_change-3">code_change/3</a></h3>
+<div class="spec">
+<p><tt>code_change(OldVsn, State, Extra) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="get_dcs-0">get_dcs/0</a></h3>
+<div class="spec">
+<p><tt>get_dcs() -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="get_max_dcs-2">get_max_dcs/2 *</a></h3>
+<div class="spec">
+<p><tt>get_max_dcs(MaxNumber, DCs) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="get_my_dc-0">get_my_dc/0</a></h3>
+<div class="spec">
+<p><tt>get_my_dc() -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="get_other_dcs-1">get_other_dcs/1</a></h3>
+<div class="spec">
+<p><tt>get_other_dcs(DCs) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="get_replica_from_dc-2">get_replica_from_dc/2 *</a></h3>
+<div class="spec">
+<p><tt>get_replica_from_dc(DC, Key) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="get_replica_from_first_dc-2">get_replica_from_first_dc/2 *</a></h3>
+<div class="spec">
+<p><tt>get_replica_from_first_dc(Key, T) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="handle_call-3">handle_call/3</a></h3>
+<div class="spec">
+<p><tt>handle_call(X1, From, State) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="handle_cast-2">handle_cast/2</a></h3>
+<div class="spec">
+<p><tt>handle_cast(Info, State) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="handle_info-2">handle_info/2</a></h3>
+<div class="spec">
+<p><tt>handle_info(Info, State) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="init-1">init/1</a></h3>
+<div class="spec">
+<p><tt>init(X1) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="my_ip-0">my_ip/0 *</a></h3>
+<div class="spec">
+<p><tt>my_ip() -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="read_from_any_dc-2">read_from_any_dc/2</a></h3>
+<div class="spec">
+<p><tt>read_from_any_dc(Key, DCs) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="receive_data_item-5">receive_data_item/5</a></h3>
+<div class="spec">
+<p><tt>receive_data_item(Key, Value, Strategy, StrategyParams, MaxDCs) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="receive_data_item_location-2">receive_data_item_location/2</a></h3>
+<div class="spec">
+<p><tt>receive_data_item_location(Key, DC) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="receive_data_item_update-4">receive_data_item_update/4</a></h3>
+<div class="spec">
+<p><tt>receive_data_item_update(Key, Value, StrategyParams, Timestamp) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="send_data_item_location-1">send_data_item_location/1</a></h3>
+<div class="spec">
+<p><tt>send_data_item_location(Key) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="send_data_item_to_dcs-4">send_data_item_to_dcs/4</a></h3>
+<div class="spec">
+<p><tt>send_data_item_to_dcs(Key, Value, Strategy, StrategyParams) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="set_dcs-1">set_dcs/1</a></h3>
+<div class="spec">
+<p><tt>set_dcs(DCs) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="start_link-0">start_link/0</a></h3>
+<div class="spec">
+<p><tt>start_link() -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="start_receiver-1">start_receiver/1</a></h3>
+<div class="spec">
+<p><tt>start_receiver(Port) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="terminate-2">terminate/2</a></h3>
+<div class="spec">
+<p><tt>terminate(Reason, State) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="update_external_replicas-5">update_external_replicas/5</a></h3>
+<div class="spec">
+<p><tt>update_external_replicas(DCs, Key, Value, StrategyParams, Timestamp) -&gt; any()</tt></p>
+</div>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Jan 14 2016, 05:05:38.</i></p>
+</body>
+</html>

@@ -1,7 +1,7 @@
 %% =============================================================================
 %% Adaptive Replication - SyncFree
 %% 
-%% @author Amadeo Asco, Annette Bieniusa
+%% @author Amadeo Asco, Annette Bieniusa, Adrian Vladu
 %% @version 1.0.0
 %% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
 %% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
@@ -11,7 +11,8 @@
 %% Unit tests for Strategy module 
 
 -module(strategy_test).
--author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de']).
+-author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de',
+         'adrian.vladu21@gmail.com']).
 
 %% =============================================================================
 %% API functions
@@ -37,8 +38,7 @@ local_read_test() ->
     Rstrength      = 20,
     Wstrength      = 100,
     
-    {ok, Pid} = strategy_adprep:init_strategy(Key, Replicated, DecayTime, 
-        ReplThreshold, RmvThreshold, MaxStrength, DecayFactor, Rstrength, Wstrength),
+    {ok, Pid} = strategy_adprep:init_strategy(Key, Replicated, [DecayTime, ReplThreshold, RmvThreshold, MaxStrength, DecayFactor, Rstrength, Wstrength]),
     ?assertNotEqual(undefined, whereis(list_to_atom(Key))),
     ok = strategy_adprep:stop(Pid),
     ?assertEqual(undefined, whereis(list_to_atom(Key))).

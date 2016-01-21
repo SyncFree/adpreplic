@@ -21,7 +21,7 @@
 %% =============================================================================
 %% Adaptive Replication User Interface
 %%
-%% @author Amadeo Asco, Annette Bieniusa
+%% @author Amadeo Asco, Annette Bieniusa, Adrian Vladu
 %% @version 1.0.0
 %% @reference Project <a href="https://syncfree.lip6.fr/">SyncFree</a>
 %% @reference More courses at <a href="http://www.trifork.com">Trifork Leeds</a>
@@ -31,7 +31,7 @@
 %% @doc Provides the public client interface.
 
 -module(adpreplic).
--author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de']).
+-author(['aas@trifork.co.uk','bieniusa@cs.uni-kl.de', 'vladu@rhrk.uni-kl.de']).
 
 -include("adprep.hrl").
 
@@ -39,35 +39,54 @@
 -compile(export_all).
 -else.
 -compile(report).
--export([create/10, read/1, update/2]).
+-export([create/11, read/1, update/2, delete/1]).
 -endif.
 
 %% Public API, can be called by clients using RPC.
 
-%% @doc The create/2 function creates a new entry under some key,
-%%      with an initial value.
-%-spec create(key(), value(), strategy(), args()) -> ok | {error, reason()}.
-create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength, 
-    DecayFactor, RStrength, WStrength) ->
+%% @doc The create/10 function creates a new entry under some key,
+%%      with an initial value and with a defined strategy.
+%-spec create(key(), value(), strategy(), integer(), float(), 
+%    float(), float(), float(), float(), -> ok | {error, reason()}.
+create(Key, Value, Strategy, DecayTime, ReplThreshold, RmvThreshold, MaxStrength,
+    DecayFactor, RStrength, WStrength, MinimumDCsNumber) ->
+
+    lager:info("Creating key ~p", [Key]),
+
     StrategyParams = #strategy_params{
-    decay_time     = DecayTime,
-    repl_threshold = ReplThreshold,
-    rmv_threshold  = RmvThreshold,
-    max_strength   = MaxStrength,
-    decay_factor   = DecayFactor,
-    rstrength      = RStrength,
-    wstrength      = WStrength
+        decay_time     = DecayTime,
+        repl_threshold = ReplThreshold,
+        rmv_threshold  = RmvThreshold,
+        max_strength   = MaxStrength,
+        decay_factor   = DecayFactor,
+        rstrength      = RStrength,
+        wstrength      = WStrength,
+        min_dcs_number = MinimumDCsNumber
     },
+
+    lager:info("Using strategy params ~p", [StrategyParams]),
+
     replica_manager:create(Key, Value, Strategy, StrategyParams).
 
-%% @doc The read/2 function returns the current value for the
+%% @doc The read/1 function returns the current value for the
 %%      object stored at some key.
 %-spec read(key() -> {ok, value()} | {error, reason()}.
 read(Key) ->
+    lager:info("Retrieving key ~p", [Key]),
+
     replica_manager:read(Key).
 
-%% @doc The update/3 function updates the current value for the
+%% @doc The update/2 function updates the current value for the
 %%      data stored at some key.
 %-spec write(key(), value()) -> ok | {error, reason()}.
 update(Key, Value) ->
+    lager:info("Updating key ~p", [Key]),
+
     replica_manager:update(Key, Value).
+
+%% @doc The delete/1 function deletes the data stored at some key.
+%-spec delete(key(),) -> ok | {error, reason()}.
+delete(Key) ->
+    lager:info("Deleting key ~p", [Key]),
+
+    replica_manager:remove_replica(Key).

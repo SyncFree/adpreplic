@@ -18,6 +18,8 @@
 %%
 %% -------------------------------------------------------------------
 
+%% @doc Starts all the required adpreplic components
+
 -module(adpreplic_app).
 
 -behaviour(application).
@@ -29,9 +31,16 @@
 %% Application callbacks
 %% ===================================================================
 
+%% @doc Starts the supervisors for datastores, replica manager 
+%% and inter-dc-manager
 start(_StartType, _StartArgs) ->
-    lager:start(),
-    adpreplic_sup:start_link().
-    
+    lager:info("Starting adpreplic supervisors"),
+    decay:start(),
+    supervisor_datastore_ets:start_link(),
+    supervisor_datastore_mnesia:start_link(),
+    supervisor_datastore_mnesia_data_info:start_link(),
+    supervisor_replica_manager:start_link(),
+    supervisor_inter_dc_manager:start_link().
+
 stop(_State) ->
     ok.

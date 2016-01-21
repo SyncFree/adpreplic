@@ -1,8 +1,8 @@
 ## Name of the node
--name adpreplic@127.0.0.1
+-name adpreplic@data-center-1.avladu
 
 ## Cookie for distributed erlang
--setcookie adpreplic
+-setcookie myawesomecookie
 
 ## Heartbeat management; auto-restarts VM if it dies or becomes unresponsive
 ## (Disabled by default..use with caution!)
