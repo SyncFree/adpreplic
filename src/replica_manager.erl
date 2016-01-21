@@ -198,6 +198,8 @@ handle_call({remove_dc_from_replica, Key, DC}, _From, Tid) ->
 
 handle_call({read, Key}, _From, Tid) ->
     lager:info("Read data item with key: ~p", [Key]),
+    {ok, StrategyParams} = get_strategy(Key),
+    strategy_adprep:init_strategy(Key, true, StrategyParams),
     Result = datastore_mnesia:read(Key),
     case Result of
         {error, _ErrorMessage} ->
@@ -225,8 +227,6 @@ handle_call({read, Key}, _From, Tid) ->
                     {reply, {error, _Info}, Tid}
             end;
         {ok, KeyValue} ->
-            {ok, StrategyParams} = get_strategy(Key),
-            _Result = strategy_adprep:init_strategy(Key, true, StrategyParams),
             strategy_adprep:local_read(Key),
             {reply, {ok, KeyValue}, Tid}
     end;
@@ -267,13 +267,28 @@ handle_call({update, Key, Value}, _From, Tid) ->
 
 handle_call({remove, Key}, _From, Tid) ->
     lager:info("Remove data item with key: ~p", [Key]),
-    %% TO DO
-    %% Remove DC from other DCs data retrieval storage
-    %{_, Pid, _, _} = sys:get_status(list_to_atom(Key)),
-    datastore_mnesia:remove(Key),
-    datastore_mnesia_data_info:remove(Key),
-    %strategy_adprep:stop(Pid),
-    {reply, {ok}, Tid}.
+
+    Result = datastore_mnesia_data_info:read(Key),
+    case Result of
+        {ok, DataInfoWithKey} ->
+            {ok, StrategyParams} = get_strategy(Key),
+            strategy_adprep:init_strategy(Key, true, StrategyParams),
+            datastore_mnesia:remove(Key),
+            DataInfo = DataInfoWithKey#data_info_with_key.value,
+            DCsNew = inter_dc_manager:get_other_dcs(DataInfo#data_info.dcs),
+            DataInfoUpdated = DataInfo#data_info{
+                replicated = false,
+                dcs = DCsNew
+            },
+            datastore_mnesia_data_info:update(Key, DataInfoUpdated),
+            {reply, {ok}, Tid};
+        {error, ErrorInfo} ->
+            lager:info("Failure: ~p", [ErrorInfo]),
+            {reply, {error, ErrorInfo}, Tid};
+        Info ->
+            lager:info("Failure: ~p", [Info]),
+            {reply, {error, Info}, Tid}
+    end.
 
 handle_cast(shutdown, Tid) ->
     lager:info("Shutting down the replica manager"),

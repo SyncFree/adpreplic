@@ -180,13 +180,13 @@ handle_cast(decay, #strategy_state{
             }
         }=StrategyState) ->
     % Time decay
-    lager:info("start decay ~p", [DecayFactor]),
     NewStrength = decrStrength(Strength, DecayFactor),
     ShouldStopReplicate = (RmvThreshold > NewStrength) and Replicated,
     % Notify replication manager if replica should not longer be replicated
     _ = case ShouldStopReplicate of
-        true -> 
-            lager:info("Below replication threshold for key ~p",[Key]),
+        true ->
+            lager:info("Remove replication threshold for key ~p is met ~p",
+                [Key]),
             replica_manager:remove_replica(Key),
             decay:stopDecayTimer(Timer),
             strategy_adprep:stop(self());
