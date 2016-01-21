@@ -35,7 +35,9 @@
          get_other_dcs/1,
          read_from_any_dc/2,
          update_external_replicas/5,
-         receive_data_item_update/4
+         receive_data_item_update/4,
+         signal_remove_replica_from_dc/2,
+         receive_signal_remove_replica_from_dc/2
          ]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -89,6 +91,12 @@ receive_data_item(Key, Value, Strategy, StrategyParams, MaxDCs) ->
 
 read_from_any_dc(Key, DCs) ->
     gen_server:call(?MODULE, {read_from_any_dc, Key, DCs}).
+
+signal_remove_replica_from_dc(DCs, Key) ->
+    gen_server:call(?MODULE, {signal_remove_replica_from_dc, DCs, Key}).
+
+receive_signal_remove_replica_from_dc(Key, DC) ->
+    gen_server:call(?MODULE, {receive_signal_remove_replica_from_dc, Key, DC}).
 
 update_external_replicas(DCs, Key, Value, StrategyParams, Timestamp) ->
     gen_server:call(?MODULE, {update_external_replicas, DCs, Key, Value,
@@ -168,6 +176,20 @@ handle_call({receive_data_item, Key, Value, Strategy, StrategyParams, MaxDCs},
     datastore_mnesia_data_info:update(Key, DataInfoUpdated),
     strategy_adprep:init_strategy(Key, true, StrategyParams),
     {reply, {ok, "Created replica"}, _State};
+
+handle_call({signal_remove_replica_from_dc, DCs, Key},
+        _From, #state{dcs=_DCs} = _State) ->
+    Result = rpc:multicall(DCs, inter_dc_manager,
+        receive_signal_remove_replica_from_dc,
+        [Key, node()], infinity),
+    lager:info("Send signal to remove replica from dc result is: ~p", [Result]),
+    {reply, {ok, DCs}, _State};
+
+handle_call({receive_signal_remove_replica_from_dc, Key, DC}, _From, #state{dcs=DCs} = _State) ->
+    lager:info("Key is: ~p and From is: ~p and DCs are: ~p and DC is: ~p",
+        [Key, _From, DCs, DC]),
+    replica_manager:remove_dc_from_replica(Key, DC),
+    {reply, {ok, DC}, _State};
 
 handle_call({receive_data_item_location, Key, DC}, _From, #state{dcs=DCs} = _State) ->
     lager:info("Key is: ~p and From is: ~p and DCs are: ~p and DC is: ~p",

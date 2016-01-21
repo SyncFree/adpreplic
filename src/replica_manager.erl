@@ -278,8 +278,10 @@ handle_call({remove, Key}, _From, Tid) ->
             DCsNew = inter_dc_manager:get_other_dcs(DataInfo#data_info.dcs),
             DataInfoUpdated = DataInfo#data_info{
                 replicated = false,
+                strength = 0.0,
                 dcs = DCsNew
             },
+            inter_dc_manager:signal_remove_replica_from_dc(DCsNew, Key),
             datastore_mnesia_data_info:update(Key, DataInfoUpdated),
             {reply, {ok}, Tid};
         {error, ErrorInfo} ->

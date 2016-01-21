@@ -186,17 +186,16 @@ handle_cast(decay, #strategy_state{
     _ = case ShouldStopReplicate of
         true ->
             lager:info("Remove replication threshold for key ~p is met ~p",
-                [Key]),
+                [Key, RmvThreshold]),
             replica_manager:remove_replica(Key),
             decay:stopDecayTimer(Timer),
-            strategy_adprep:stop(self());
+            strategy_adprep:stop(self()),
+            {noreply, StrategyState#strategy_state{strength=0.0}};
         false ->
             lager:info("Remove replication threshold for key ~p not met ~p",
                 [Key, NewStrength]),
-            ok
-    end,
-   {noreply, StrategyState#strategy_state{strength=NewStrength}}.
-
+            {noreply, StrategyState#strategy_state{strength=NewStrength}}
+    end.
 
 %% @doc Does nothing.
 handle_info(_Msg, State) ->
